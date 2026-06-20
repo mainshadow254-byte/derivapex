@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Trading Terminal</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <style>
+    .terminal-shell{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+    .ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+    .ctrl select,.ctrl button{font-size:13px}
+    .readout{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:8px 0;color:var(--muted)}
+    .readout b{color:#e2e8f0}
+    .ind-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px}
+    .ind{display:flex;align-items:center;gap:6px;font-size:12px;background:#0d1426;border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer}
+    #main-chart{height:420px}#osc-chart{height:140px;margin-top:6px}
+    .layout{display:grid;gap:16px;grid-template-columns:1fr}
+    @media(min-width:1200px){.layout{grid-template-columns:280px minmax(0,1fr) 320px}}
+    .col-stack{display:flex;flex-direction:column;gap:16px}
+  </style>
+</head>
+<body class="app-body">
+  <nav class="nav">
+    <a class="brand" href="dashboard.html">ApexBot</a>
+    <div class="nav-actions">
+      <button id="bell" class="btn ghost notif-bell" title="Notifications">🔔</button>
+      <a class="btn ghost" href="dashboard.html">Dashboard</a>
+      <a class="btn ghost" href="bot-builder.html">Builder</a>
+      <a class="btn ghost" href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>
+      <a class="btn ghost" href="https://app.deriv.com/" target="_blank" rel="noopener">DTrader</a>
+    </div>
+  </nav>
+
+  <div class="container layout">
+    <!-- LEFT: Market Watch + Watchlists -->
+    <div id="market-watch" class="col-stack"></div>
+
+    <!-- CENTER: Chart -->
+    <div class="terminal-shell">
+      <div class="ctrl">
+        <select id="market" class="input" style="max-width:220px"></select>
+        <select id="type" class="input" style="max-width:150px">
+          <option value="candlestick">Candlestick</option>
+          <option value="ohlc">OHLC bars</option>
+          <option value="line">Line</option>
+          <option value="area">Area</option>
+          <option value="tick">Tick</option>
+        </select>
+        <select id="gran" class="input" style="max-width:140px"></select>
+        <button id="save-layout" class="btn ghost">💾 Save layout</button>
+        <button id="reset-layout" class="btn ghost">↺ Reset</button>
+        <button id="fs" class="btn ghost">⛶ Fullscreen</button>
+      </div>
+
+      <div class="readout" id="readout">
+        <span>O <b id="r-o">—</b></span><span>H <b id="r-h">—</b></span><span>L <b id="r-l">—</b></span>
+        <span>C <b id="r-c">—</b></span><span>Price <b id="r-q">—</b></span>
+        <span>Bid <b id="r-bid">—</b></span><span>Ask <b id="r-ask">—</b></span>
+        <span>Tick vol <b id="r-vol">—</b></span><span>Trend <b id="r-trend">—</b></span><span>Volatility <b id="r-volat">—</b></span>
+      </div>
+
+      <div id="main-chart"></div>
+      <div id="osc-chart"></div>
+
+      <div class="ind-grid" id="indicators"></div>
+      <div id="ind-config" style="margin-top:10px"></div>
+
+      <!-- Trading panels: positions / orders / closed / history -->
+      <div style="margin-top:16px"><div id="trading-panels"></div></div>
+    </div>
+
+    <!-- RIGHT: Account summary + AI analysis + notifications -->
+    <div class="col-stack">
+      <div id="deriv-onboard"></div>
+      <div class="card" id="account-summary"><p class="muted">Loading account…</p></div>
+      <div class="card">
+        <h3 style="margin-top:0">AI Chart Analysis</h3>
+        <div id="ai"><p class="muted">Loading analysis…</p></div>
+      </div>
+      <div class="card hidden" id="notif-card"><div id="notif-feed"></div></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/pb-client.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/mini-charts.js"></script>
+  <script src="js/indicators.js"></script>
+  <script src="js/chart-terminal.js"></script>
+  <script src="js/ai-analysis.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/devices.js"></script>
+  <script src="js/workspace.js"></script>
+  <script src="js/deriv-onboard.js"></script>
+  <script>
+  (async function(){
+    if(!Auth.isLoggedIn){ location.href='auth.html?mode=login'; return; }
+    let me; try{ me=await api('/me'); }catch{ location.href='auth.html?mode=login'; return; }
+    if(!me.verified){ location.href='verify.html'; return; }
+    ContentProtection.init(`${me.email} · TERMINAL`);
+    Devices.heartbeat();
+    // Show the Deriv connect/create card until a real Deriv account is linked.
+    if (!me.deriv_connected && window.DerivOnboard) {
+      DerivOnboard.mount(document.getElementById('deriv-onboard'));
+    }
+    const cfg = await loadPublicConfig();
+    const $=(id)=>document.getElementById(id);
+
+    // Timeframes (data-driven; includes 30m / 4h / Daily, and future ones too).
+    let granOptions = [{value:60,label:'1 Minute'},{value:300,label:'5 Minutes'},{value:900,label:'15 Minutes'},{value:1800,label:'30 Minutes'},{value:3600,label:'1 Hour'},{value:14400,label:'4 Hours'},{value:86400,label:'Daily'}];
+    try { const { timeframes } = await api('/market/timeframes'); if (timeframes?.length) granOptions = timeframes.filter(t=>t.value>0); } catch {}
+    $('gran').innerHTML = granOptions.map(t=>`<option value="${t.value}">${t.label}</option>`).join('');
+
+    // Quick market select (full Deriv coverage; future markets appear automatically)
+    let firstSymbol='R_100';
+    try{
+      const { groups } = await api('/market/symbols');
+      const sel=$('market'); sel.innerHTML='';
+      Object.entries(groups).forEach(([market,arr])=>{
+        const og=document.createElement('optgroup'); og.label=market;
+        arr.forEach(s=>{ const o=document.createElement('option'); o.value=s.symbol; o.textContent=s.name; og.appendChild(o); });
+        sel.appendChild(og);
+      });
+      firstSymbol = sel.value || firstSymbol;
+    }catch(e){ $('market').innerHTML='<option value="R_100">Volatility 100</option>'; }
+
+    const INDICATORS=[['ema20','EMA 20'],['ema50','EMA 50'],['ma20','MA 20'],['bollinger','Bollinger'],['sr','Support/Resist'],['trendline','Trend line'],['rsi','RSI'],['macd','MACD'],['atr','ATR']];
+    const term = new ChartTerminal({
+      container:$('main-chart'), oscContainer:$('osc-chart'), appId:cfg.derivAppId,
+      symbol:firstSymbol, granularity:60,
+      onReadout:(d)=>{
+        if(d.o!=null)$('r-o').textContent=(+d.o).toFixed(4);
+        if(d.h!=null)$('r-h').textContent=(+d.h).toFixed(4);
+        if(d.l!=null)$('r-l').textContent=(+d.l).toFixed(4);
+        if(d.c!=null)$('r-c').textContent=(+d.c).toFixed(4);
+        if(d.quote!=null)$('r-q').textContent=d.quote.toFixed(4);
+        if(d.bid!=null)$('r-bid').textContent=d.bid.toFixed(4);
+        if(d.ask!=null)$('r-ask').textContent=d.ask.toFixed(4);
+        if(d.tickVol!=null)$('r-vol').textContent=d.tickVol;
+      },
+      onLayoutChange:()=>{ buildIndicatorUI(); }
+    });
+    // Reflect restored layout in the type select.
+    $('type').value = term.type;
+    await term.load();
+
+    // Indicator toggles + per-indicator configuration.
+    const PARAM_FIELDS = {
+      ma20:[['period','Period']], ema20:[['period','Period']], ema50:[['period','Period']],
+      bollinger:[['period','Period'],['mult','StdDev']], rsi:[['period','Period']], atr:[['period','Period']],
+      macd:[['fast','Fast'],['slow','Slow'],['signal','Signal']], sr:[['lookback','Lookback']],
+    };
+    function buildIndicatorUI(){
+      const ig=$('indicators'); ig.innerHTML='';
+      INDICATORS.forEach(([id,label])=>{
+        const wrap=document.createElement('label'); wrap.className='ind';
+        const on=term.enabled.has(id);
+        wrap.innerHTML=`<input type="checkbox" ${on?'checked':''}/> ${label}`;
+        wrap.querySelector('input').onchange=(e)=>{ term.toggleIndicator(id,e.target.checked); };
+        ig.appendChild(wrap);
+      });
+      // Config panel only for currently enabled indicators that have params.
+      const cfgEl=$('ind-config'); const active=INDICATORS.map(x=>x[0]).filter(id=>term.enabled.has(id) && PARAM_FIELDS[id]);
+      cfgEl.innerHTML = active.length ? `<div class="card" style="padding:12px"><strong style="font-size:13px">Configure indicators</strong>`+
+        active.map(id=>{
+          const label=INDICATORS.find(x=>x[0]===id)[1];
+          return `<div style="margin-top:8px"><div class="muted-sm">${label}</div>`+
+            PARAM_FIELDS[id].map(([k,lab])=>`<div class="ind-cfg"><span>${lab}</span><input class="input" type="number" step="any" value="${term.params[id][k]}" data-id="${id}" data-k="${k}"></div>`).join('')+`</div>`;
+        }).join('')+`</div>` : '';
+      cfgEl.querySelectorAll('input[data-id]').forEach(inp=>inp.onchange=()=>term.setIndicatorParam(inp.dataset.id,inp.dataset.k,inp.value));
+    }
+    buildIndicatorUI();
+
+    $('market').onchange=()=>{ term.setSymbol($('market').value); MarketWatch.setCurrent($('market').value); refreshAI(); };
+    $('type').onchange=()=>term.setType($('type').value);
+    $('gran').onchange=()=>{ term.setGranularity(+$('gran').value); refreshAI(); };
+    $('fs').onclick=()=>term.fullscreen();
+    $('save-layout').onclick=()=>{ term.saveLayout(); $('save-layout').textContent='✓ Saved'; setTimeout(()=>$('save-layout').textContent='💾 Save layout',1500); };
+    $('reset-layout').onclick=()=>{ term.resetLayout(); $('type').value=term.type; buildIndicatorUI(); };
+
+    // Market Watch (search / categories / favorites / watchlists) drives the chart.
+    MarketWatch.init($('market-watch'), { onSelect:(sym)=>{ $('market').value=sym; term.setSymbol(sym); refreshAI(); } });
+    MarketWatch.setCurrent(firstSymbol);
+
+    // Account summary + trading panels (real account / recorded ledger).
+    AccountSummary.load($('account-summary'));
+    TradingPanels.init($('trading-panels'));
+    setInterval(()=>AccountSummary.load($('account-summary')), 30000);
+
+    // Notifications bell.
+    Notifications.badge($('bell'));
+    $('bell').onclick=()=>{ const c=$('notif-card'); c.classList.toggle('hidden'); if(!c.classList.contains('hidden')) Notifications.renderFeed($('notif-feed')); };
+
+    // Recompute indicators on live data periodically.
+    setInterval(()=>term._renderIndicators(), 5000);
+
+    async function refreshAI(){ AIAnalysis.render($('ai'), $('market').value, +$('gran').value, {trendEl:$('r-trend'),volatEl:$('r-volat')}); }
+    refreshAI();
+    setInterval(refreshAI, 15000);
+  })();
+  </script>
+</body>
+</html>

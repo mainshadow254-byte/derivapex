@@ -1,0 +1,26 @@
+{
+  "name": "apexbot-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ApexBot secure backend — all sensitive trading, payment, role, and email logic. No secrets ever reach the frontend.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "telegram:set-webhook": "node scripts/set-telegram-webhook.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "pocketbase": "^0.27.0",
+    "ws": "^8.18.0"
+  }
+}

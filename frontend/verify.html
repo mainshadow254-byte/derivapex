@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot - Verify & onboard</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-3" />
+</head>
+<body>
+  <nav class="nav"><a class="brand" href="index.html">ApexBot</a><a class="btn ghost" href="auth.html?mode=login">Log in</a></nav>
+
+  <div class="container" style="max-width:520px;padding-top:40px">
+    <div id="step-email" class="card">
+      <h2 style="margin-top:0">Verify your email</h2>
+      <p class="muted" id="email-help">Open the verification link from your email. If you landed here from that email, we will confirm the token automatically.</p>
+      <div id="msg"></div>
+      <button id="check" class="btn" style="width:100%">I've verified - continue</button>
+      <p class="muted" style="text-align:center;margin-top:12px;font-size:13px"><a id="resend" href="#">Resend email</a></p>
+    </div>
+
+    <div id="step-tg" class="card hidden">
+      <h2 style="margin-top:0">Email verified — finish account setup</h2>
+      <p class="muted">Telegram is optional. Link it if you want bot alerts, community access, and account notifications.</p>
+      <div class="notice demo">You can finish this later in Account Settings. Recommended for alerts and community access.</div>
+      <div id="tg-msg"></div>
+      <div class="grid cols-2" style="margin-top:14px">
+        <button id="finish-tg" class="btn" type="button">Finish Telegram verification</button>
+        <button id="skip-tg" class="btn ghost" type="button">Skip for now</button>
+      </div>
+      <a id="tg-community" class="btn ghost" target="_blank" rel="noopener" style="width:100%;justify-content:center;margin-top:10px">Join Telegram community</a>
+
+      <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+        <div class="label">Deriv account (for real trading)</div>
+        <p class="muted" style="font-size:12px;margin:4px 0 8px">New to Deriv? Create an account first, then connect it from your dashboard.</p>
+        <div class="grid cols-2">
+          <a class="btn ghost" data-deriv-affiliate>Create Deriv Account with ApexBot</a>
+          <a class="btn" data-deriv-oauth>Connect Deriv Account</a>
+        </div>
+      </div>
+
+      <a class="btn ok" id="go-dash" href="dashboard.html" style="width:100%;margin-top:14px;justify-content:center">Go to dashboard</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/pb-client.js"></script>
+  <script src="js/deriv-onboard.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    const email = params.get('email') || '';
+    const token = params.get('token') || params.get('verification_token') || '';
+
+    if (email) {
+      $('email-help').innerHTML = `We sent a real PocketBase verification link to <strong>${email}</strong>. Open that email link to verify.`;
+    }
+
+    function msg(text, kind = 'err') {
+      $('msg').innerHTML = `<div class="notice ${kind}">${text}</div>`;
+    }
+
+    async function confirmToken(value) {
+      const res = await fetch(`${window.APEX.API_BASE}/auth/confirm-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: value }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || 'Verification failed.');
+      return body;
+    }
+
+    $('resend').onclick = async (event) => {
+      event.preventDefault();
+      try {
+        await api('/auth/start-verification', {
+          method: 'POST',
+          body: JSON.stringify({
+            userId: pb.authStore.model?.id,
+            telegram: pb.authStore.model?.telegram_username || '',
+          }),
+        });
+        msg('Verification email re-sent. Check your inbox and spam folder.', 'ok');
+      } catch (err) {
+        msg(err?.body?.setupNeeded ? err.message : 'Please log in again to resend.');
+      }
+    };
+
+    function tgMsg(text, kind = 'demo') {
+      $('tg-msg').innerHTML = `<div class="notice ${kind}" style="margin-top:12px">${text}</div>`;
+    }
+
+    async function startTelegramVerification() {
+      if (!Auth.isLoggedIn) {
+        tgMsg('Please log in again to start Telegram verification.', 'err');
+        return;
+      }
+      try {
+        const res = await api('/telegram/start-verification', {
+          method: 'POST',
+          body: JSON.stringify({ telegram: pb.authStore.model?.telegram_username || '' }),
+        });
+        if (res.startUrl) {
+          window.open(res.startUrl, '_blank', 'noopener');
+          tgMsg('Telegram opened. Use Verify Join in the bot after joining the community, if required.', 'ok');
+        } else {
+          tgMsg('Telegram bot link is not configured yet. You can still go to your dashboard.', 'demo');
+        }
+      } catch (err) {
+        tgMsg(err.message || 'Could not start Telegram verification.', 'err');
+      }
+    }
+
+    async function showTelegram(_me) {
+      const cfg = await loadPublicConfig();
+      $('tg-community').href = cfg.telegram?.community || '#';
+      $('tg-community').classList.toggle('hidden', !cfg.telegram?.community);
+      $('step-email').classList.add('hidden');
+      $('step-tg').classList.remove('hidden');
+      DerivOnboard.wireAffiliate($('step-tg'));
+      DerivOnboard.wireOAuth($('step-tg'));
+    }
+
+    $('finish-tg').onclick = startTelegramVerification;
+    $('skip-tg').onclick = () => { location.href = 'dashboard.html'; };
+
+    $('check').onclick = async () => {
+      if (!Auth.isLoggedIn) {
+        msg('Please log in again, then click continue.');
+        return;
+      }
+      try {
+        await pb.collection('users').authRefresh();
+        const me = await api('/me');
+        if (me.verified) showTelegram(me);
+        else msg('Email not verified yet. Check your inbox and spam, then try again.');
+      } catch (err) {
+        msg(err.message);
+      }
+    };
+
+    (async () => {
+      if (token) {
+        try {
+          msg('Confirming your verification link...', 'ok');
+          await confirmToken(token);
+          msg('Email verified. Log in if needed, then continue onboarding.', 'ok');
+          if (Auth.isLoggedIn) {
+            await pb.collection('users').authRefresh();
+            const me = await api('/me');
+            return showTelegram(me);
+          }
+        } catch (err) {
+          msg(err.message || 'Verification link is invalid or expired.');
+        }
+      }
+
+      if (Auth.isLoggedIn) {
+        try {
+          await pb.collection('users').authRefresh();
+          const me = await api('/me');
+          if (me.verified) showTelegram(me);
+        } catch {}
+      }
+    })();
+  </script>
+</body>
+</html>

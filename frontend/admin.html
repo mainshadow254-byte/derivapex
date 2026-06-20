@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Admin</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="dashboard.html">ApexBot Admin</a>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span id="role-badge" class="badge demo">…</span>
+      <a class="btn ghost" href="dashboard.html">User dashboard</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="denied" class="notice err hidden">You do not have permission to view this page.</div>
+    <div id="panel" class="hidden">
+      <div class="tabs">
+        <div class="tab active" data-tab="analytics">Analytics</div>
+        <div class="tab" data-tab="users">Users</div>
+        <div class="tab" data-tab="subs">Subscriptions & Payments</div>
+        <div class="tab" data-tab="telegram">Telegram Verification</div>
+        <div class="tab" data-tab="sessions">Devices & Sessions</div>
+        <div class="tab" data-tab="admins" id="tab-admins-btn">Admins</div>
+        <div class="tab" data-tab="mode">Real/Demo Mode</div>
+        <div class="tab" data-tab="logs">Audit Logs</div>
+      </div>
+
+      <section id="t-analytics"><div id="analytics-body" class="grid cols-2"></div></section>
+
+      <section id="t-sessions" class="hidden"><div id="sessions-body" class="grid cols-2"></div></section>
+
+      <section id="t-users" class="hidden"><div class="card"><h3>User Management</h3><div class="table-wrap"><table id="users-table"><thead><tr><th>Email</th><th>Verified</th><th>Telegram</th><th>Deriv</th><th></th></tr></thead><tbody></tbody></table></div></div></section>
+
+      <section id="t-subs" class="hidden"><div class="card"><h3>Subscriptions & Payment Status</h3><div id="subs-msg"></div><div class="table-wrap"><table id="subs-table"><thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Expires</th><th>Provider</th></tr></thead><tbody></tbody></table></div></div></section>
+
+      <section id="t-telegram" class="hidden"><div class="card"><h3>Telegram Verification Review</h3><div class="table-wrap"><table id="tg-table"><thead><tr><th>Email</th><th>Handle</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div></div></section>
+
+      <section id="t-admins" class="hidden"><div class="card">
+        <h3>Admin Management <span class="muted" style="font-size:13px">(owner only)</span></h3>
+        <div id="admin-owner-only" class="hidden">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <input id="new-admin-email" class="input" style="max-width:300px" placeholder="user@email.com (must have signed up)" />
+            <button id="add-admin" class="btn">Approve as admin</button>
+          </div>
+        </div>
+        <div id="admins-note" class="notice demo hidden">Only the owner can create, enable, or remove admins.</div>
+        <div id="admin-msg"></div>
+        <div class="table-wrap"><table id="admins-table"><thead><tr><th>Email</th><th>Level</th><th>Active</th><th></th></tr></thead><tbody></tbody></table></div>
+      </div></section>
+
+      <section id="t-mode" class="hidden"><div class="card">
+        <h3>Real / Demo Mode</h3>
+        <p class="muted">Global trading mode. Demo is clearly separated from real. Switching is audited.</p>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span id="mode-now" class="badge demo">…</span>
+          <button id="set-demo" class="btn ghost">Set Demo</button>
+          <button id="set-real" class="btn danger">Set Real</button>
+        </div>
+      </div></section>
+
+      <section id="t-logs" class="hidden"><div class="card"><h3>Audit History</h3><div class="table-wrap"><table id="logs-table"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead><tbody></tbody></table></div></div></section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/pb-client.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/mini-charts.js"></script>
+  <script src="js/admin-analytics.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Sign in</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+</head>
+<body class="app-body">
+  <nav class="nav"><a class="brand" href="index.html">ApexBot</a><a class="btn ghost" href="index.html">Home</a></nav>
+
+  <main class="auth-shell">
+    <section class="auth-pitch">
+      <span class="status-chip"><i></i> Secure strategy workspace</span>
+      <h1>One account for analysis, automation, and disciplined execution.</h1>
+      <p class="muted">Move from live market context to tested bot logic inside a workspace built around transparent risk controls.</p>
+      <div class="auth-modules">
+        <div class="auth-module"><b>Live market engine</b><small>Deriv ticks, charts, volatility and structure.</small></div>
+        <div class="auth-module"><b>Bot strategy lab</b><small>Build, validate and backtest before execution.</small></div>
+        <div class="auth-module"><b>Copy controls</b><small>Allocation and loss limits remain visible.</small></div>
+        <div class="auth-module"><b>Backend security</b><small>Roles, subscriptions and secrets stay server-side.</small></div>
+      </div>
+    </section>
+    <section class="card auth-card">
+      <h2 id="title" style="margin-top:0">Create your account</h2>
+      <p class="muted" id="subtitle">Sign up with your name, email, and password. Telegram is optional.</p>
+
+      <div id="msg"></div>
+
+      <div id="name-wrap" style="margin-bottom:14px">
+        <label class="label">Full name</label>
+        <input id="name" type="text" class="input" placeholder="Your full name" autocomplete="name" />
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="label">Email</label>
+        <input id="email" type="email" class="input" placeholder="you@example.com" />
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="label">Password</label>
+        <input id="password" type="password" minlength="8" class="input" placeholder="At least 8 characters" />
+      </div>
+      <div id="tg-wrap" style="margin-bottom:14px">
+        <label class="label">Telegram username (optional)</label>
+        <input id="telegram" type="text" class="input" placeholder="@yourhandle" />
+        <p class="muted" style="font-size:12px;margin:6px 0 0">Telegram is optional. Recommended for alerts and community access.</p>
+      </div>
+
+      <button id="submit" class="btn" style="width:100%">Create account</button>
+      <button id="google" class="btn ghost" style="width:100%;justify-content:center;margin-top:10px" type="button">Continue with Google</button>
+
+      <p class="muted" style="text-align:center;margin-top:16px;font-size:13px">
+        <a id="toggle" href="#">Already have an account? Log in</a><br/>
+        <a id="forgot" href="#" class="hidden">Forgot password?</a>
+      </p>
+
+      <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px;text-align:center">
+        <p class="muted" style="font-size:12px;margin:0 0 8px">Real trading runs through your own Deriv account.</p>
+        <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center">New to Deriv? Create Account</a>
+      </div>
+      <div class="secure-row"><span>Encrypted sessions</span><span>Backend permissions</span><span>Risk aware</span></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/pb-client.js"></script>
+  <script src="js/deriv-onboard.js"></script>
+  <script>
+    let mode = new URLSearchParams(location.search).get('mode') === 'login' ? 'login' : 'signup';
+    const $ = (id) => document.getElementById(id);
+    function msg(text, kind='err'){ $('msg').innerHTML = `<div class="notice ${kind}">${text}</div>`; }
+    function loginError(){
+      $('msg').innerHTML = '<div class="notice err">An account with this email already exists. Please log in instead.<div style="margin-top:10px"><button id="login-from-error" class="btn ghost" type="button">Log in</button></div></div>';
+      $('login-from-error').onclick = () => { mode='login'; render(); $('msg').innerHTML=''; };
+    }
+    function isDuplicateEmailError(err){
+      const data = err?.data || err?.body?.data || err?.response?.data || {};
+      const email = data.email || {};
+      const text = [err?.message, email.message, email.code, JSON.stringify(data)].filter(Boolean).join(' ').toLowerCase();
+      return text.includes('unique') || text.includes('validation_not_unique') || text.includes('already exists');
+    }
+    function safeError(err){
+      if (isDuplicateEmailError(err)) return loginError();
+      const text = err?.message || err?.body?.error || 'Something went wrong. Please try again.';
+      msg(text === 'Failed to create record.' ? 'Could not create account. Please check the form and try again.' : text);
+    }
+    function render(){
+      if (mode==='login'){
+        $('title').textContent='Welcome back'; $('subtitle').textContent='Log in to your account.';
+        $('name-wrap').classList.add('hidden'); $('tg-wrap').classList.add('hidden'); $('submit').textContent='Log in';
+        $('toggle').textContent="Need an account? Sign up"; $('forgot').classList.remove('hidden');
+      } else {
+        $('title').textContent='Create your account'; $('subtitle').textContent='Sign up with your name, email, and password. Telegram is optional.';
+        $('name-wrap').classList.remove('hidden'); $('tg-wrap').classList.remove('hidden'); $('submit').textContent='Create account';
+        $('toggle').textContent='Already have an account? Log in'; $('forgot').classList.add('hidden');
+      }
+    }
+    $('toggle').onclick=(e)=>{e.preventDefault(); mode=mode==='login'?'signup':'login'; $('msg').innerHTML=''; render();};
+    $('forgot').onclick=async(e)=>{e.preventDefault(); const email=$('email').value.trim(); if(!email) return msg('Enter your email first.');
+      try { await Auth.requestReset(email); msg('If that email exists, a reset link was sent.','ok'); }
+      catch (err) { msg(err?.message || 'Could not request password reset.'); }};
+
+    $('google').onclick = async () => {
+      $('google').disabled = true;
+      try {
+        const sync = await Auth.googleLogin();
+        if (sync.needsEmailVerification) location.href = 'verify.html';
+        else location.href = 'dashboard.html';
+      } catch (err) {
+        msg(err?.message || 'Google sign-in failed. Please try again.');
+      } finally {
+        $('google').disabled = false;
+      }
+    };
+
+    // Surface the "Create Deriv Account" affiliate button (link from safe config).
+    DerivOnboard.wireAffiliate();
+
+    $('submit').onclick = async () => {
+      const name=$('name').value.trim(), email=$('email').value.trim(), password=$('password').value, telegram=$('telegram').value.trim();
+      if(!email||!password) return msg('Email and password are required.');
+      $('submit').disabled=true;
+      try {
+        if (mode==='signup'){
+          if(!name) { $('submit').disabled=false; return msg('Full name is required.'); }
+          await Auth.signup({ name, email, password, telegram });
+          location.href = 'verify.html?email='+encodeURIComponent(email);
+        } else {
+          await Auth.login(email, password);
+          const me = await api('/me').catch(()=>null);
+          if (me && !me.verified) location.href = 'verify.html?email='+encodeURIComponent(email);
+          else location.href = 'dashboard.html';
+        }
+      } catch (err) {
+        safeError(err);
+      } finally { $('submit').disabled=false; }
+    };
+    render();
+  </script>
+</body>
+</html>

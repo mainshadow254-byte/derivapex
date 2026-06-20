@@ -1,0 +1,1198 @@
+[
+  {
+    "id": "apxadmins000001",
+    "name": "admins",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "email",
+        "type": "email",
+        "required": true
+      },
+      {
+        "name": "level",
+        "type": "select",
+        "values": [
+          "admin"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "active",
+        "type": "bool"
+      },
+      {
+        "name": "approved_by",
+        "type": "text",
+        "max": 64
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_admins_user` ON `admins` (`user`)",
+      "CREATE UNIQUE INDEX `idx_admins_email` ON `admins` (`email`)",
+      "CREATE INDEX `idx_admins_active` ON `admins` (`active`)"
+    ]
+  },
+  {
+    "id": "apxsubs00000001",
+    "name": "subscriptions",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "plan",
+        "type": "select",
+        "values": [
+          "free",
+          "starter",
+          "standard",
+          "premium",
+          "elite"
+        ],
+        "maxSelect": 1,
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "values": [
+          "active",
+          "expired",
+          "replaced",
+          "canceled"
+        ],
+        "maxSelect": 1,
+        "required": true
+      },
+      {
+        "name": "expires_at",
+        "type": "date"
+      },
+      {
+        "name": "current_period_end",
+        "type": "date"
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "max": 80
+      },
+      {
+        "name": "payment_ref",
+        "type": "text",
+        "max": 255
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_subscriptions_user` ON `subscriptions` (`user`)",
+      "CREATE INDEX `idx_subscriptions_status_expiry` ON `subscriptions` (`status`, `expires_at`)",
+      "CREATE UNIQUE INDEX `idx_subscriptions_one_active` ON `subscriptions` (`user`) WHERE `status` = 'active'"
+    ]
+  },
+  {
+    "id": "apxpayments00001",
+    "name": "payments",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "amount",
+        "type": "number",
+        "min": 0
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "max": 12
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "values": [
+          "pending",
+          "succeeded",
+          "failed",
+          "refunded"
+        ],
+        "maxSelect": 1,
+        "required": true
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "max": 80
+      },
+      {
+        "name": "payment_ref",
+        "type": "text",
+        "max": 255
+      },
+      {
+        "name": "event_type",
+        "type": "text",
+        "max": 120
+      },
+      {
+        "name": "paid_at",
+        "type": "date"
+      },
+      {
+        "name": "meta",
+        "type": "text",
+        "max": 20000
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_payments_user` ON `payments` (`user`)",
+      "CREATE INDEX `idx_payments_status` ON `payments` (`status`)",
+      "CREATE UNIQUE INDEX `idx_payments_provider_ref` ON `payments` (`provider`, `payment_ref`) WHERE `payment_ref` != ''"
+    ]
+  },
+  {
+    "id": "apxbots00000001",
+    "name": "bots",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "max": 160
+      },
+      {
+        "name": "format",
+        "type": "select",
+        "values": [
+          "xml",
+          "json",
+          "unknown"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "symbol",
+        "type": "text",
+        "max": 80
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "max": 1000000,
+        "hidden": true
+      },
+      {
+        "name": "validated",
+        "type": "bool"
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "values": [
+          "inactive",
+          "running",
+          "stopped"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_bots_user_status` ON `bots` (`user`, `status`)"
+    ]
+  },
+  {
+    "id": "apxaudit0000001",
+    "name": "audit_logs",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "actor",
+        "type": "text",
+        "max": 64
+      },
+      {
+        "name": "actor_email",
+        "type": "text",
+        "max": 255
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "max": 160
+      },
+      {
+        "name": "target",
+        "type": "text",
+        "max": 255
+      },
+      {
+        "name": "meta",
+        "type": "text",
+        "max": 20000
+      },
+      {
+        "name": "ip",
+        "type": "text",
+        "max": 128
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_audit_actor` ON `audit_logs` (`actor`)",
+      "CREATE INDEX `idx_audit_action` ON `audit_logs` (`action`)"
+    ]
+  },
+  {
+    "id": "apxplans0000001",
+    "name": "plans",
+    "type": "base",
+    "system": false,
+    "listRule": "",
+    "viewRule": "",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "plan",
+        "type": "text",
+        "required": true,
+        "max": 40
+      },
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "max": 80
+      },
+      {
+        "name": "price",
+        "type": "number",
+        "required": true,
+        "min": 0
+      },
+      {
+        "name": "features",
+        "type": "text",
+        "max": 5000
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_plans_plan` ON `plans` (`plan`)"
+    ]
+  },
+  {
+    "id": "apxsettings0001",
+    "name": "system_settings",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "key",
+        "type": "text",
+        "required": true,
+        "max": 120
+      },
+      {
+        "name": "value",
+        "type": "text",
+        "max": 20000
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_system_settings_key` ON `system_settings` (`key`)"
+    ]
+  },
+  {
+    "id": "apxstrategy0001",
+    "name": "strategies",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "owner",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "max": 160
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "max": 10000
+      },
+      {
+        "name": "category",
+        "type": "select",
+        "values": [
+          "forex",
+          "synthetic",
+          "crypto",
+          "mixed"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "symbol",
+        "type": "text",
+        "max": 80
+      },
+      {
+        "name": "risk_score",
+        "type": "number",
+        "min": 0,
+        "max": 100
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "values": [
+          "draft",
+          "published",
+          "paused"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "provider_name",
+        "type": "text",
+        "max": 160
+      },
+      {
+        "name": "published_at",
+        "type": "date"
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_strategies_status_category` ON `strategies` (`status`, `category`)",
+      "CREATE INDEX `idx_strategies_owner` ON `strategies` (`owner`)"
+    ]
+  },
+  {
+    "id": "apxtrades000001",
+    "name": "trades",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "symbol",
+        "type": "text",
+        "required": true,
+        "max": 80
+      },
+      {
+        "name": "mode",
+        "type": "select",
+        "values": [
+          "demo",
+          "real"
+        ],
+        "maxSelect": 1,
+        "required": true
+      },
+      {
+        "name": "source",
+        "type": "select",
+        "values": [
+          "manual",
+          "bot",
+          "copy",
+          "scanner"
+        ],
+        "maxSelect": 1,
+        "required": true
+      },
+      {
+        "name": "contract_type",
+        "type": "text",
+        "max": 80
+      },
+      {
+        "name": "stake",
+        "type": "number"
+      },
+      {
+        "name": "entry_price",
+        "type": "number"
+      },
+      {
+        "name": "exit_price",
+        "type": "number"
+      },
+      {
+        "name": "profit",
+        "type": "number"
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "values": [
+          "open",
+          "won",
+          "lost",
+          "closed",
+          "cancelled"
+        ],
+        "maxSelect": 1,
+        "required": true
+      },
+      {
+        "name": "contract_id",
+        "type": "text",
+        "max": 120
+      },
+      {
+        "name": "bot",
+        "type": "relation",
+        "collectionId": "apxbots00000001",
+        "maxSelect": 1,
+        "cascadeDelete": false
+      },
+      {
+        "name": "strategy",
+        "type": "relation",
+        "collectionId": "apxstrategy0001",
+        "maxSelect": 1,
+        "cascadeDelete": false
+      },
+      {
+        "name": "opened_at",
+        "type": "date"
+      },
+      {
+        "name": "closed_at",
+        "type": "date"
+      },
+      {
+        "name": "meta",
+        "type": "text",
+        "max": 20000
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_trades_user_opened` ON `trades` (`user`, `opened_at`)",
+      "CREATE INDEX `idx_trades_user_status` ON `trades` (`user`, `status`)",
+      "CREATE INDEX `idx_trades_strategy_opened` ON `trades` (`strategy`, `opened_at`)",
+      "CREATE INDEX `idx_trades_bot_opened` ON `trades` (`bot`, `opened_at`)",
+      "CREATE UNIQUE INDEX `idx_trades_contract_id` ON `trades` (`contract_id`) WHERE `contract_id` != ''"
+    ]
+  },
+  {
+    "id": "apxcopyfollow01",
+    "name": "copy_follows",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "follower",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "strategy",
+        "type": "relation",
+        "collectionId": "apxstrategy0001",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "values": [
+          "active",
+          "paused",
+          "stopped"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "capital_allocation",
+        "type": "number",
+        "min": 0
+      },
+      {
+        "name": "risk_max_daily_loss",
+        "type": "number",
+        "min": 0
+      },
+      {
+        "name": "risk_max_per_trade",
+        "type": "number",
+        "min": 0
+      },
+      {
+        "name": "started_at",
+        "type": "date"
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_copy_follower_strategy` ON `copy_follows` (`follower`, `strategy`)",
+      "CREATE INDEX `idx_copy_strategy_status` ON `copy_follows` (`strategy`, `status`)"
+    ]
+  },
+  {
+    "id": "apxmarketlist01",
+    "name": "marketplace_listings",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "bot",
+        "type": "relation",
+        "collectionId": "apxbots00000001",
+        "maxSelect": 1,
+        "cascadeDelete": false
+      },
+      {
+        "name": "seller",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "max": 180
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "max": 10000
+      },
+      {
+        "name": "category",
+        "type": "select",
+        "values": [
+          "trading",
+          "signal",
+          "ai",
+          "automation"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "price",
+        "type": "number",
+        "min": 0
+      },
+      {
+        "name": "published",
+        "type": "bool"
+      },
+      {
+        "name": "downloads",
+        "type": "number",
+        "min": 0
+      },
+      {
+        "name": "risk_rating",
+        "type": "select",
+        "values": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "published_at",
+        "type": "date"
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_market_published_category` ON `marketplace_listings` (`published`, `category`)",
+      "CREATE INDEX `idx_market_seller` ON `marketplace_listings` (`seller`)"
+    ]
+  },
+  {
+    "id": "apxbotreviews01",
+    "name": "bot_reviews",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "listing",
+        "type": "relation",
+        "collectionId": "apxmarketlist01",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "rating",
+        "type": "number",
+        "min": 1,
+        "max": 5
+      },
+      {
+        "name": "review",
+        "type": "text",
+        "max": 5000
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_reviews_listing_user` ON `bot_reviews` (`listing`, `user`)"
+    ]
+  },
+  {
+    "id": "apxbotinstall01",
+    "name": "bot_installs",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "listing",
+        "type": "relation",
+        "collectionId": "apxmarketlist01",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "purchased",
+        "type": "bool"
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_installs_listing_user` ON `bot_installs` (`listing`, `user`)",
+      "CREATE INDEX `idx_installs_user` ON `bot_installs` (`user`)"
+    ]
+  },
+  {
+    "id": "apxnotify000001",
+    "name": "notifications",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "type",
+        "type": "select",
+        "values": [
+          "market",
+          "scanner",
+          "volatility",
+          "trading",
+          "copy",
+          "bot",
+          "telegram",
+          "payment",
+          "subscription",
+          "security"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "max": 200
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "max": 10000
+      },
+      {
+        "name": "severity",
+        "type": "select",
+        "values": [
+          "info",
+          "success",
+          "warning",
+          "error"
+        ],
+        "maxSelect": 1
+      },
+      {
+        "name": "read",
+        "type": "bool"
+      },
+      {
+        "name": "meta",
+        "type": "text",
+        "max": 20000
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_notifications_user` ON `notifications` (`user`)",
+      "CREATE INDEX `idx_notifications_user_read` ON `notifications` (`user`, `read`)"
+    ]
+  },
+  {
+    "id": "apxnotifypref01",
+    "name": "notification_prefs",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "prefs",
+        "type": "text",
+        "max": 10000
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_notification_prefs_user` ON `notification_prefs` (`user`)"
+    ]
+  },
+  {
+    "id": "apxdevices00001",
+    "name": "devices",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "device_id",
+        "type": "text",
+        "required": true,
+        "max": 160
+      },
+      {
+        "name": "user_agent",
+        "type": "text",
+        "max": 1000
+      },
+      {
+        "name": "ip",
+        "type": "text",
+        "max": 128
+      },
+      {
+        "name": "label",
+        "type": "text",
+        "max": 200
+      },
+      {
+        "name": "revoked",
+        "type": "bool"
+      },
+      {
+        "name": "last_seen",
+        "type": "date"
+      },
+      {
+        "name": "location",
+        "type": "text",
+        "max": 255
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_devices_user_device` ON `devices` (`user`, `device_id`)",
+      "CREATE INDEX `idx_devices_user_last_seen` ON `devices` (`user`, `last_seen`)"
+    ]
+  },
+  {
+    "id": "apxwatchlist001",
+    "name": "watchlists",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true,
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "max": 120
+      },
+      {
+        "name": "symbols",
+        "type": "text",
+        "max": 20000
+      },
+      {
+        "name": "is_favorites",
+        "type": "bool"
+      },
+      {
+        "name": "created",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": false
+      },
+      {
+        "name": "updated",
+        "type": "autodate",
+        "onCreate": true,
+        "onUpdate": true
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_watchlists_user` ON `watchlists` (`user`)",
+      "CREATE UNIQUE INDEX `idx_watchlists_one_favorites` ON `watchlists` (`user`) WHERE `is_favorites` = TRUE"
+    ]
+  }
+]

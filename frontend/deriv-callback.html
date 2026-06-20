@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Connect Deriv</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+</head>
+<body>
+  <nav class="nav"><a class="brand" href="dashboard.html">ApexBot</a><a class="btn ghost" href="dashboard.html">Dashboard</a></nav>
+
+  <div class="container" style="max-width:480px;padding-top:40px">
+    <!-- Start: begin OAuth (no token in URL yet) -->
+    <div id="start" class="card hidden">
+      <h2 style="margin-top:0">Connect your Deriv account</h2>
+      <p class="muted">Authorize ApexBot to trade on your behalf using your own Deriv account. You'll be sent to Deriv to log in and approve; your token is stored encrypted and never shown again.</p>
+      <button id="go-oauth" class="btn" style="width:100%">Connect with Deriv</button>
+      <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account</a>
+      <p class="muted" style="font-size:12px;margin-top:10px">Real trading requires an active Premium plan. You stay in control — disconnect anytime.</p>
+    </div>
+
+    <!-- Working: exchanging token -->
+    <div id="working" class="card">
+      <h2 style="margin-top:0">Linking your Deriv account…</h2>
+      <p class="muted">Verifying your authorization with Deriv. This takes a few seconds.</p>
+      <div id="msg"></div>
+    </div>
+
+    <!-- Success -->
+    <div id="done" class="card hidden">
+      <h2 style="margin-top:0">✅ Deriv account connected</h2>
+      <div id="done-detail" class="muted"></div>
+      <a class="btn ok" href="dashboard.html" style="width:100%;justify-content:center;margin-top:12px">Back to dashboard</a>
+    </div>
+
+    <!-- Failure -->
+    <div id="fail" class="card hidden">
+      <h2 style="margin-top:0">⚠️ Could not connect</h2>
+      <p class="muted" id="fail-detail"></p>
+      <button id="retry" class="btn" style="width:100%">Try again</button>
+      <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account to Continue</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/pb-client.js"></script>
+  <script src="js/deriv-onboard.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function show(id){ ['start','working','done','fail'].forEach(s=>$(s).classList.toggle('hidden', s!==id)); }
+
+    // Deriv OAuth returns token(s) in the query string: token1, acct1, cur1, ...
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token1') || params.get('token');
+    const loginid = params.get('acct1') || '';
+    const currency = params.get('cur1') || '';
+
+    function startOAuth(){
+      loadPublicConfig().then((cfg)=>{
+        const appId = cfg.derivAppId || '1089';
+        const oauthUrl = cfg.derivOAuthUrl || `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(appId)}`;
+        // Send the user to Deriv to authorize. Redirect URI is configured in your
+        // Deriv app settings and should point back to this page.
+        location.href = oauthUrl;
+      });
+    }
+
+    // Surface "Create Deriv Account" affiliate buttons (link from safe config).
+    DerivOnboard.wireAffiliate();
+
+    (async function(){
+      // Must be logged in to attach a Deriv account to the user.
+      if (!Auth.isLoggedIn) { location.href = 'auth.html?mode=login'; return; }
+
+      if (!token) { show('start'); $('go-oauth').onclick = startOAuth; return; }
+
+      show('working');
+      history.replaceState({}, '', 'deriv-callback.html?connecting=1');
+      try {
+        const r = await api('/deriv/connect', {
+          method: 'POST',
+          body: JSON.stringify({ token, loginid, currency }),
+        });
+        $('done-detail').innerHTML = `Account <strong>${r.loginid || ''}</strong> (${r.currency || ''}) linked. ` +
+          (r.balance != null ? `Current balance: <strong>${r.balance} ${r.currency || ''}</strong>.` : '');
+        show('done');
+        // Clean the token out of the URL so it isn't left in history.
+        history.replaceState({}, '', 'deriv-callback.html');
+      } catch (e) {
+        history.replaceState({}, '', 'deriv-callback.html');
+        $('fail-detail').textContent = e?.body?.detail || e?.message || 'Authorization failed. Please try again. If this keeps happening, confirm your Deriv app redirect URL points to this page.';
+        show('fail');
+        $('retry').onclick = startOAuth;
+      }
+    })();
+  </script>
+</body>
+</html>

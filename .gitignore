@@ -1,0 +1,16 @@
+*.local
+.env
+backend/.env
+frontend/.env
+**/node_modules/
+**/pb_data/
+*.log
+**/*.log
+tmp/
+temp/
+test-output/
+coverage/
+build/
+dist/
+.cache/
+*.zip

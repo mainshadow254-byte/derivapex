@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Demo Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+</head>
+<body class="app-body">
+  <nav class="nav">
+    <a class="brand" href="index.html">ApexBot</a>
+    <div id="demo-nav"></div>
+  </nav>
+
+  <div class="container">
+    <div class="card page-hero" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <span class="platform-kicker">Workspace online</span>
+        <h2 style="margin:0">Demo Dashboard <span class="demo-tag">DEMO</span></h2>
+        <p class="muted" style="margin:4px 0 0;font-size:13px">A full preview with no login. Balances & positions are simulated; market data & AI are live.</p>
+      </div>
+      <a class="btn ok" href="auth.html">Create free account</a>
+    </div>
+
+    <!-- Connect / upgrade section -->
+    <div id="deriv-onboard"></div>
+
+    <!-- Account summary (simulated) -->
+    <div class="card section-card">
+      <h3 style="margin-top:0">Account summary <span class="demo-tag">SIMULATED</span></h3>
+      <div id="acct" class="grid cols-4"><p class="muted">Loading…</p></div>
+      <div id="acct-note" class="muted" style="font-size:12px;margin-top:8px"></div>
+    </div>
+
+    <div class="grid cols-2">
+      <!-- Live chart -->
+      <div class="card section-card">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          <h3 style="margin:0">Live chart</h3>
+          <select id="symbol-select" class="input" style="max-width:200px"></select>
+        </div>
+        <div class="demo-chart-box"><canvas id="chart"></canvas></div>
+        <p class="muted" style="font-size:12px;margin-top:8px">Live ticks via Deriv's public feed.</p>
+      </div>
+
+      <!-- Open positions (simulated) -->
+      <div class="card section-card">
+        <h3 style="margin-top:0">Open positions <span class="demo-tag">SIMULATED</span></h3>
+        <div id="positions" class="table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- AI scanner top picks -->
+    <div class="card section-card">
+      <h3 style="margin-top:0">AI Scanner — top picks <span class="demo-tag">DEMO</span></h3>
+      <div id="scan" class="grid cols-2"><p class="muted">Scanning…</p></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/demo.js"></script>
+  <script src="js/deriv-onboard.js"></script>
+  <script>
+    DEMO.mountChrome('demo-dashboard.html');
+    DerivOnboard.mount(document.getElementById('deriv-onboard'), {
+      title: 'Connect Your Deriv Account',
+      body: 'To use real trading features, connect your Deriv account. If you don\u2019t have one, create one first using the button below, then sign up / log in and connect.',
+    });
+    const el = (id)=>document.getElementById(id);
+    const money = (n,c='USD')=> (n<0?'-':'') + (c==='USD'?'$':'') + Math.abs(+n).toFixed(2);
+
+    async function loadAccount(){
+      try {
+        const a = await DEMO.get('/account');
+        el('acct').innerHTML = [
+          ['Balance', money(a.balance,a.currency)],
+          ['Equity', money(a.equity,a.currency)],
+          ['Margin used', money(a.marginUsed,a.currency)],
+          ['Free margin', money(a.freeMargin,a.currency)],
+        ].map(([k,v])=>`<div class="card metric-tile"><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.08em">${k}</div><div class="metric-value">${v}</div></div>`).join('');
+        el('acct-note').textContent = a.note || '';
+        el('positions').innerHTML = `<table><thead><tr><th>Symbol</th><th>Type</th><th>Stake</th><th>Payout</th></tr></thead><tbody>
+          ${(a.positions||[]).map(p=>`<tr><td>${p.symbol}</td><td>${p.contract_type}</td><td>${money(p.buy_price)}</td><td>${money(p.payout)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No open positions.</td></tr>'}
+        </tbody></table>`;
+      } catch (e) { el('acct').innerHTML = `<div class="notice err">${e.message}</div>`; }
+    }
+
+    async function loadChart(){
+      const cfg = await loadPublicConfig();
+      try {
+        const { tracked } = await DEMO.get('/markets');
+        const list = (tracked && tracked.length) ? tracked : ['R_100'];
+        const sel = el('symbol-select');
+        sel.innerHTML = list.slice(0,40).map(s=>`<option>${s}</option>`).join('');
+        const chart = new LiveChart(el('chart'), list[0], cfg.derivAppId);
+        chart.connect();
+        sel.onchange = ()=> chart.setSymbol(sel.value);
+      } catch (e) { el('symbol-select').innerHTML = '<option>R_100</option>'; }
+    }
+
+    function riskBadge(level){ return level==='high'?'<span class="badge warn">HIGH</span>':level==='medium'?'<span class="badge demo">MED</span>':'<span class="badge real">LOW</span>'; }
+    async function loadScan(){
+      try {
+        const r = await DEMO.get('/scan');
+        const list = (r.markets||[]).slice(0,4);
+        if (!list.length){ el('scan').innerHTML = '<p class="muted">Markets warming up — live signals appear after ~1–2 minutes of ticks.</p>'; return; }
+        el('scan').innerHTML = list.map(m=>`<div class="card scanner-card">
+          <div style="display:flex;justify-content:space-between;align-items:center"><strong>${m.symbol}</strong> ${riskBadge(m.riskLevel)}</div>
+          <div class="muted" style="font-size:13px;margin:6px 0">Direction: <b>${m.direction}</b> · Confidence: <b>${m.confidence ?? '—'}%</b></div>
+          ${m.reason?`<div style="font-size:12px">${m.reason}</div>`:''}
+        </div>`).join('');
+      } catch (e) { el('scan').innerHTML = `<div class="notice err">${e.message}</div>`; }
+    }
+
+    loadAccount(); loadChart(); loadScan();
+    setInterval(loadScan, 20000);
+  </script>
+</body>
+</html>

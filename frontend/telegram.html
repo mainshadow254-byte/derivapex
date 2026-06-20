@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot - Telegram setup</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-3" />
+</head>
+<body class="app-body">
+  <nav class="nav"><a class="brand" href="index.html">ApexBot</a><a class="btn ghost" href="auth.html?mode=login">Log in</a></nav>
+
+  <main class="container" style="max-width:520px;padding-top:40px">
+    <section class="card">
+      <h2 style="margin-top:0">Telegram is optional</h2>
+      <p class="muted">Link Telegram if you want bot alerts, community access, and account notifications. You can finish this later in Account Settings.</p>
+      <div id="msg"></div>
+      <div style="margin-bottom:14px">
+        <label class="label">Telegram username (optional)</label>
+        <input id="telegram" class="input" placeholder="@yourhandle" />
+      </div>
+      <button id="start" class="btn" style="width:100%">Finish Telegram verification</button>
+      <button id="save" class="btn ghost" style="width:100%;margin-top:10px">Save handle for later</button>
+      <button id="skip" class="btn ok" style="width:100%;margin-top:10px">Go to dashboard</button>
+      <a id="community" class="btn ghost hidden" target="_blank" rel="noopener" style="width:100%;justify-content:center;margin-top:10px">Join Telegram community</a>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/pb-client.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function msg(text, kind = 'err') { $('msg').innerHTML = `<div class="notice ${kind}">${text}</div>`; }
+
+    (async () => {
+      if (!Auth.isLoggedIn) {
+        location.href = 'auth.html?mode=login';
+        return;
+      }
+      try {
+        const me = await api('/me');
+        if (me.telegram_username) $('telegram').value = me.telegram_username.startsWith('@') ? me.telegram_username : '@' + me.telegram_username;
+        const cfg = await loadPublicConfig();
+        if (cfg.telegram?.community) {
+          $('community').href = cfg.telegram.community;
+          $('community').classList.remove('hidden');
+        }
+      } catch (err) {
+        msg(err.message || 'Please log in again.');
+      }
+    })();
+
+    $('skip').onclick = () => { location.href = 'dashboard.html'; };
+
+    $('start').onclick = async () => {
+      $('start').disabled = true;
+      try {
+        const res = await api('/telegram/start-verification', {
+          method: 'POST',
+          body: JSON.stringify({ telegram: $('telegram').value.trim() }),
+        });
+        if (res.startUrl) {
+          window.open(res.startUrl, '_blank', 'noopener');
+          msg('Telegram opened. Verify in the bot, then return to ApexBot.', 'ok');
+        } else {
+          msg('Telegram bot link is not configured yet. You can still use the dashboard.', 'demo');
+        }
+      } catch (err) {
+        msg(err.message || 'Could not start Telegram verification.');
+      } finally {
+        $('start').disabled = false;
+      }
+    };
+
+    $('save').onclick = async () => {
+      const telegram = $('telegram').value.trim();
+      if (!telegram) return msg('Telegram is optional. Enter a handle or choose Go to dashboard.', 'demo');
+      $('save').disabled = true;
+      try {
+        await api('/auth/complete-telegram', { method: 'POST', body: JSON.stringify({ telegram }) });
+        await pb.collection('users').authRefresh().catch(() => {});
+        const me = await api('/me');
+        location.href = me.verified ? 'dashboard.html' : 'verify.html';
+      } catch (err) {
+        msg(err.message || 'Could not save Telegram username.');
+      } finally {
+        $('save').disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

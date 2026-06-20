@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Demo Markets</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+</head>
+<body class="app-body">
+  <nav class="nav">
+    <a class="brand" href="index.html">ApexBot</a>
+    <div id="demo-nav"></div>
+  </nav>
+
+  <div class="container">
+    <div class="card page-hero" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <span class="platform-kicker">Live instruments</span><h2 style="margin:0">Markets <span class="demo-tag">DEMO</span></h2>
+        <p class="muted" style="margin:4px 0 0;font-size:13px">Live Deriv market list — Volatility, Boom, Crash, Step, Jump, Range Break, Forex, Crypto. No login required.</p>
+      </div>
+      <input id="search" class="input" placeholder="Search markets…" style="max-width:240px" />
+    </div>
+    <div id="groups"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/demo.js"></script>
+  <script>
+    DEMO.mountChrome('demo-markets.html');
+    const $ = (id) => document.getElementById(id);
+    let GROUPS = {};
+
+    function render(filter='') {
+      const f = filter.toLowerCase().trim();
+      const wrap = $('groups');
+      const entries = Object.entries(GROUPS);
+      if (!entries.length) { wrap.innerHTML = '<div class="card muted">Loading live markets…</div>'; return; }
+      let html = '';
+      for (const [market, arr] of entries) {
+        const rows = arr.filter(s => !f || (s.name||'').toLowerCase().includes(f) || (s.symbol||'').toLowerCase().includes(f) || (s.submarket||'').toLowerCase().includes(f));
+        if (!rows.length) continue;
+        html += `<div class="card section-card">
+          <h3 style="margin:0 0 8px">${market} <span class="muted" style="font-size:13px">(${rows.length})</span></h3>
+          <div class="table-wrap"><table><thead><tr><th>Name</th><th>Symbol</th><th>Submarket</th><th>Status</th></tr></thead><tbody>
+          ${rows.map(s => `<tr><td>${s.name}</td><td><code>${s.symbol}</code></td><td class="muted">${s.submarket||'—'}</td><td>${s.exchange_open?'<span class="badge real">open</span>':'<span class="badge demo">closed</span>'}</td></tr>`).join('')}
+          </tbody></table></div></div>`;
+      }
+      wrap.innerHTML = html || '<div class="card muted">No markets match your search.</div>';
+    }
+
+    $('search').oninput = (e) => render(e.target.value);
+
+    (async function(){
+      try {
+        const { groups } = await DEMO.get('/symbols');
+        GROUPS = groups || {};
+        render();
+      } catch (e) {
+        $('groups').innerHTML = `<div class="notice err">Could not load markets: ${e.message}</div>`;
+      }
+    })();
+  </script>
+</body>
+</html>

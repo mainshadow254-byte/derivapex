@@ -1,0 +1,17 @@
+.env
+*.env
+*.local
+backend/.env
+frontend/.env
+**/node_modules/**
+**/pb_data/**
+*.log
+**/*.log
+backend/apexbot-backend*.log
+backend/apexbot-backend*.err.log
+tmp/**
+temp/**
+test-output/**
+coverage/**
+.DS_Store
+Thumbs.db

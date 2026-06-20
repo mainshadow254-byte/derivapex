@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Reset password</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+</head>
+<body>
+  <nav class="nav"><a class="brand" href="index.html">ApexBot</a><a class="btn ghost" href="auth.html?mode=login">Log in</a></nav>
+
+  <div class="container" style="max-width:440px;padding-top:40px">
+    <!-- Step A: set a new password (when a reset token is present) -->
+    <div id="step-set" class="card hidden">
+      <h2 style="margin-top:0">Set a new password</h2>
+      <p class="muted">Enter a new password for your account.</p>
+      <div id="msg"></div>
+      <div style="margin-bottom:14px">
+        <label class="label">New password</label>
+        <input id="password" type="password" minlength="8" class="input" placeholder="At least 8 characters" />
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="label">Confirm new password</label>
+        <input id="password2" type="password" minlength="8" class="input" placeholder="Repeat new password" />
+      </div>
+      <button id="set-btn" class="btn" style="width:100%">Change password</button>
+    </div>
+
+    <!-- Step B: request a reset link (when no token) -->
+    <div id="step-request" class="card hidden">
+      <h2 style="margin-top:0">Reset your password</h2>
+      <p class="muted">Enter your email and we'll send a reset link.</p>
+      <div id="msg2"></div>
+      <div style="margin-bottom:14px">
+        <label class="label">Email</label>
+        <input id="email" type="email" class="input" placeholder="you@example.com" />
+      </div>
+      <button id="req-btn" class="btn" style="width:100%">Send reset link</button>
+    </div>
+
+    <!-- Success state -->
+    <div id="step-done" class="card hidden">
+      <h2 style="margin-top:0">✅ Password updated</h2>
+      <p class="muted">Your password has been changed. You can now log in with your new password.</p>
+      <a class="btn ok" href="auth.html?mode=login" style="width:100%;justify-content:center">Go to login</a>
+    </div>
+
+    <!-- Failure state -->
+    <div id="step-fail" class="card hidden">
+      <h2 style="margin-top:0">⚠️ Link invalid or expired</h2>
+      <p class="muted" id="fail-detail">This reset link is no longer valid. Request a new one below.</p>
+      <a class="btn" href="reset.html" style="width:100%;justify-content:center">Request a new link</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/pb-client.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    // PocketBase password-reset emails include a token; we accept several common keys.
+    const token = params.get('token') || params.get('reset_token') || '';
+    const emailQ = params.get('email') || '';
+    function show(id){ ['step-set','step-request','step-done','step-fail'].forEach(s=>$(s).classList.toggle('hidden', s!==id)); }
+    function msg(box, t, k='err'){ $(box).innerHTML = `<div class="notice ${k}">${t}</div>`; }
+
+    if (token) {
+      show('step-set');
+    } else {
+      show('step-request');
+      if (emailQ) $('email').value = emailQ;
+    }
+
+    // Set new password with the reset token (PocketBase auth action — allowed client-side).
+    $('set-btn').onclick = async () => {
+      const p1 = $('password').value, p2 = $('password2').value;
+      if (!p1 || p1.length < 8) return msg('msg', 'Password must be at least 8 characters.');
+      if (p1 !== p2) return msg('msg', 'Passwords do not match.');
+      $('set-btn').disabled = true;
+      try {
+        await pb.collection('users').confirmPasswordReset(token, p1, p2);
+        show('step-done');
+      } catch (e) {
+        $('fail-detail').textContent = e?.message || 'This reset link is no longer valid. Request a new one below.';
+        show('step-fail');
+      } finally { $('set-btn').disabled = false; }
+    };
+
+    // Request a reset link (uses the existing backend flow).
+    $('req-btn').onclick = async () => {
+      const email = $('email').value.trim();
+      if (!email) return msg('msg2', 'Enter your email first.');
+      $('req-btn').disabled = true;
+      try {
+        await Auth.requestReset(email);
+        msg('msg2', 'If that email exists, a reset link was sent. Check your inbox (and spam).', 'ok');
+      } catch (err) {
+        msg('msg2', err?.message || 'Could not request password reset.');
+      } finally { $('req-btn').disabled = false; }
+    };
+  </script>
+</body>
+</html>
