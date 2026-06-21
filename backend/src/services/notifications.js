@@ -3,11 +3,16 @@
 // Respects each user's per-type preferences. No synthetic alerts.
 import { getServicePB } from '../pocketbase.js';
 import { notifyAdminTelegram } from './adminAlerts.js';
+import { sendTelegramMessage } from './telegramBot.js';
 
 export const NOTIFICATION_TYPES = [
   'market', 'scanner', 'volatility', 'trading', 'copy',
   'bot', 'telegram', 'payment', 'subscription', 'security',
 ];
+
+export function shouldNotifyAdmin({ type, severity = 'info', meta = {} } = {}) {
+  return meta?.adminAlert === true || severity === 'critical' || type === 'payment';
+}
 
 function defaultPrefs() {
   return Object.fromEntries(NOTIFICATION_TYPES.map((t) => [t, true]));
@@ -49,9 +54,20 @@ export async function notify({ userId, type, title, body = '', severity = 'info'
       user: userId, type, title, body, severity, read: false,
       meta: JSON.stringify(meta || {}),
     });
-    if (type === 'security') {
+
+    // User-facing Telegram alerts go only to the linked, verified Telegram
+    // account for that user. Admin Telegram is reserved for operational events.
+    const user = await pb.collection('users').getOne(userId).catch(() => null);
+    if (user?.telegram_verified && user?.telegram_user_id) {
+      void sendTelegramMessage(
+        user.telegram_user_id,
+        `ApexBot ${type} alert\n${title}${body ? `\n\n${body}` : ''}`,
+      ).catch((error) => console.error('[notify] user Telegram delivery failed:', error?.message || error));
+    }
+
+    if (shouldNotifyAdmin({ type, severity, meta })) {
       void notifyAdminTelegram({
-        category: 'security', title, message: body,
+        category: type, title, message: body,
         meta: { ...meta, userId, severity },
       });
     }

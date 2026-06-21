@@ -50,6 +50,7 @@ app.get('/api/public-config', (_req, res) => {
   res.json({
     derivAppId: config.deriv.appId, // public app id for chart tick streams
     derivOAuthUrl: config.deriv.oauthUrl, // public OAuth authorize URL, no token
+    derivOAuthRedirect: config.deriv.oauthRedirect || `${config.publicAppUrl.replace(/\/$/, '')}/deriv-callback.html`,
     derivAffiliateLink: config.deriv.affiliateLink, // public-safe referral link
     telegram: {
       community: config.telegram.communityUrl,

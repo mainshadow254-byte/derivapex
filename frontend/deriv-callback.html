@@ -43,6 +43,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="apex-config.js"></script>
   <script src="js/config.js"></script>
   <script src="js/pb-client.js"></script>
   <script src="js/deriv-onboard.js"></script>
@@ -59,10 +60,12 @@
     function startOAuth(){
       loadPublicConfig().then((cfg)=>{
         const appId = cfg.derivAppId || '1089';
-        const oauthUrl = cfg.derivOAuthUrl || `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(appId)}`;
+        const oauthUrl = new URL(cfg.derivOAuthUrl || `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(appId)}`);
+        oauthUrl.searchParams.set('app_id', oauthUrl.searchParams.get('app_id') || appId);
+        oauthUrl.searchParams.set('redirect_uri', cfg.derivOAuthRedirect || window.APEX.DERIV_CALLBACK_URL || 'https://derivsignalhub.com/deriv-callback.html');
         // Send the user to Deriv to authorize. Redirect URI is configured in your
         // Deriv app settings and should point back to this page.
-        location.href = oauthUrl;
+        location.href = oauthUrl.toString();
       });
     }
 
@@ -89,7 +92,7 @@
         history.replaceState({}, '', 'deriv-callback.html');
       } catch (e) {
         history.replaceState({}, '', 'deriv-callback.html');
-        $('fail-detail').textContent = e?.body?.detail || e?.message || 'Authorization failed. Please try again. If this keeps happening, confirm your Deriv app redirect URL points to this page.';
+        $('fail-detail').textContent = e?.body?.detail || e?.message || 'Authorization failed. Please try again. If this keeps happening, set your Deriv app redirect URL to https://derivsignalhub.com/deriv-callback.html.';
         show('fail');
         $('retry').onclick = startOAuth;
       }

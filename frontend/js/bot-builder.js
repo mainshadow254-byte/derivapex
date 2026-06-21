@@ -7,10 +7,14 @@
   if (!me.verified) { location.href = 'verify.html'; return; }
   ContentProtection.init(`${me.email} - BUILDER`);
 
+  const defaults = {
+    sellRule: 'mirror', afterWin: 'continue', afterLoss: 'cooldown', cooldownTrades: 1,
+    dailyLossLimit: 25, maxTradesPerDay: 20, maxConsecutiveLosses: 3, demoOnly: true,
+  };
   const templates = [
-    { id:'trend', name:'Trend Rider', description:'Trades fresh fast/slow moving-average crossovers.', symbol:'R_100', strategy:'ma_cross', contract_type:'BOTH', stake:10, fastPeriod:10, slowPeriod:30, rsiPeriod:14, oversold:30, overbought:70, lookback:20 },
-    { id:'rsi', name:'RSI Reversal', description:'Looks for stretched momentum and mean-reversion entries.', symbol:'R_50', strategy:'rsi_reversal', contract_type:'BOTH', stake:10, fastPeriod:10, slowPeriod:30, rsiPeriod:14, oversold:28, overbought:72, lookback:20 },
-    { id:'breakout', name:'Breakout Scout', description:'Enters when price closes beyond a recent range.', symbol:'BOOM500', strategy:'breakout', contract_type:'BOTH', stake:10, fastPeriod:10, slowPeriod:30, rsiPeriod:14, oversold:30, overbought:70, lookback:20 },
+    { id:'trend', name:'Trend Rider', description:'Trades fresh fast/slow moving-average crossovers.', symbol:'R_100', strategy:'ma_cross', contract_type:'BOTH', stake:10, fastPeriod:10, slowPeriod:30, rsiPeriod:14, oversold:30, overbought:70, lookback:20, ...defaults },
+    { id:'rsi', name:'RSI Reversal', description:'Looks for stretched momentum and mean-reversion entries.', symbol:'R_50', strategy:'rsi_reversal', contract_type:'BOTH', stake:10, fastPeriod:10, slowPeriod:30, rsiPeriod:14, oversold:28, overbought:72, lookback:20, ...defaults, dailyLossLimit:20 },
+    { id:'breakout', name:'Breakout Scout', description:'Enters when price closes beyond a recent range.', symbol:'BOOM500', strategy:'breakout', contract_type:'BOTH', stake:10, fastPeriod:10, slowPeriod:30, rsiPeriod:14, oversold:30, overbought:70, lookback:20, ...defaults, maxTradesPerDay:12 },
   ];
   let current = { ...templates[0] };
 
@@ -35,6 +39,14 @@
     el('s-oversold').value = s.oversold;
     el('s-overbought').value = s.overbought;
     el('s-lookback').value = s.lookback;
+    el('s-sell-rule').value = s.sellRule || defaults.sellRule;
+    el('s-after-win').value = s.afterWin || defaults.afterWin;
+    el('s-after-loss').value = s.afterLoss || defaults.afterLoss;
+    el('s-cooldown').value = s.cooldownTrades ?? defaults.cooldownTrades;
+    el('s-daily-loss').value = s.dailyLossLimit ?? defaults.dailyLossLimit;
+    el('s-max-trades').value = s.maxTradesPerDay ?? defaults.maxTradesPerDay;
+    el('s-max-losses').value = s.maxConsecutiveLosses ?? defaults.maxConsecutiveLosses;
+    el('s-demo-only').value = String(s.demoOnly !== false);
     refresh();
   }
 
@@ -46,6 +58,14 @@
       slowPeriod: Number(el('s-slow').value), rsiPeriod: Number(el('s-rsi').value),
       oversold: Number(el('s-oversold').value), overbought: Number(el('s-overbought').value),
       lookback: Number(el('s-lookback').value),
+      sellRule: el('s-sell-rule').value,
+      afterWin: el('s-after-win').value,
+      afterLoss: el('s-after-loss').value,
+      cooldownTrades: Number(el('s-cooldown').value),
+      dailyLossLimit: Number(el('s-daily-loss').value),
+      maxTradesPerDay: Number(el('s-max-trades').value),
+      maxConsecutiveLosses: Number(el('s-max-losses').value),
+      demoOnly: el('s-demo-only').value !== 'false' || !me.deriv_connected,
     };
   }
 
@@ -59,10 +79,24 @@
       : current.strategy === 'rsi_reversal'
         ? `RSI ${current.rsiPeriod} exits ${current.oversold}-${current.overbought} zone`
         : `Close breaks the previous ${current.lookback}-candle range`;
+    el('buy-preview').textContent = current.strategy === 'breakout'
+      ? `Buy/Rise when close breaks above the previous ${current.lookback}-candle range.`
+      : current.strategy === 'rsi_reversal'
+        ? `Buy/Rise when RSI ${current.rsiPeriod} recovers from ${current.oversold}.`
+        : `Buy/Rise when fast MA ${current.fastPeriod} crosses above slow MA ${current.slowPeriod}.`;
+    el('sell-preview').textContent = current.sellRule === 'disabled'
+      ? 'Sell/Fall entries are disabled for this strategy.'
+      : current.strategy === 'breakout'
+        ? `Sell/Fall when close breaks below the previous ${current.lookback}-candle range.`
+        : current.strategy === 'rsi_reversal'
+          ? `Sell/Fall when RSI ${current.rsiPeriod} rejects near ${current.overbought}.`
+          : `Sell/Fall when fast MA ${current.fastPeriod} crosses below slow MA ${current.slowPeriod}.`;
     el('strategy-flow').innerHTML = [
       ['1','Market',current.symbol], ['2','Signal',rule], ['3','Direction',current.contract_type],
-      ['4','Risk',`Stake ${current.stake || 0}`], ['5','Exit','Next candle close'],
-    ].map(([n,k,v], i) => `<div class="flow-node"><span>${n}</span><div><small>${esc(k)}</small><strong>${esc(v)}</strong></div></div>${i < 4 ? '<div class="flow-arrow">&rarr;</div>' : ''}`).join('');
+      ['4','Restart',current.afterLoss === 'cooldown' ? `Cooldown ${current.cooldownTrades} after loss` : `After loss: ${current.afterLoss}`],
+      ['5','Risk',`Stake ${current.stake || 0} - daily stop ${current.dailyLossLimit || 0}`],
+      ['6','Mode',current.demoOnly ? 'Demo only' : 'Real allowed after Deriv connect'],
+    ].map(([n,k,v], i) => `<div class="flow-node"><span>${n}</span><div><small>${esc(k)}</small><strong>${esc(v)}</strong></div></div>${i < 5 ? '<div class="flow-arrow">&rarr;</div>' : ''}`).join('');
     el('builder-status').textContent = 'DRAFT';
     el('builder-status').className = 'badge info';
   }
@@ -72,6 +106,11 @@
     if (chosen) writeForm({ ...chosen });
   });
   document.querySelectorAll('.builder-form input,.builder-form select').forEach((input) => input.oninput = refresh);
+  document.querySelectorAll('.palette-item').forEach((button) => button.onclick = () => {
+    document.querySelectorAll('.palette-item').forEach((item) => item.classList.remove('active'));
+    button.classList.add('active');
+    document.querySelector(`[data-block="${button.dataset.focus}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
   el('tour-toggle').onclick = () => el('builder-tour').classList.toggle('hidden');
 
   el('run-backtest').onclick = async () => {
@@ -89,7 +128,7 @@
       el('builder-message').textContent = 'Backtest complete.';
     } catch (e) {
       el('builder-message').textContent = e.message + (e.status === 402 ? ' Upgrade to Standard to use bot tools.' : '');
-    } finally { button.disabled = false; button.textContent = 'Run backtest'; }
+    } finally { button.disabled = false; button.textContent = 'Run demo backtest'; }
   };
 
   el('save-bot').onclick = async () => {
@@ -100,6 +139,32 @@
       el('builder-message').textContent = `Saved ${result.bot.name} to your private bot library.`;
       el('builder-status').textContent = 'SAVED'; el('builder-status').className = 'badge real';
     } catch (e) { el('builder-message').textContent = e.message; }
+  };
+
+  el('export-bot').onclick = () => {
+    const strategy = readForm();
+    const blob = new Blob([JSON.stringify(strategy, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${strategy.name.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '') || 'strategy'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    el('builder-message').textContent = 'Strategy JSON exported.';
+  };
+
+  el('import-bot-json').onchange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const strategy = JSON.parse(await file.text());
+      writeForm({ ...templates[0], ...strategy });
+      el('builder-message').textContent = 'Strategy imported into the workspace.';
+    } catch {
+      el('builder-message').textContent = 'Could not import that JSON strategy.';
+    } finally {
+      event.target.value = '';
+    }
   };
 
   writeForm(current);

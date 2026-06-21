@@ -56,8 +56,10 @@ window.Auth = {
     const providers = methods?.oauth2?.providers || [];
     const google = providers.find((provider) => provider.name === 'google');
     if (!methods?.oauth2?.enabled || !google) {
-      const err = new Error('Google sign-in not configured yet. Enable Google OAuth in PocketBase settings first.');
+      const pbOrigin = String(window.APEX.POCKETBASE_URL || '').replace(/\/$/, '');
+      const err = new Error(`Google sign-in is not configured in PocketBase yet. Add Google OAuth credentials in PocketBase and set this Google redirect URI: ${pbOrigin}/api/oauth2-redirect`);
       err.code = 'GOOGLE_OAUTH_NOT_CONFIGURED';
+      err.redirectUri = `${pbOrigin}/api/oauth2-redirect`;
       throw err;
     }
     await pb.collection('users').authWithOAuth2({ provider: 'google' });

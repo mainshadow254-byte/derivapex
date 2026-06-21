@@ -259,7 +259,7 @@
       return `<div class="card" style="border-color:#f59e0b;margin:10px 0">
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong>AI Market Advisor</strong><span class="badge demo">AI SETUP REQUIRED</span></div>
         <div class="notice demo" style="margin-top:8px">${escapeHtml(advisor.summary || 'AI setup required.')}</div>
-        <div class="muted" style="font-size:12px;margin-top:8px">Add AI_PROVIDER, AI_API_KEY, and AI_MODEL on the backend/Railway environment. The deterministic scanner still runs, but no AI analysis is being generated.</div>
+        <div class="muted" style="font-size:12px;margin-top:8px">AI analysis has not been configured by the service administrator. The deterministic scanner remains available.</div>
       </div>`;
     }
     const source = advisor.source === 'openai' ? `OPENAI ${advisor.model || ''}` : 'SAFETY ENGINE';

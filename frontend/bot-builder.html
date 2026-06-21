@@ -27,13 +27,13 @@
       </div>
 
       <div id="builder-tour" class="card builder-tour hidden">
-        <strong>Three steps</strong>
+        <strong>Builder flow</strong>
         <ol>
-          <li>Pick a template or configure the blocks yourself.</li>
-          <li>Run a historical simulation and review drawdown and every trade.</li>
-          <li>Save the strategy to your private bot library.</li>
+          <li>Pick a quick strategy or drag your thinking through the block categories.</li>
+          <li>Set market, duration, stake, entry logic, restart logic, and risk controls.</li>
+          <li>Run a demo backtest before saving or exporting the strategy.</li>
         </ol>
-        <p class="muted-sm">Backtests use a fixed payout assumption and cannot predict future results.</p>
+        <p class="muted-sm">Demo run only unless your Deriv account is connected. Backtests cannot predict future results.</p>
       </div>
 
       <section>
@@ -41,32 +41,90 @@
         <div id="template-grid" class="grid cols-3"></div>
       </section>
 
-      <section class="card">
-        <div class="row between"><h2 style="margin:0">Strategy rules</h2><span id="builder-status" class="badge info">DRAFT</span></div>
-        <div class="builder-form">
-          <label>Name<input id="s-name" class="input" maxlength="120" /></label>
-          <label>Market<select id="s-symbol" class="input"><option value="R_100">Volatility 100</option></select></label>
-          <label>Strategy<select id="s-strategy" class="input"><option value="ma_cross">Moving-average crossover</option><option value="rsi_reversal">RSI reversal</option><option value="breakout">Price breakout</option></select></label>
-          <label>Direction<select id="s-contract" class="input"><option value="BOTH">Both directions</option><option value="CALL">CALL only</option><option value="PUT">PUT only</option></select></label>
-          <label>Stake<input id="s-stake" class="input" type="number" min="0.35" step="0.01" /></label>
-          <label>Timeframe<select id="s-gran" class="input"><option value="60">1 minute</option><option value="300">5 minutes</option><option value="900">15 minutes</option><option value="3600">1 hour</option></select></label>
-          <label data-param="ma">Fast MA<input id="s-fast" class="input" type="number" min="2" max="100" /></label>
-          <label data-param="ma">Slow MA<input id="s-slow" class="input" type="number" min="3" max="250" /></label>
-          <label data-param="rsi">RSI period<input id="s-rsi" class="input" type="number" min="2" max="100" /></label>
-          <label data-param="rsi">Oversold<input id="s-oversold" class="input" type="number" min="1" max="49" /></label>
-          <label data-param="rsi">Overbought<input id="s-overbought" class="input" type="number" min="51" max="99" /></label>
-          <label data-param="breakout">Breakout lookback<input id="s-lookback" class="input" type="number" min="2" max="250" /></label>
+      <section class="bot-workbench card">
+        <div class="row between">
+          <div>
+            <h2 style="margin:0">Block workspace</h2>
+            <p class="muted-sm" style="margin:4px 0 0">Original ApexBot strategy blocks inspired by professional bot-builder structure.</p>
+          </div>
+          <span id="builder-status" class="badge info">DRAFT</span>
+        </div>
+
+        <div class="builder-shell">
+          <aside class="block-palette">
+            <button class="palette-item active" data-focus="trade"><span>1</span> Trade parameters</button>
+            <button class="palette-item" data-focus="buy"><span>2</span> Buy conditions</button>
+            <button class="palette-item" data-focus="sell"><span>3</span> Sell conditions</button>
+            <button class="palette-item" data-focus="restart"><span>4</span> Restart conditions</button>
+            <button class="palette-item" data-focus="risk"><span>5</span> Risk controls</button>
+          </aside>
+
+          <section class="block-canvas" id="block-canvas">
+            <div class="block-card" data-block="trade">
+              <div class="block-head"><span>1. Trade parameters</span><small>Market, direction, stake, duration</small></div>
+              <div class="block-body builder-form">
+                <label>Name<input id="s-name" class="input" maxlength="120" /></label>
+                <label>Market<select id="s-symbol" class="input"><option value="R_100">Volatility 100</option></select></label>
+                <label>Strategy<select id="s-strategy" class="input"><option value="ma_cross">Moving-average crossover</option><option value="rsi_reversal">RSI reversal</option><option value="breakout">Price breakout</option></select></label>
+                <label>Direction<select id="s-contract" class="input"><option value="BOTH">Both directions</option><option value="CALL">Rise / CALL only</option><option value="PUT">Fall / PUT only</option></select></label>
+                <label>Stake<input id="s-stake" class="input" type="number" min="0.35" step="0.01" /></label>
+                <label>Timeframe<select id="s-gran" class="input"><option value="60">1 minute</option><option value="300">5 minutes</option><option value="900">15 minutes</option><option value="3600">1 hour</option></select></label>
+              </div>
+            </div>
+
+            <div class="block-card" data-block="buy">
+              <div class="block-head"><span>2. Buy conditions</span><small>Rules that allow a Rise/CALL entry</small></div>
+              <div class="block-body builder-form">
+                <label data-param="ma">Fast MA<input id="s-fast" class="input" type="number" min="2" max="100" /></label>
+                <label data-param="ma">Slow MA<input id="s-slow" class="input" type="number" min="3" max="250" /></label>
+                <label data-param="rsi">RSI period<input id="s-rsi" class="input" type="number" min="2" max="100" /></label>
+                <label data-param="rsi">Oversold<input id="s-oversold" class="input" type="number" min="1" max="49" /></label>
+                <label data-param="breakout">Breakout lookback<input id="s-lookback" class="input" type="number" min="2" max="250" /></label>
+                <div class="logic-chip" id="buy-preview">Buy when signal confirms upward pressure.</div>
+              </div>
+            </div>
+
+            <div class="block-card" data-block="sell">
+              <div class="block-head"><span>3. Sell conditions</span><small>Rules that allow a Fall/PUT entry</small></div>
+              <div class="block-body builder-form">
+                <label data-param="rsi">Overbought<input id="s-overbought" class="input" type="number" min="51" max="99" /></label>
+                <label>Sell rule<select id="s-sell-rule" class="input"><option value="mirror">Mirror buy logic</option><option value="confirmation">Require momentum confirmation</option><option value="disabled">Disable sell entries</option></select></label>
+                <div class="logic-chip" id="sell-preview">Sell when signal confirms downward pressure.</div>
+              </div>
+            </div>
+
+            <div class="block-card" data-block="restart">
+              <div class="block-head"><span>4. Restart trading conditions</span><small>What happens after a trade closes</small></div>
+              <div class="block-body builder-form">
+                <label>After win<select id="s-after-win" class="input"><option value="continue">Continue scanning</option><option value="pause">Pause bot</option></select></label>
+                <label>After loss<select id="s-after-loss" class="input"><option value="continue">Continue scanning</option><option value="cooldown">Cooldown first</option><option value="pause">Pause bot</option></select></label>
+                <label>Cooldown trades<input id="s-cooldown" class="input" type="number" min="0" max="20" /></label>
+              </div>
+            </div>
+
+            <div class="block-card" data-block="risk">
+              <div class="block-head"><span>5. Risk controls</span><small>Hard stops before real execution</small></div>
+              <div class="block-body builder-form">
+                <label>Daily loss limit<input id="s-daily-loss" class="input" type="number" min="0" step="0.01" /></label>
+                <label>Max trades/day<input id="s-max-trades" class="input" type="number" min="1" max="200" /></label>
+                <label>Max consecutive losses<input id="s-max-losses" class="input" type="number" min="1" max="20" /></label>
+                <label>Demo only<select id="s-demo-only" class="input"><option value="true">Yes - demo run only</option><option value="false">Allow real only after Deriv connected</option></select></label>
+              </div>
+            </div>
+          </section>
         </div>
       </section>
 
       <section class="card">
-        <h2 style="margin-top:0">Visual flow</h2>
+        <h2 style="margin-top:0">Execution preview</h2>
         <div id="strategy-flow" class="strategy-flow"></div>
       </section>
 
-      <div class="row">
-        <button id="run-backtest" class="btn">Run backtest</button>
+      <div class="builder-actions">
+        <button id="run-backtest" class="btn">Run demo backtest</button>
         <button id="save-bot" class="btn ok">Save to my bots</button>
+        <button id="export-bot" class="btn ghost" type="button">Export JSON</button>
+        <label class="btn ghost file-btn">Import JSON<input id="import-bot-json" type="file" accept="application/json,.json" hidden /></label>
         <span id="builder-message" class="muted-sm"></span>
       </div>
 
@@ -84,11 +142,13 @@
           <li>Demo test before real funds</li>
         </ul>
         <div class="notice demo">Historical performance is not a guarantee. Live payouts, latency, and market conditions differ.</div>
+        <div class="notice err" style="margin-top:10px">Safety rule: ApexBot builder runs demo/backtest first. Real trading requires your own connected Deriv account and active permissions.</div>
       </div>
     </aside>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
+  <script src="apex-config.js"></script>
   <script src="js/config.js"></script>
   <script src="js/pb-client.js"></script>
   <script src="js/security.js"></script>

@@ -16,9 +16,14 @@ window.DerivOnboard = (function () {
   async function oauthUrl() {
     try {
       const cfg = await loadPublicConfig();
-      return cfg?.derivOAuthUrl || `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(cfg?.derivAppId || '1089')}`;
+      const base = cfg?.derivOAuthUrl || `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(cfg?.derivAppId || '1089')}`;
+      const url = new URL(base, window.location.origin);
+      if (!url.searchParams.get('app_id')) url.searchParams.set('app_id', cfg?.derivAppId || '1089');
+      const redirect = cfg?.derivOAuthRedirect || window.APEX?.DERIV_CALLBACK_URL || `${window.location.origin}/deriv-callback.html`;
+      if (redirect && !url.searchParams.get('redirect_uri')) url.searchParams.set('redirect_uri', redirect);
+      return url.toString();
     } catch {
-      return 'https://oauth.deriv.com/oauth2/authorize?app_id=1089';
+      return `https://oauth.deriv.com/oauth2/authorize?app_id=1089&redirect_uri=${encodeURIComponent(window.APEX?.DERIV_CALLBACK_URL || `${window.location.origin}/deriv-callback.html`)}`;
     }
   }
 

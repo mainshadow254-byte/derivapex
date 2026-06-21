@@ -9,7 +9,8 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node --test",
-    "telegram:set-webhook": "node scripts/set-telegram-webhook.mjs"
+    "telegram:set-webhook": "node scripts/set-telegram-webhook.mjs",
+    "pb:brand-email": "node scripts/brand-pocketbase-email-templates.mjs"
   },
   "engines": {
     "node": ">=20"
