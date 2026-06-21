@@ -7,19 +7,20 @@ import { CHART_GRANULARITIES, ALLOWED_GRANULARITIES } from '../config.js';
 
 const router = Router();
 
-// Supported chart timeframes (data-driven; new ones appear with no UI changes).
-router.get('/timeframes', requireAuth, (_req, res) => res.json({ timeframes: CHART_GRANULARITIES }));
+// Public read-only metadata used by the builder before login.
+// No balances, account data, or trading actions are exposed here.
+router.get('/timeframes', (_req, res) => res.json({ timeframes: CHART_GRANULARITIES }));
 
 // Symbols grouped by market (synthetic/forex/crypto/...). Real Deriv data.
 // This dynamically returns EVERY market Deriv currently exposes (Volatility,
 // Boom, Crash, Step, Jump, Range Break, Forex, Crypto, ...), so future Deriv
 // markets appear automatically without any frontend change.
-router.get('/symbols', requireAuth, async (_req, res) => {
+router.get('/symbols', async (_req, res) => {
   try { res.json({ groups: await getSymbolsGrouped() }); }
   catch (e) { res.status(502).json({ error: 'Deriv symbols unavailable.', detail: e.message }); }
 });
 
-router.get('/contracts', requireAuth, async (req, res) => {
+router.get('/contracts', async (req, res) => {
   const { symbol } = req.query;
   if (!symbol) return res.status(400).json({ error: 'symbol required.' });
   try { res.json({ symbol, contracts: await getContractsFor(symbol) }); }
