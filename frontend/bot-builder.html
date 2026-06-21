@@ -192,26 +192,50 @@
       </section>
     </section>
 
+    <section id="bot-results-panel" class="bot-results-panel minimized" aria-label="Bot performance and journal">
+      <div class="bot-results-tabs">
+        <button class="bot-result-tab active" data-result-tab="summary" type="button">Summary</button>
+        <button class="bot-result-tab" data-result-tab="transactions" type="button">Transactions</button>
+        <button class="bot-result-tab" data-result-tab="journal" type="button">Journal</button>
+        <button id="minimize-results" class="bot-results-toggle" type="button" aria-label="Minimize results panel">-</button>
+      </div>
+      <div class="bot-results-body">
+        <div id="validation-warnings" class="bot-validation-strip"></div>
+
+        <section class="bot-result-view active" data-result-view="summary">
+          <p id="summary-ready-text" class="bot-empty-text">When you're ready to trade, hit <b>Run</b>. You'll be able to track your bot's performance here.</p>
+          <div class="bot-summary-grid">
+            <div><b>Total stake</b><span id="summary-stake">0.00 AUD</span></div>
+            <div><b>Total payout</b><span id="summary-payout">0.00 AUD</span></div>
+            <div><b>No. of runs</b><span id="summary-runs">0</span></div>
+            <div><b>Contracts lost</b><span id="summary-lost">0</span></div>
+            <div><b>Contracts won</b><span id="summary-won">0</span></div>
+            <div><b>Total profit/loss</b><span id="summary-profit">0.00 AUD</span></div>
+          </div>
+        </section>
+
+        <section class="bot-result-view" data-result-view="transactions">
+          <div id="transaction-list" class="bot-table-empty">No transactions yet. Demo transactions will appear after Run.</div>
+        </section>
+
+        <section class="bot-result-view" data-result-view="journal">
+          <div id="builder-log" class="bot-journal-log">
+            <div>Bot not running.</div>
+            <div>No demo execution logs yet.</div>
+          </div>
+        </section>
+
+        <section id="backtest-results" class="hidden"></section>
+      </div>
+    </section>
+
     <section class="dbot-run-panel">
       <button id="run-demo-bottom" class="btn run-wide" type="button">Run</button>
       <div class="dbot-status-box">
         <strong id="bot-run-state">Bot is not running</strong>
         <span>Last signal: <b id="last-signal">none</b></span>
       </div>
-      <button id="toggle-log" class="btn ghost" type="button">Logs</button>
-    </section>
-
-    <section id="builder-log-wrap" class="builder-terminal hidden">
-      <div class="terminal-head">
-        <strong>Validation and demo logs</strong>
-        <span id="risk-score">Risk: --</span>
-      </div>
-      <div id="validation-warnings" class="warning-list"></div>
-      <div id="builder-log" class="terminal-log">
-        <div>Bot not running.</div>
-        <div>No demo execution logs yet.</div>
-      </div>
-      <section id="backtest-results" class="hidden"></section>
+      <button id="toggle-log" class="btn ghost" type="button">Journal</button>
     </section>
   </main>
 

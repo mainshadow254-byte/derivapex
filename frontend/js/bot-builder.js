@@ -114,6 +114,8 @@
   let current = { ...defaults, stacks: structuredCloneSafe(defaults.stacks) };
   let flatSymbols = [];
   let availableContracts = [];
+  const botStats = { runs: 0, stake: 0, payout: 0, won: 0, lost: 0, profit: 0 };
+  const transactions = [];
 
   function structuredCloneSafe(value) {
     return JSON.parse(JSON.stringify(value));
@@ -140,6 +142,35 @@
     row.className = tone ? `log-${tone}` : '';
     row.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
     el('builder-log').prepend(row);
+  }
+
+  function setResultsPanel(open = true, tab = '') {
+    el('bot-results-panel').classList.toggle('minimized', !open);
+    if (tab) setResultTab(tab);
+  }
+
+  function setResultTab(tab) {
+    document.querySelectorAll('.bot-result-tab').forEach((button) => button.classList.toggle('active', button.dataset.resultTab === tab));
+    document.querySelectorAll('.bot-result-view').forEach((view) => view.classList.toggle('active', view.dataset.resultView === tab));
+  }
+
+  function renderTransactions() {
+    el('transaction-list').innerHTML = transactions.length ? `
+      <table class="bot-transactions-table">
+        <thead><tr><th>Time</th><th>Market</th><th>Contract</th><th>Stake</th><th>Status</th></tr></thead>
+        <tbody>${transactions.map((tx) => `<tr><td>${esc(tx.time)}</td><td>${esc(tx.symbol)}</td><td>${esc(tx.contract)}</td><td>${esc(tx.stake)}</td><td>${esc(tx.status)}</td></tr>`).join('')}</tbody>
+      </table>
+    ` : 'No transactions yet. Demo transactions will appear after Run.';
+  }
+
+  function renderSummary() {
+    el('summary-stake').textContent = `${fmt(botStats.stake)} AUD`;
+    el('summary-payout').textContent = `${fmt(botStats.payout)} AUD`;
+    el('summary-runs').textContent = botStats.runs;
+    el('summary-lost').textContent = botStats.lost;
+    el('summary-won').textContent = botStats.won;
+    el('summary-profit').textContent = `${fmt(botStats.profit)} AUD`;
+    el('summary-ready-text').classList.toggle('hidden', botStats.runs > 0);
   }
 
   function classifySymbol(s) {
@@ -417,9 +448,9 @@
       node.classList.toggle('hidden', node.dataset.param !== ({ ma_cross:'ma', rsi_reversal:'rsi', breakout:'breakout', digit_pattern:'digit' }[current.strategy]));
     });
     const risk = Math.min(100, Math.round((current.stake * 4) + current.maxTradesPerDay + current.maxConsecutiveLosses * 8 + (current.moneyMode === 'martingale' ? 18 : 0)));
-    el('risk-score').textContent = `Risk: ${risk}/100 | Exposure: AUD ${fmt(current.stake * current.maxTradesPerDay)}`;
     const list = warnings(current);
     el('validation-warnings').innerHTML = list.length ? list.map((w) => `<div>${esc(w)}</div>`).join('') : '<div class="ok-text">No validation errors.</div>';
+    el('validation-warnings').dataset.risk = `Risk: ${risk}/100 | Exposure: AUD ${fmt(current.stake * current.maxTradesPerDay)}`;
     autosave();
   }
 
@@ -452,12 +483,12 @@
     const strategy = readForm();
     const list = warnings(strategy);
     if (list.length) {
-      el('builder-log-wrap').classList.remove('hidden');
+      setResultsPanel(true, 'journal');
       log(`Run blocked: ${list.join(' ')}`, 'warn');
       return;
     }
     el('bot-run-state').textContent = 'Running demo';
-    el('builder-log-wrap').classList.remove('hidden');
+    setResultsPanel(true, 'journal');
     log('Starting demo run. No real trade will be placed.', 'ok');
     try {
       const result = await request('/trading/demo-trade', {
@@ -465,6 +496,17 @@
         body: JSON.stringify({ symbol: strategy.symbol, contractType: strategy.contract_type, amount: strategy.stake, duration: strategy.duration }),
       });
       el('last-signal').textContent = `${strategy.contract_type} on ${strategy.symbol}`;
+      botStats.runs += 1;
+      botStats.stake += strategy.stake;
+      transactions.unshift({
+        time: new Date().toLocaleTimeString(),
+        symbol: strategy.symbol,
+        contract: strategy.contract_type,
+        stake: `${fmt(strategy.stake)} AUD`,
+        status: result.tradeId ? 'Demo recorded' : 'Demo simulation',
+      });
+      renderSummary();
+      renderTransactions();
       log(`Demo trade recorded: ${result.tradeId || 'simulation'}.`, 'ok');
     } catch (e) {
       const login = e.status === 401 ? ' Login is required to run the demo bot.' : '';
@@ -526,12 +568,14 @@
     }
   };
   el('run-backtest').onclick = () => {
-    el('builder-log-wrap').classList.remove('hidden');
+    setResultsPanel(true, 'journal');
     log('Backtest demo is prepared from the current block settings. Use Run for demo execution.', 'ok');
   };
   el('run-demo').onclick = runDemoTrade;
   el('run-demo-bottom').onclick = runDemoTrade;
-  el('toggle-log').onclick = () => el('builder-log-wrap').classList.toggle('hidden');
+  el('toggle-log').onclick = () => setResultsPanel(true, 'journal');
+  el('minimize-results').onclick = () => setResultsPanel(false);
+  document.querySelectorAll('.bot-result-tab').forEach((button) => button.onclick = () => setResultsPanel(true, button.dataset.resultTab));
 
   renderToolbox('trade');
   setupDrops();
@@ -544,5 +588,7 @@
     writeForm(defaults);
   }
   await loadContracts(val('s-symbol'));
+  renderSummary();
+  renderTransactions();
   refresh();
 })();
