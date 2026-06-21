@@ -31,6 +31,7 @@ import { getServicePB } from '../pocketbase.js';
 import { audit } from '../services/audit.js';
 import { notify } from '../services/notifications.js';
 import { config } from '../config.js';
+import { notifyAdminTelegram } from '../services/adminAlerts.js';
 
 const router = Router();
 
@@ -112,6 +113,11 @@ async function handleTelegramCommand(message) {
   if (cmd === '/help' || cmd === '/commands') return sendTelegramMessage(chatId, HELP_TEXT);
   if (cmd === '/support') {
     const s = supportMessage();
+    void notifyAdminTelegram({
+      category: 'support', title: 'Telegram support requested',
+      message: 'A Telegram user opened the support command.',
+      meta: { telegramUserId: from.id, username: telegramUsername(from) },
+    });
     return sendTelegramMessage(chatId, `${s.title}\n\n${s.body}${s.url ? `\n${s.url}` : ''}`);
   }
   if (cmd === '/community') return sendTelegramMessage(chatId, communityText());
@@ -144,6 +150,11 @@ async function handleTelegramCallback(callbackQuery) {
   }
   if (data === 'open_support') {
     const s = supportMessage();
+    void notifyAdminTelegram({
+      category: 'support', title: 'Telegram support requested',
+      message: 'A Telegram user opened the support button.',
+      meta: { telegramUserId: from.id, username: telegramUsername(from) },
+    });
     return sendTelegramMessage(chatId, `${s.title}\n\n${s.body}${s.url ? `\n${s.url}` : ''}`);
   }
   if (data === 'open_community') return sendTelegramMessage(chatId, communityText());

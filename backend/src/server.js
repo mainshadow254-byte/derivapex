@@ -6,6 +6,7 @@ import { config, validateRuntimeConfig } from './config.js';
 import { attachUser } from './middleware/auth.js';
 import { startMarketFeed } from './services/deriv.js';
 import { startTelegramRuntime } from './services/telegramRuntime.js';
+import { notifyAdminError } from './services/adminAlerts.js';
 
 import meRoutes from './routes/me.js';
 import authRoutes from './routes/auth.js';
@@ -88,6 +89,7 @@ app.use('/api/deriv', derivRoutes);
 app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
 app.use((err, _req, res, _next) => {
   console.error('[error]', err);
+  void notifyAdminError('Unhandled API error', err, { path: _req.originalUrl, method: _req.method });
   res.status(500).json({ error: 'Internal server error.' });
 });
 
@@ -115,5 +117,6 @@ app.listen(config.port, () => {
   startMarketFeed({ dynamic: true, seed: SEED_SYMBOLS });
   startTelegramRuntime().catch((error) => {
     console.error('[telegram-runtime]', error?.message || error);
+    void notifyAdminError('Telegram runtime failed', error);
   });
 });

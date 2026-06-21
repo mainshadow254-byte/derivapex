@@ -106,6 +106,7 @@ export const config = {
     usePolling: String(pick('TELEGRAM_USE_POLLING', 'false')).toLowerCase() === 'true',
     supportUrl: pick('TELEGRAM_SUPPORT_URL', ''),
     adminContact: pick('TELEGRAM_ADMIN_CONTACT', ''),
+    adminId: (pick('TELEGRAM_ADMIN_ID', '') || '').trim(),
     requiredChannelId: pick('TELEGRAM_REQUIRED_CHANNEL_ID', ''),
     requiredGroupId: pick('TELEGRAM_REQUIRED_GROUP_ID', ''),
   },

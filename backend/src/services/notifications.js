@@ -2,6 +2,7 @@
 // backend (trades, subscriptions, payments, bot/copy actions, security, etc.).
 // Respects each user's per-type preferences. No synthetic alerts.
 import { getServicePB } from '../pocketbase.js';
+import { notifyAdminTelegram } from './adminAlerts.js';
 
 export const NOTIFICATION_TYPES = [
   'market', 'scanner', 'volatility', 'trading', 'copy',
@@ -44,10 +45,17 @@ export async function notify({ userId, type, title, body = '', severity = 'info'
       const { prefs } = await getPrefs(userId);
       if (prefs[type] === false) return null;
     }
-    return await pb.collection('notifications').create({
+    const record = await pb.collection('notifications').create({
       user: userId, type, title, body, severity, read: false,
       meta: JSON.stringify(meta || {}),
     });
+    if (type === 'security') {
+      void notifyAdminTelegram({
+        category: 'security', title, message: body,
+        meta: { ...meta, userId, severity },
+      });
+    }
+    return record;
   } catch (e) {
     console.error('[notify] failed:', e?.message || e);
     return null;

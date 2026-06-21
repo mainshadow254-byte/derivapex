@@ -42,6 +42,7 @@ Set:
 TELEGRAM_BOT_TOKEN=replace-me
 TELEGRAM_WEBHOOK_SECRET=replace-with-random-webhook-secret
 TELEGRAM_BOT_USERNAME=Apexrebornbot
+TELEGRAM_ADMIN_ID=123456789
 TELEGRAM_USE_POLLING=false
 PUBLIC_BACKEND_URL=https://your-service.up.railway.app
 ```

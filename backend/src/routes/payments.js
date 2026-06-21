@@ -7,6 +7,7 @@ import { config, PLAN_TIERS } from '../config.js';
 import { sendAccountNotice } from '../services/resend.js';
 import { notify } from '../services/notifications.js';
 import { getSubscriptionSnapshot } from '../services/subscriptions.js';
+import { notifyAdminError, notifyAdminTelegram } from '../services/adminAlerts.js';
 
 const router = Router();
 
@@ -85,8 +86,14 @@ router.post('/webhook', async (req, res) => {
     notify({ userId: user.id, type: 'payment', severity: 'success', title: 'Payment received', body: `Payment confirmed for the ${PLAN_TIERS[plan].label} plan.`, meta: { paymentRef: event.paymentRef } }).catch(() => {});
     notify({ userId: user.id, type: 'subscription', severity: 'success', title: 'Subscription active', body: `Your ${PLAN_TIERS[plan].label} plan is active until ${new Date(expires).toDateString()}.`, meta: { plan } }).catch(() => {});
     sendAccountNotice(user.email, 'Subscription active', `Your ${PLAN_TIERS[plan].label} plan is now active until ${new Date(expires).toDateString()}.`).catch(() => {});
+    void notifyAdminTelegram({
+      category: 'payment', title: 'Payment and subscription activated',
+      message: `${user.email} activated the ${plan} plan.`,
+      meta: { paymentRef, amount: payment.amount, currency: payment.currency, expires },
+    });
     res.json({ ok: true, subscriptionId: sub.id, paymentId: payment.id });
   } catch (e) {
+    void notifyAdminError('Payment activation failed', e, { plan, email: event.email || '' });
     res.status(500).json({ error: 'Activation failed.', detail: e.message });
   }
 });
@@ -134,8 +141,14 @@ router.post('/manual-activate', requireAuth, requireAdmin, async (req, res) => {
     });
     await audit({ actorId: req.auth.user.id, actorEmail: req.auth.email, action: 'subscription.manual_activate', target: user.email, meta: { plan }, ip: req.ip });
     notify({ userId: user.id, type: 'subscription', severity: 'success', title: 'Subscription active', body: `Your ${PLAN_TIERS[plan].label} plan was activated by an admin until ${new Date(expires).toDateString()}.`, meta: { plan } }).catch(() => {});
+    void notifyAdminTelegram({
+      category: 'payment', title: 'Manual subscription activation',
+      message: `${req.auth.email} activated ${plan} for ${user.email}.`,
+      meta: { expires },
+    });
     res.json({ ok: true, subscriptionId: sub.id });
   } catch (e) {
+    void notifyAdminError('Manual subscription activation failed', e, { plan, email: email || '' });
     res.status(500).json({ error: 'Manual activation failed.', detail: e.message });
   }
 });
