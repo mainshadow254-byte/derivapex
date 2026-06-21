@@ -17,6 +17,13 @@
   let symbolGroups = {};
   let flatSymbols = [];
   let availableContracts = [];
+  let canvasBlocks = [];
+  let selectedBlockId = '';
+  let undoStack = [];
+  let redoStack = [];
+  let zoom = 1;
+  const AUTOSAVE_KEY = 'apexbot_builder_autosave_v2';
+  const VERSION_KEY = 'apexbot_builder_versions_v1';
 
   const tradeTypeGroups = [
     { id:'rise_fall', label:'Rise/Fall', categories:['callput'], contracts:['CALL','PUT'] },
@@ -42,15 +49,36 @@
     BOTH:'Both directions',
   };
 
-  const categoryBlocks = {
-    trade:['Trade definition','Trade type','Contract type','Duration','Stake'],
-    markets:['Derived / Synthetic','Volatility','Boom & Crash','Step','Jump','Forex','Crypto'],
-    conditions:['Buy condition','Sell condition','If sell is available','Compare price','Digit condition'],
-    indicators:['Moving average','RSI','Breakout range','Tick analysis','Candle read'],
-    risk:['Stop loss','Take profit','Max daily loss','Max trades','Max consecutive losses'],
-    restart:['Trade again','Restart after win','Restart after loss','Cooldown','Restart on error'],
-    notifications:['Telegram notification','Browser alert','Execution log','Signal note'],
-    utilities:['Import XML','Export XML','Reset workspace','Read balance','Time filter'],
+  const blockCatalog = {
+    trade:[['start','Start block'],['purchase','Purchase block'],['trade_again','Trade Again block'],['condition','Condition block']],
+    markets:[['market_synthetic','Derived / Synthetic'],['market_volatility','Volatility'],['market_boom_crash','Boom & Crash'],['market_step','Step'],['market_jump','Jump'],['market_forex','Forex'],['market_crypto','Crypto']],
+    contracts:[['rise_fall','Rise/Fall'],['higher_lower','Higher/Lower + Barrier'],['touch_no_touch','Touch/No Touch'],['digits','Digits'],['range','Range'],['multipliers','Multipliers'],['asian','Asian'],['spreads','Spread contracts']],
+    conditions:[['buy_condition','Buy condition'],['sell_condition','Sell condition'],['if_sell_available','If sell is available'],['digit_prediction','Prediction digit selector']],
+    indicators:[['rsi','RSI'],['ema','EMA'],['sma','SMA'],['macd','MACD'],['bollinger','Bollinger Bands'],['stochastic','Stochastic'],['atr','ATR'],['adx','ADX'],['cci','CCI'],['momentum','Momentum'],['support','Support'],['resistance','Resistance']],
+    logic:[['if','IF'],['else','ELSE'],['and','AND'],['or','OR'],['not','NOT'],['gt','>'],['lt','<'],['eq','='],['gte','>='],['lte','<='],['cross_above','Cross Above'],['cross_below','Cross Below']],
+    variables:[['global_variable','Global variable'],['local_variable','Local variable'],['counter','Counter'],['trade_counter','Trade counter'],['current_profit','CurrentProfit'],['current_loss','CurrentLoss'],['wins','ConsecutiveWins'],['losses','ConsecutiveLosses'],['trade_count','TradeCount']],
+    risk:[['stop_loss','Stop Loss'],['take_profit','Take Profit'],['daily_profit','Daily Profit Target'],['daily_loss','Daily Loss Limit'],['max_drawdown','Max Drawdown'],['loss_limit','Consecutive Loss Limit'],['win_limit','Consecutive Win Limit'],['max_trades','Max Trades'],['session_stop','Session Stop']],
+    money:[['fixed_stake','Fixed stake'],['martingale','Martingale'],['anti_martingale','Anti-Martingale'],['custom_progression','Custom progression'],['reset_on_win','Reset on Win'],['reset_on_loss','Reset on Loss'],['max_recovery','Max Recovery Levels']],
+    ai:[['ai_signal','AI Signal Block'],['ai_trend','AI Trend Confirmation'],['ai_volatility','AI Volatility Filter'],['ai_risk','AI Risk Assessment'],['ai_veto','AI Trade Veto'],['ai_confidence','AI Confidence Filter']],
+    events:[['before_purchase','Before Purchase'],['after_purchase','After Purchase'],['during_trade','During Trade'],['on_win','On Win'],['on_loss','On Loss'],['on_error','On Error'],['on_disconnect','On Disconnect']],
+    restart:[['trade_again','Trade again'],['restart_win','Restart after win'],['restart_loss','Restart after loss'],['cooldown','Cooldown'],['restart_error','Restart on error']],
+    notifications:[['telegram','Telegram notification'],['browser_alert','Browser alert'],['execution_log','Execution log'],['signal_note','Signal note']],
+    utilities:[['import_json','Import JSON'],['export_json','Export JSON'],['version_history','Version History'],['read_balance','Read balance'],['time_filter','Time filter']],
+  };
+
+  const templates = {
+    rsi_reversal: { label:'RSI Reversal', strategy:'rsi_reversal', tradeType:'rise_fall', contract_type:'CALL', blocks:['start','rsi','lt','purchase','if_sell_available','trade_again','stop_loss','take_profit'] },
+    ema_cross: { label:'EMA Cross', strategy:'ma_cross', blocks:['start','ema','cross_above','purchase','trade_again','stop_loss'] },
+    trend_following: { label:'Trend Following', strategy:'ma_cross', blocks:['start','sma','ema','and','purchase','on_win','trade_again'] },
+    bollinger_bounce: { label:'Bollinger Bounce', strategy:'breakout', blocks:['start','bollinger','condition','purchase','stop_loss','take_profit'] },
+    even_odd: { label:'Even/Odd Digits', strategy:'digit_pattern', tradeType:'even_odd', contract_type:'DIGITEVEN', blocks:['start','digit_prediction','purchase','trade_again','loss_limit'] },
+    over_under: { label:'Over/Under Digits', strategy:'digit_pattern', tradeType:'over_under', contract_type:'DIGITOVER', blocks:['start','digit_prediction','purchase','trade_again','stop_loss'] },
+    matches_differs: { label:'Matches/Differs Digits', strategy:'digit_pattern', tradeType:'matches_differs', contract_type:'DIGITMATCH', blocks:['start','digit_prediction','purchase','trade_again'] },
+    boom_spike: { label:'Boom Spike Hunter', strategy:'breakout', blocks:['start','market_boom_crash','atr','condition','purchase','session_stop'] },
+    crash_spike: { label:'Crash Spike Hunter', strategy:'breakout', blocks:['start','market_boom_crash','atr','condition','purchase','session_stop'] },
+    volatility_scalper: { label:'Volatility Scalper', strategy:'ma_cross', blocks:['start','market_volatility','tick_analysis','purchase','max_trades','daily_loss'] },
+    martingale_recovery: { label:'Martingale Recovery', moneyMode:'martingale', blocks:['start','purchase','on_loss','martingale','max_recovery','loss_limit','trade_again'] },
+    ai_assisted: { label:'AI Assisted Strategy', blocks:['start','ai_signal','ai_trend','ai_volatility','ai_risk','ai_veto','purchase','trade_again'] },
   };
 
   const defaults = {
@@ -58,8 +86,10 @@
     tradeType: 'rise_fall', stake: 1, duration: 5, durationType: 't', granularity: 60,
     fastPeriod: 10, slowPeriod: 30, rsiPeriod: 14, oversold: 30, overbought: 70, lookback: 20,
     sellRule: 'available', stopLoss: 10, takeProfit: 20, dailyLossLimit: 25,
-    maxTradesPerDay: 20, maxConsecutiveLosses: 3, afterWin: 'continue', afterLoss: 'cooldown',
-    cooldownTrades: 1, demoOnly: true, restartOnError: true,
+    maxTradesPerDay: 20, maxConsecutiveLosses: 3, dailyProfitTarget: 30, maxDrawdown: 25,
+    sessionStop: 'none', afterWin: 'continue', afterLoss: 'cooldown',
+    cooldownTrades: 1, demoOnly: true, restartOnError: true, prediction: 0, barrier: '',
+    comparator: '>', conditionValue: 70, moneyMode: 'fixed', multiplier: 2, maxRecoveryLevels: 3,
   };
   let current = { ...defaults };
 
@@ -68,6 +98,124 @@
     row.className = tone ? `log-${tone}` : '';
     row.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
     el('builder-log').prepend(row);
+  }
+
+  function blockLabel(type) {
+    return Object.values(blockCatalog).flat().find(([id]) => id === type)?.[1] || type.replace(/_/g, ' ');
+  }
+
+  function defaultBlocks(types = ['start', 'condition', 'purchase', 'trade_again', 'stop_loss', 'take_profit']) {
+    return types.map((type, index) => ({
+      id: `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2, 6)}`,
+      type,
+      title: blockLabel(type),
+      x: 40 + (index % 2) * 330,
+      y: 35 + Math.floor(index / 2) * 118,
+      settings: {},
+    }));
+  }
+
+  function snapshot() {
+    return JSON.stringify({ strategy: readFormSafe(), canvasBlocks, selectedBlockId, zoom });
+  }
+
+  function pushHistory() {
+    undoStack.push(snapshot());
+    if (undoStack.length > 40) undoStack.shift();
+    redoStack = [];
+  }
+
+  function restoreSnapshot(raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      canvasBlocks = parsed.canvasBlocks || canvasBlocks;
+      selectedBlockId = parsed.selectedBlockId || '';
+      zoom = parsed.zoom || 1;
+      if (parsed.strategy) writeForm(parsed.strategy, { noHistory: true, noAutosave: true });
+      renderCanvas();
+      refresh(true);
+    } catch (e) {
+      log(`Could not restore builder state: ${e.message}`, 'warn');
+    }
+  }
+
+  function autosave() {
+    try {
+      localStorage.setItem(AUTOSAVE_KEY, snapshot());
+      el('autosave-status').textContent = `Autosaved ${new Date().toLocaleTimeString()}`;
+    } catch {}
+  }
+
+  function saveVersion(label = 'Manual version') {
+    try {
+      const versions = JSON.parse(localStorage.getItem(VERSION_KEY) || '[]');
+      versions.unshift({ label, at: new Date().toISOString(), state: snapshot() });
+      localStorage.setItem(VERSION_KEY, JSON.stringify(versions.slice(0, 20)));
+    } catch {}
+  }
+
+  function renderCanvas() {
+    const blocks = el('canvas-blocks');
+    blocks.style.transform = `scale(${zoom})`;
+    blocks.innerHTML = canvasBlocks.map((block, index) => `
+      <button class="canvas-block ${selectedBlockId === block.id ? 'selected' : ''}" draggable="true" data-block-id="${esc(block.id)}" style="left:${block.x}px;top:${block.y}px">
+        <span>${index + 1}</span>
+        <b>${esc(block.title)}</b>
+        <small>${esc(block.type)}</small>
+      </button>
+    `).join('');
+    el('empty-canvas').classList.toggle('hidden', canvasBlocks.length > 0);
+    blocks.querySelectorAll('.canvas-block').forEach((node) => {
+      node.onclick = () => { selectedBlockId = node.dataset.blockId; renderCanvas(); renderBlockProperties(); };
+      node.ondragstart = (event) => {
+        event.dataTransfer.setData('application/x-apex-existing-block', node.dataset.blockId);
+      };
+    });
+    renderConnections();
+    renderMiniMap();
+    renderBlockProperties();
+    el('zoom-label').textContent = `${Math.round(zoom * 100)}%`;
+  }
+
+  function renderConnections() {
+    const svg = el('connection-layer');
+    svg.innerHTML = '';
+    for (let i = 0; i < canvasBlocks.length - 1; i++) {
+      const a = canvasBlocks[i], b = canvasBlocks[i + 1];
+      const x1 = (a.x + 250) * zoom, y1 = (a.y + 36) * zoom;
+      const x2 = b.x * zoom, y2 = (b.y + 36) * zoom;
+      svg.insertAdjacentHTML('beforeend', `<path d="M ${x1} ${y1} C ${x1 + 70} ${y1}, ${x2 - 70} ${y2}, ${x2} ${y2}" />`);
+    }
+  }
+
+  function renderMiniMap() {
+    el('mini-map').innerHTML = canvasBlocks.map((block) => `<span style="left:${Math.max(0, block.x / 8)}px;top:${Math.max(0, block.y / 8)}px"></span>`).join('');
+  }
+
+  function renderBlockProperties() {
+    const block = canvasBlocks.find((b) => b.id === selectedBlockId);
+    el('block-properties').innerHTML = block
+      ? [
+          ['Block', block.title],
+          ['Type', block.type],
+          ['Position', `${Math.round(block.x)}, ${Math.round(block.y)}`],
+          ['Status', block.type.startsWith('ai_') ? 'Backend AI only' : 'Local builder block'],
+        ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')
+      : '<div><span>Selected</span><b>None</b></div>';
+  }
+
+  function addCanvasBlock(type, x = 70, y = 70) {
+    pushHistory();
+    const block = { id: `${type}-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`, type, title: blockLabel(type), x, y, settings: {} };
+    canvasBlocks.push(block);
+    selectedBlockId = block.id;
+    log(`Added block: ${block.title}`);
+    renderCanvas();
+    refresh();
+  }
+
+  function readFormSafe() {
+    try { return readForm(); } catch { return { ...current }; }
   }
 
   function classifySymbol(s) {
@@ -198,27 +346,39 @@
       duration: Number(el('s-duration').value || 5),
       durationType: el('s-duration-type').value,
       restartOnError: el('s-restart-error').value !== 'false',
+      prediction: Number(el('s-prediction').value || 0),
+      barrier: el('s-barrier').value.trim(),
       fastPeriod: Number(el('s-fast').value),
       slowPeriod: Number(el('s-slow').value),
       rsiPeriod: Number(el('s-rsi').value),
       oversold: Number(el('s-oversold').value),
       overbought: Number(el('s-overbought').value),
       lookback: Number(el('s-lookback').value),
+      comparator: el('s-comparator').value,
+      conditionValue: Number(el('s-condition-value').value || 0),
       sellRule: el('s-sell-rule').value,
       stopLoss: Number(el('s-stop-loss').value),
       takeProfit: Number(el('s-take-profit').value),
       dailyLossLimit: Number(el('s-daily-loss').value),
+      dailyProfitTarget: Number(el('s-daily-profit').value),
+      maxDrawdown: Number(el('s-max-drawdown').value),
+      sessionStop: el('s-session-stop').value,
       maxTradesPerDay: Number(el('s-max-trades').value),
       maxConsecutiveLosses: Number(el('s-max-losses').value),
       afterWin: el('s-after-win').value,
       afterLoss: el('s-after-loss').value,
       cooldownTrades: Number(el('s-cooldown').value),
+      moneyMode: el('s-money-mode').value,
+      multiplier: Number(el('s-multiplier').value || 1),
+      maxRecoveryLevels: Number(el('s-max-recovery').value || 0),
       demoOnly: el('s-demo-only').value !== 'false' || !me.deriv_connected,
+      blocks: canvasBlocks.map((b) => ({ type: b.type, title: b.title, x: b.x, y: b.y, settings: b.settings || {} })),
     };
   }
 
-  function writeForm(s) {
+  function writeForm(s, options = {}) {
     current = { ...defaults, ...s };
+    if (!options.noHistory) pushHistory();
     el('s-name').value = current.name;
     el('s-strategy').value = current.strategy;
     el('s-gran').value = String(current.granularity || 60);
@@ -226,24 +386,41 @@
     el('s-duration').value = current.duration;
     el('s-duration-type').value = current.durationType;
     el('s-restart-error').value = String(current.restartOnError !== false);
+    el('s-prediction').value = String(current.prediction ?? 0);
+    el('s-barrier').value = current.barrier || '';
     el('s-fast').value = current.fastPeriod;
     el('s-slow').value = current.slowPeriod;
     el('s-rsi').value = current.rsiPeriod;
     el('s-oversold').value = current.oversold;
     el('s-overbought').value = current.overbought;
     el('s-lookback').value = current.lookback;
+    el('s-comparator').value = current.comparator || '>';
+    el('s-condition-value').value = current.conditionValue ?? 70;
     el('s-sell-rule').value = current.sellRule;
     el('s-stop-loss').value = current.stopLoss;
     el('s-take-profit').value = current.takeProfit;
     el('s-daily-loss').value = current.dailyLossLimit;
+    el('s-daily-profit').value = current.dailyProfitTarget;
+    el('s-max-drawdown').value = current.maxDrawdown;
+    el('s-session-stop').value = current.sessionStop || 'none';
     el('s-max-trades').value = current.maxTradesPerDay;
     el('s-max-losses').value = current.maxConsecutiveLosses;
     el('s-after-win').value = current.afterWin;
     el('s-after-loss').value = current.afterLoss;
     el('s-cooldown').value = current.cooldownTrades;
+    el('s-money-mode').value = current.moneyMode || 'fixed';
+    el('s-multiplier').value = current.multiplier || 1;
+    el('s-max-recovery').value = current.maxRecoveryLevels || 0;
     el('s-demo-only').value = String(current.demoOnly !== false);
+    if (Array.isArray(current.blocks)) {
+      canvasBlocks = current.blocks.map((b, index) => typeof b === 'string'
+        ? { id: `${b}-${Date.now()}-${index}`, type: b, title: blockLabel(b), x: 60 + (index % 2) * 330, y: 50 + Math.floor(index / 2) * 116, settings: {} }
+        : { id: b.id || `${b.type}-${Date.now()}-${index}`, type: b.type, title: b.title || blockLabel(b.type), x: b.x ?? 60, y: b.y ?? 50, settings: b.settings || {} });
+      renderCanvas();
+    }
     renderMarketSelectors();
     refresh(true);
+    if (!options.noAutosave) autosave();
   }
 
   function validation(strategy) {
@@ -253,7 +430,12 @@
     if (!availableContracts.some((c) => c.contract_type === strategy.contract_type) && availableContracts.length) warnings.push('Selected contract is not available for this symbol.');
     if (!strategy.stake || strategy.stake < 0.35) warnings.push('Stake must be at least 0.35.');
     if (!strategy.duration || strategy.duration < 1) warnings.push('Duration must be at least 1.');
+    if (!canvasBlocks.some((b) => b.type === 'purchase')) warnings.push('Missing Purchase Block.');
+    if (!canvasBlocks.some((b) => ['condition','buy_condition','rsi','ema','sma','macd','bollinger','ai_signal'].includes(b.type))) warnings.push('Missing Conditions.');
+    if (!canvasBlocks.some((b) => b.type === 'start')) warnings.push('Missing Start Block.');
+    if (!strategy.stopLoss && !canvasBlocks.some((b) => b.type === 'stop_loss')) warnings.push('Missing Stop Loss.');
     if (strategy.stopLoss && strategy.takeProfit && strategy.stopLoss > strategy.takeProfit) warnings.push('Stop loss is greater than take profit.');
+    if (strategy.moneyMode !== 'fixed' && strategy.maxRecoveryLevels > 12) warnings.push('Recovery levels are high. Reduce recovery depth.');
     if (!strategy.demoOnly && !me.deriv_connected) warnings.push('Real mode requires a connected Deriv account.');
     return warnings;
   }
@@ -286,9 +468,9 @@
     const rule = current.strategy === 'ma_cross'
       ? `Fast MA ${current.fastPeriod} crosses slow MA ${current.slowPeriod}`
       : current.strategy === 'rsi_reversal'
-        ? `RSI ${current.rsiPeriod} exits ${current.oversold}-${current.overbought}`
+        ? `RSI ${current.rsiPeriod} ${current.comparator} ${current.conditionValue || current.oversold}`
         : current.strategy === 'digit_pattern'
-          ? `Digit rule uses ${contractLabels[current.contract_type] || current.contract_type}`
+          ? `Digit rule uses ${contractLabels[current.contract_type] || current.contract_type} with prediction ${current.prediction}`
           : `Close breaks previous ${current.lookback}-candle range`;
     el('buy-preview').textContent = `Buy condition: ${rule}.`;
     el('sell-preview').textContent = current.sellRule === 'disabled' ? 'Sell condition disabled.' : `Sell condition: ${current.sellRule}.`;
@@ -303,6 +485,7 @@
       ['Market', current.symbol], ['Trade type', tradeTypeGroups.find((g) => g.id === current.tradeType)?.label || current.tradeType],
       ['Contract', contractLabels[current.contract_type] || current.contract_type], ['Stake', `$${fmt(current.stake)}`],
       ['Duration', `${current.duration}${current.durationType}`], ['Logic', rule],
+      ['Money mode', current.moneyMode], ['AI blocks', canvasBlocks.filter((b) => b.type.startsWith('ai_')).length],
     ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
     const symbol = flatSymbols.find((s) => s.symbol === current.symbol);
     el('market-status').innerHTML = [
@@ -310,21 +493,94 @@
       ['Family', symbol?.family || current.marketGroup],
       ['Submarket', symbol?.submarket || current.submarket],
       ['Contracts loaded', availableContracts.length || 'Pending'],
+      ['Connection', 'Backend Deriv feed'],
+    ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
+    el('ai-summary').innerHTML = [
+      ['Confidence', canvasBlocks.some((b) => b.type === 'ai_confidence') ? 'Backend required' : 'Not enabled'],
+      ['Risk', canvasBlocks.some((b) => b.type === 'ai_risk') ? 'Backend required' : 'Not enabled'],
+      ['Market used', current.symbol],
     ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
     const warnings = validation(current);
     el('validation-warnings').innerHTML = warnings.length ? warnings.map((w) => `<div>${esc(w)}</div>`).join('') : '<div class="ok-text">No validation warnings.</div>';
     el('builder-status').textContent = warnings.length ? 'CHECK' : 'READY';
     el('builder-status').className = `badge ${warnings.length ? 'warn' : 'real'}`;
+    autosave();
     if (!skipContractLoad) refreshBuilderAnalysis();
   }
 
   function renderBlockLibrary(category = 'trade') {
     document.querySelectorAll('.builder-category').forEach((button) => button.classList.toggle('active', button.dataset.category === category));
-    el('builder-block-library').innerHTML = (categoryBlocks[category] || []).map((label) => `<button class="builder-mini-block" type="button">${esc(label)}</button>`).join('');
+    el('builder-block-library').innerHTML = (blockCatalog[category] || []).map(([type, label]) => `<button class="builder-mini-block" type="button" draggable="true" data-block-type="${esc(type)}">${esc(label)}</button>`).join('');
     el('builder-block-library').querySelectorAll('button').forEach((button) => button.onclick = () => {
-      log(`Added block: ${button.textContent}`);
-      refresh();
+      addCanvasBlock(button.dataset.blockType);
     });
+    el('builder-block-library').querySelectorAll('button').forEach((button) => {
+      button.ondragstart = (event) => event.dataTransfer.setData('application/x-apex-block', button.dataset.blockType);
+    });
+  }
+
+  async function loadTradingDashboard() {
+    try {
+      const summary = await api('/account/summary');
+      el('trading-dashboard').innerHTML = [
+        ['Mode', summary.mode?.toUpperCase() || 'DEMO'],
+        ['Balance', `${summary.currency || 'USD'} ${fmt(summary.balance)}`],
+        ['Equity', `${summary.currency || 'USD'} ${fmt(summary.equity)}`],
+        ['Daily P/L', fmt(summary.profitLoss?.daily)],
+        ['Open Positions', summary.openPositions ?? 0],
+        ['Connection', summary.mode === 'real' ? 'Deriv connected' : 'Demo ledger'],
+      ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
+    } catch (e) {
+      el('trading-dashboard').innerHTML = `<div><span>Status</span><b>${esc(e.message)}</b></div>`;
+    }
+  }
+
+  function renderTemplates() {
+    el('template-picker').innerHTML = '<option value="">Templates</option>' +
+      Object.entries(templates).map(([id, t]) => `<option value="${id}">${esc(t.label)}</option>`).join('');
+  }
+
+  function applyTemplate(id) {
+    const t = templates[id];
+    if (!t) return;
+    pushHistory();
+    writeForm({ ...defaults, ...t, name: t.label, blocks: t.blocks }, { noHistory: true });
+    log(`Loaded template: ${t.label}`, 'ok');
+  }
+
+  function canvasPoint(event) {
+    const rect = el('drag-canvas').getBoundingClientRect();
+    const snap = el('snap-grid').checked ? 20 : 1;
+    return {
+      x: Math.max(0, Math.round(((event.clientX - rect.left) / zoom) / snap) * snap),
+      y: Math.max(0, Math.round(((event.clientY - rect.top) / zoom) / snap) * snap),
+    };
+  }
+
+  function setupCanvasDragDrop() {
+    const canvas = el('drag-canvas');
+    canvas.ondragover = (event) => event.preventDefault();
+    canvas.ondrop = (event) => {
+      event.preventDefault();
+      const point = canvasPoint(event);
+      const type = event.dataTransfer.getData('application/x-apex-block');
+      const existingId = event.dataTransfer.getData('application/x-apex-existing-block');
+      if (type) {
+        addCanvasBlock(type, point.x, point.y);
+        return;
+      }
+      if (existingId) {
+        const block = canvasBlocks.find((b) => b.id === existingId);
+        if (block) {
+          pushHistory();
+          block.x = point.x;
+          block.y = point.y;
+          selectedBlockId = block.id;
+          renderCanvas();
+          refresh();
+        }
+      }
+    };
   }
 
   function strategyXml(strategy) {
@@ -337,6 +593,7 @@
       <block type="trade_definition_contracttype"><field name="TYPE_LIST">${esc(strategy.contract_type)}</field></block>
       <block type="trade_definition_candleinterval"><field name="CANDLEINTERVAL_LIST">${esc(strategy.granularity)}</field></block>
       <block type="trade_definition_restartonerror"><field name="RESTARTONERROR">${strategy.restartOnError ? 'TRUE' : 'FALSE'}</field></block>
+      <block type="apex_canvas_blocks"><field name="COUNT">${canvasBlocks.length}</field></block>
     </statement>
     <statement name="SUBMARKET">
       <block type="trade_definition_tradeoptions"><field name="DURATIONTYPE_LIST">${esc(strategy.durationType)}</field><field name="CURRENCY_LIST">USD</field><value name="DURATION"><shadow type="math_number_positive"><field name="NUM">${esc(strategy.duration)}</field></shadow></value><value name="AMOUNT"><shadow type="math_number_positive"><field name="NUM">${esc(strategy.stake)}</field></shadow></value></block>
@@ -383,7 +640,25 @@
   el('s-symbol').onchange = () => { current.symbol = el('s-symbol').value; loadContracts(current.symbol).then(() => refresh()); };
   el('s-trade-type').onchange = () => { current.tradeType = el('s-trade-type').value; renderContracts(); refresh(); };
 
-  el('new-strategy').onclick = () => { writeForm({ ...defaults }); log('New strategy created.'); };
+  el('new-strategy').onclick = () => { writeForm({ ...defaults, blocks: defaultBlocks().map((b) => b.type) }); log('New strategy created.'); };
+  el('duplicate-strategy').onclick = () => {
+    const strategy = readForm();
+    writeForm({ ...strategy, name: `${strategy.name} copy`, blocks: canvasBlocks.map((b) => ({ ...b, id: undefined, x: b.x + 24, y: b.y + 24 })) });
+    log('Duplicated current strategy.', 'ok');
+  };
+  el('clone-strategy').onclick = () => {
+    const strategy = readForm();
+    download(`${strategy.name.replace(/[^a-z0-9_-]+/gi, '-') || 'strategy'}-clone.json`, JSON.stringify(strategy, null, 2), 'application/json');
+    log('Clone exported locally. Marketplace clone workflow is prepared for backend integration.', 'ok');
+  };
+  el('update-strategy').onclick = () => {
+    saveVersion('Update snapshot');
+    log('Update snapshot saved locally. Existing published-strategy update needs marketplace backend integration.', 'ok');
+  };
+  el('publish-strategy').onclick = () => {
+    saveVersion('Publish draft');
+    log('Publish draft prepared locally. Public marketplace publishing is not enabled without backend approval.', 'warn');
+  };
   el('export-bot').onclick = () => {
     const strategy = readForm();
     download(`${strategy.name.replace(/[^a-z0-9_-]+/gi, '-') || 'strategy'}.json`, JSON.stringify(strategy, null, 2), 'application/json');
@@ -427,10 +702,30 @@
     } catch (e) { log(`Backtest failed: ${e.message}`, 'warn'); }
   };
   el('run-demo').onclick = runDemoTrade;
+  el('template-picker').onchange = () => applyTemplate(el('template-picker').value);
+  el('undo-builder').onclick = () => {
+    if (!undoStack.length) return log('Nothing to undo.', 'warn');
+    redoStack.push(snapshot());
+    restoreSnapshot(undoStack.pop());
+    log('Undo applied.');
+  };
+  el('redo-builder').onclick = () => {
+    if (!redoStack.length) return log('Nothing to redo.', 'warn');
+    undoStack.push(snapshot());
+    restoreSnapshot(redoStack.pop());
+    log('Redo applied.');
+  };
+  el('zoom-in').onclick = () => { zoom = Math.min(1.4, +(zoom + 0.1).toFixed(2)); renderCanvas(); autosave(); };
+  el('zoom-out').onclick = () => { zoom = Math.max(0.7, +(zoom - 0.1).toFixed(2)); renderCanvas(); autosave(); };
 
+  setupCanvasDragDrop();
+  renderTemplates();
   renderBlockLibrary('trade');
   await loadSymbols();
-  writeForm(defaults);
+  const saved = localStorage.getItem(AUTOSAVE_KEY);
+  if (saved) restoreSnapshot(saved);
+  else writeForm({ ...defaults, blocks: defaultBlocks().map((b) => b.type) });
   await loadContracts(el('s-symbol').value);
+  await loadTradingDashboard();
   refresh();
 })();
