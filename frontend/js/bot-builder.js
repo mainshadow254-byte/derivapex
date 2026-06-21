@@ -419,6 +419,9 @@
       renderCanvas();
     }
     renderMarketSelectors();
+    if ([...el('s-trade-type').options].some((option) => option.value === current.tradeType)) el('s-trade-type').value = current.tradeType;
+    renderContracts();
+    if ([...el('s-contract').options].some((option) => option.value === current.contract_type)) el('s-contract').value = current.contract_type;
     refresh(true);
     if (!options.noAutosave) autosave();
   }
