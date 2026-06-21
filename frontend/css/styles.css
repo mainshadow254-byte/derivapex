@@ -256,3 +256,78 @@ code{color:#8ee7f5;background:#07111d;border:1px solid #1c3444;border-radius:6px
 .builder-terminal{background:#07101d;border:1px solid #263d5b;border-radius:12px;overflow:hidden}.terminal-head{display:flex;justify-content:space-between;gap:10px;background:#0d1b2e;padding:10px 14px;border-bottom:1px solid #263d5b}.terminal-log{height:120px;overflow:auto;padding:10px 14px;font-family:Consolas,monospace;font-size:12px;color:#cbd5e1}.terminal-log div{padding:3px 0}.terminal-log .log-ok{color:#86efac}.terminal-log .log-warn{color:#fde68a}
 @media(max-width:1180px){.builder-grid{grid-template-columns:220px minmax(0,1fr)}.builder-inspector{grid-column:1/-1;position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}}
 @media(max-width:760px){.builder-app{padding:10px}.builder-topbar{align-items:flex-start;flex-direction:column}.builder-toolbar{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;width:100%;padding-bottom:4px}.builder-toolbar .btn{white-space:nowrap}.builder-grid{grid-template-columns:1fr}.builder-categories,.builder-inspector{position:static;max-height:none}.builder-inspector{display:flex}.workspace-header{align-items:flex-start;flex-direction:column}.workspace-tools{justify-content:flex-start}.strategy-name-row{grid-template-columns:1fr}.workspace-columns{grid-template-columns:1fr}.visual-block-body{grid-template-columns:1fr}.drag-canvas{min-height:360px}.canvas-block{width:220px}.terminal-head{flex-direction:column}.builder-topbar h1{font-size:24px}}
+
+/* ---------- ApexBot DBot-style builder flow ------------------------------ */
+.dbot-flow-page{background:#060a13;color:#0f172a;min-height:100vh}
+.dbot-flow-page .builder-nav{background:#123c99;border-bottom:1px solid rgba(255,255,255,.08)}
+.dbot-flow-app{min-height:calc(100vh - 64px);display:flex;flex-direction:column;background:#f8fafc}
+.dbot-flow-toolbar{height:58px;display:flex;align-items:center;gap:8px;padding:9px 18px;background:#183fa4;border-bottom:1px solid #123177;overflow-x:auto}
+.dbot-flow-toolbar .btn{white-space:nowrap}
+.dbot-flow-shell{display:grid;grid-template-columns:44px 220px minmax(0,1fr);min-height:calc(100vh - 214px);background:#fff}
+.dbot-side-rail{border-right:1px solid #d7dee8;background:#f8fafc;display:flex;flex-direction:column;align-items:center;gap:14px;padding:14px 6px}
+.dbot-tool-icon{width:31px;height:31px;border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:6px;font-size:10px;font-weight:900;cursor:pointer}
+.dbot-tool-icon.active,.dbot-tool-icon:hover{border-color:#f2b235;color:#0f3f99;box-shadow:0 0 0 2px rgba(242,178,53,.22)}
+.dbot-toolbox{border-right:1px solid #d7dee8;background:#fff;padding:16px 14px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 122px);overflow:auto}
+.quick-strategy{appearance:none;border:0;border-radius:5px;background:#3b82f6;color:white;font-size:20px;font-weight:900;padding:18px 14px;cursor:pointer;text-align:center;box-shadow:0 10px 28px rgba(59,130,246,.2)}
+.quick-strategy:hover{background:#2563eb}
+.dbot-toolbox-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#64748b;font-weight:900;margin-top:4px}
+.dbot-risk-note{margin:auto 0 0;background:#ffd400;color:#171717;border-radius:6px;padding:10px 12px;font-size:12px;font-weight:900;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.dbot-work-area{background:#fff;min-width:0;overflow:auto;padding:22px 28px 120px}
+.strategy-name-inline{display:flex;align-items:center;gap:10px;max-width:520px;margin-bottom:18px;color:#475569;font-size:12px;font-weight:900}
+.strategy-name-inline .input{min-height:34px;background:#fff;color:#111827;border-color:#cbd5e1}
+.dbot-block-board{min-height:650px;display:grid;grid-template-columns:minmax(430px,620px) minmax(320px,430px);align-items:start;justify-content:center;gap:46px 86px}
+.dbot-root-block{border-radius:4px;background:#1f5fab;color:#111827;box-shadow:none;border:0;overflow:visible}
+.dbot-root-head{height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 13px;background:#1f5fab;color:#fff;border-radius:4px 4px 0 0;font-size:18px}
+.dbot-root-head span{font-weight:500}.dbot-root-head small{font-size:11px;opacity:.82}
+.trade-definition{outline:2px solid #f2b235;outline-offset:0}
+.during-purchase,.after-purchase{align-self:start}
+.risk-stack{grid-column:1 / 2}
+.risk-stack .dbot-root-head{background:#1f5fab}
+.dbot-stack{display:grid;gap:0;padding:0 14px 14px;background:#1f5fab;border-radius:0 0 4px 4px}
+.dbot-row-block,.dbot-if-row,.dbot-check-row,.dbot-nested-head,.dbot-drop-slot{background:#e5e5e5;border:1px solid #cfd4da;color:#111827;min-height:48px;display:flex;align-items:center;gap:9px;padding:7px 10px;font-size:15px}
+.dbot-row-block:first-child,.dbot-if-row:first-child{border-top-left-radius:5px;border-top-right-radius:5px}
+.dbot-row-block span,.dbot-if-row span{white-space:nowrap}
+.dbot-pill,.dbot-number{height:35px;border:1px solid #c7ccd4;border-radius:17px;background:#fff;color:#111827;padding:0 10px;min-width:92px;max-width:220px;font:inherit}
+.dbot-number{width:74px;min-width:54px;text-align:center}
+.trade-options-row{flex-wrap:wrap}
+.dbot-check-row{justify-content:space-between}
+.dbot-check-row input{width:18px;height:18px;accent-color:#1f5fab}
+.dbot-nested-head{background:#1f5fab;color:#fff;border-color:#1f5fab;font-size:18px;margin-top:10px}
+.dbot-drop-slot{min-height:48px;align-items:stretch;flex-direction:column;padding:8px;background:#e5e5e5}
+.dbot-nested-block{position:relative;width:100%;min-height:36px;border-radius:4px;background:#fff;border:1px solid #d1d5db;display:flex;align-items:center;padding:8px 38px 8px 10px;color:#111827}
+.dbot-nested-block b{font-size:14px;font-weight:500}
+.block-remove{position:absolute;right:8px;top:7px;width:22px;height:22px;border:0;border-radius:50%;background:#202936;color:#fff;cursor:pointer}
+.block-remove:hover{background:#dc2626}
+.toolbox-block{appearance:none;border:1px solid #d1d5db;background:#f8fafc;color:#111827;border-radius:5px;padding:10px;text-align:left;cursor:pointer}
+.toolbox-block:hover{border-color:#3b82f6;background:#eff6ff}
+.toolbox-block span{display:block;color:#64748b;font-size:10px;font-family:Consolas,monospace}
+.toolbox-block b{display:block;margin-top:2px;font-size:13px}
+.dbot-warning{width:100%;border-radius:5px;border:1px solid #f59e0b;background:#fff7ed;color:#92400e;padding:9px 11px;font-size:12px;font-weight:800}
+.condition-fields.hidden{display:none!important}
+.dbot-run-panel{position:fixed;left:0;right:0;bottom:0;z-index:70;background:rgba(255,255,255,.97);border-top:1px solid #d7dee8;display:grid;grid-template-columns:145px minmax(240px,760px) 90px;justify-content:center;align-items:center;gap:18px;padding:12px 18px}
+.run-wide{height:58px;font-size:20px;background:#48b7b2}
+.dbot-status-box{height:58px;border:1px solid #cfd4da;border-radius:5px;display:grid;place-items:center;background:#fff;color:#111827}
+.dbot-status-box span{font-size:12px;color:#475569}
+.dbot-flow-page .builder-terminal{position:fixed;left:16px;right:16px;bottom:90px;z-index:71;background:#fff;color:#111827;border:1px solid #cbd5e1;box-shadow:0 24px 60px rgba(15,23,42,.22)}
+.dbot-flow-page .terminal-head{background:#f8fafc;color:#111827;border-bottom-color:#d7dee8}
+.dbot-flow-page .terminal-log{color:#334155;max-height:180px;height:150px}
+.dbot-flow-page .warning-list{padding:10px 14px;background:#fff;color:#92400e}
+.dbot-flow-page .ok-text{color:#047857}
+@media(max-width:1120px){
+  .dbot-flow-shell{grid-template-columns:44px minmax(0,1fr)}
+  .dbot-toolbox{display:none}
+  .dbot-block-board{grid-template-columns:1fr;gap:26px;justify-content:stretch}
+  .risk-stack{grid-column:auto}
+}
+@media(max-width:700px){
+  .dbot-flow-toolbar{padding:8px 10px}
+  .dbot-flow-shell{grid-template-columns:1fr}
+  .dbot-side-rail{position:sticky;top:55px;z-index:20;flex-direction:row;justify-content:flex-start;overflow-x:auto;border-right:0;border-bottom:1px solid #d7dee8}
+  .dbot-work-area{padding:14px 10px 130px}
+  .dbot-root-head{font-size:16px}
+  .dbot-row-block,.dbot-if-row,.dbot-check-row{flex-wrap:wrap}
+  .dbot-pill{max-width:100%;min-width:130px}
+  .dbot-run-panel{grid-template-columns:1fr;gap:8px;padding:10px}
+  .run-wide,.dbot-status-box{height:48px}
+  .dbot-flow-page .builder-terminal{bottom:168px;left:8px;right:8px}
+}
