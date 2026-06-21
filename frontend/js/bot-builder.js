@@ -13,6 +13,7 @@
 
   const API_BASE = (window.ApexConfig?.apiBaseUrl || window.APEX_CONFIG?.API_BASE_URL || '').replace(/\/$/, '');
   const AUTOSAVE_KEY = 'apexbot_dbot_flow_v1';
+  const RESULTS_PANEL_KEY = 'apexbot_results_panel_open_v1';
 
   const tradeTypeGroups = [
     { id:'rise_fall', label:'Rise/Fall', categories:['callput'], contracts:['CALL','PUT'] },
@@ -142,10 +143,14 @@
     row.className = tone ? `log-${tone}` : '';
     row.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
     el('builder-log').prepend(row);
+    while (el('builder-log').children.length > 80) el('builder-log').lastElementChild.remove();
   }
 
   function setResultsPanel(open = true, tab = '') {
     el('bot-results-panel').classList.toggle('minimized', !open);
+    el('minimize-results').textContent = open ? 'Hide' : 'Show';
+    el('minimize-results').setAttribute('aria-label', open ? 'Minimize results panel' : 'Show results panel');
+    try { localStorage.setItem(RESULTS_PANEL_KEY, open ? 'open' : 'closed'); } catch {}
     if (tab) setResultTab(tab);
   }
 
@@ -311,7 +316,12 @@
 
   function addBlock(type, zone = targetZoneFor(type)) {
     current.stacks[zone] ||= [];
-    current.stacks[zone].push(blockLabel(type));
+    const label = blockLabel(type);
+    if (current.stacks[zone].includes(label)) {
+      log(`${label} is already in this block stack.`, 'warn');
+      return;
+    }
+    current.stacks[zone].push(label);
     renderStacks();
     refresh();
     log(`Added block: ${blockLabel(type)}`);
@@ -568,13 +578,12 @@
     }
   };
   el('run-backtest').onclick = () => {
-    setResultsPanel(true, 'journal');
+    setResultsPanel(true, 'summary');
     log('Backtest demo is prepared from the current block settings. Use Run for demo execution.', 'ok');
   };
-  el('run-demo').onclick = runDemoTrade;
   el('run-demo-bottom').onclick = runDemoTrade;
-  el('toggle-log').onclick = () => setResultsPanel(true, 'journal');
-  el('minimize-results').onclick = () => setResultsPanel(false);
+  el('toggle-log').onclick = () => setResultsPanel(true, 'summary');
+  el('minimize-results').onclick = () => setResultsPanel(el('bot-results-panel').classList.contains('minimized'));
   document.querySelectorAll('.bot-result-tab').forEach((button) => button.onclick = () => setResultsPanel(true, button.dataset.resultTab));
 
   renderToolbox('trade');
@@ -591,4 +600,5 @@
   renderSummary();
   renderTransactions();
   refresh();
+  setResultsPanel(localStorage.getItem(RESULTS_PANEL_KEY) === 'open');
 })();

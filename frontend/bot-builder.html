@@ -12,7 +12,6 @@
     <div class="nav-actions">
       <a class="btn ghost" href="dashboard.html">Dashboard</a>
       <a class="btn ghost" href="terminal.html">DTrader</a>
-      <a class="btn ghost" href="chart.html">Charts</a>
       <a class="btn ghost" data-deriv-oauth>Connect Deriv</a>
     </div>
   </nav>
@@ -24,8 +23,6 @@
       <label class="btn ghost file-btn">Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
       <button id="export-bot" class="btn ghost" type="button">Export</button>
       <button id="run-backtest" class="btn ghost" type="button">Backtest demo</button>
-      <button id="run-demo" class="btn" type="button">Run</button>
-      <a class="btn ghost" data-deriv-oauth>Connect Deriv</a>
     </header>
 
     <section class="dbot-flow-shell">
@@ -197,7 +194,7 @@
         <button class="bot-result-tab active" data-result-tab="summary" type="button">Summary</button>
         <button class="bot-result-tab" data-result-tab="transactions" type="button">Transactions</button>
         <button class="bot-result-tab" data-result-tab="journal" type="button">Journal</button>
-        <button id="minimize-results" class="bot-results-toggle" type="button" aria-label="Minimize results panel">-</button>
+        <button id="minimize-results" class="bot-results-toggle" type="button" aria-label="Minimize results panel">Hide</button>
       </div>
       <div class="bot-results-body">
         <div id="validation-warnings" class="bot-validation-strip"></div>
@@ -235,7 +232,7 @@
         <strong id="bot-run-state">Bot is not running</strong>
         <span>Last signal: <b id="last-signal">none</b></span>
       </div>
-      <button id="toggle-log" class="btn ghost" type="button">Journal</button>
+      <button id="toggle-log" class="btn ghost" type="button">Results</button>
     </section>
   </main>
 
