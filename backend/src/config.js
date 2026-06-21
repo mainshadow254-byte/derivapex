@@ -39,7 +39,7 @@ function resolveTelegramBotUrl() {
 }
 
 const derivAppId = pick('DERIV_APP_ID', '1089');
-const defaultDerivAffiliateLink = 'https://track.deriv.com/_mOh_WtlcE0NMjdsyM5hasGNd7ZgqdRLk/1/';
+const defaultDerivAffiliateLink = 'https://deriv.com/signup/';
 const defaultDerivOAuthUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(derivAppId)}`;
 const aiProvider = pick('AI_PROVIDER', pick('OPENAI_API_KEY', '') ? 'openai' : '');
 const aiApiKey = pick(['AI_API_KEY', 'OPENAI_API_KEY'], '');

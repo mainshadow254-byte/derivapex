@@ -3,148 +3,162 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ApexBot - Visual Strategy Builder</title>
-  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <title>ApexBot - Deriv Bot Builder</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260621-builder" />
 </head>
-<body>
-  <nav class="nav">
+<body class="builder-page app-body">
+  <nav class="nav builder-nav">
     <a class="brand" href="dashboard.html">ApexBot</a>
     <div class="nav-actions">
       <a class="btn ghost" href="dashboard.html">Dashboard</a>
-      <a class="btn ghost" href="terminal.html">Terminal</a>
+      <a class="btn ghost" href="terminal.html">DTrader</a>
+      <a class="btn ghost" data-deriv-oauth>Connect Deriv</a>
     </div>
   </nav>
 
-  <main class="container builder-layout">
-    <section class="builder-main">
-      <div class="card builder-hero">
-        <div>
-          <span class="eyebrow">NO-CODE LAB</span>
-          <h1>Visual Strategy Builder</h1>
-          <p class="muted">Choose a template, configure its rules, test it against real historical Deriv candles, then save a validated JSON bot.</p>
-        </div>
-        <button id="tour-toggle" class="btn ghost">Show guide</button>
+  <main class="builder-app">
+    <header class="builder-topbar">
+      <div>
+        <span class="eyebrow">DERIV-STYLE BLOCK LAB</span>
+        <h1>Bot Builder</h1>
+        <p>No guaranteed profits. Trading involves risk.</p>
       </div>
-
-      <div id="builder-tour" class="card builder-tour hidden">
-        <strong>Builder flow</strong>
-        <ol>
-          <li>Pick a quick strategy or drag your thinking through the block categories.</li>
-          <li>Set market, duration, stake, entry logic, restart logic, and risk controls.</li>
-          <li>Run a demo backtest before saving or exporting the strategy.</li>
-        </ol>
-        <p class="muted-sm">Demo run only unless your Deriv account is connected. Backtests cannot predict future results.</p>
+      <div class="builder-toolbar">
+        <button id="new-strategy" class="btn ghost" type="button">New strategy</button>
+        <button id="save-bot" class="btn ok" type="button">Save</button>
+        <label class="btn ghost file-btn">Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
+        <button id="export-bot" class="btn ghost" type="button">Export</button>
+        <button id="run-backtest" class="btn ghost" type="button">Backtest demo</button>
+        <button id="run-demo" class="btn" type="button">Run demo</button>
+        <a class="btn ghost" data-deriv-oauth>Connect Deriv</a>
       </div>
+    </header>
 
-      <section>
-        <div class="row between"><h2>Quick strategies</h2><span class="muted-sm">Ready-made, editable templates</span></div>
-        <div id="template-grid" class="grid cols-3"></div>
-      </section>
+    <section class="builder-grid">
+      <aside class="builder-categories">
+        <button class="builder-category active" data-category="trade">Trade Parameters</button>
+        <button class="builder-category" data-category="markets">Markets</button>
+        <button class="builder-category" data-category="conditions">Conditions</button>
+        <button class="builder-category" data-category="indicators">Indicators</button>
+        <button class="builder-category" data-category="risk">Risk Management</button>
+        <button class="builder-category" data-category="restart">Restart Logic</button>
+        <button class="builder-category" data-category="notifications">Notifications</button>
+        <button class="builder-category" data-category="utilities">Utilities</button>
+        <div id="builder-block-library" class="builder-block-library"></div>
+      </aside>
 
-      <section class="bot-workbench card">
-        <div class="row between">
+      <section class="builder-workspace">
+        <div class="workspace-header">
           <div>
-            <h2 style="margin:0">Block workspace</h2>
-            <p class="muted-sm" style="margin:4px 0 0">Original ApexBot strategy blocks inspired by professional bot-builder structure.</p>
+            <strong>Workspace</strong>
+            <span id="builder-status" class="badge info">DRAFT</span>
           </div>
-          <span id="builder-status" class="badge info">DRAFT</span>
+          <div class="muted-sm">Blocks are demo-safe until a Deriv account is connected and confirmed.</div>
         </div>
 
-        <div class="builder-shell">
-          <aside class="block-palette">
-            <button class="palette-item active" data-focus="trade"><span>1</span> Trade parameters</button>
-            <button class="palette-item" data-focus="buy"><span>2</span> Buy conditions</button>
-            <button class="palette-item" data-focus="sell"><span>3</span> Sell conditions</button>
-            <button class="palette-item" data-focus="restart"><span>4</span> Restart conditions</button>
-            <button class="palette-item" data-focus="risk"><span>5</span> Risk controls</button>
-          </aside>
+        <div class="visual-block block-blue" data-block="trade_parameters">
+          <div class="visual-block-head">1. Trade parameters</div>
+          <div class="visual-block-body">
+            <label>Strategy name<input id="s-name" class="input" maxlength="120" /></label>
+            <label>Market group<select id="s-market-group" class="input"></select></label>
+            <label>Submarket<select id="s-submarket" class="input"></select></label>
+            <label>Symbol<select id="s-symbol" class="input"><option value="R_100">Volatility 100 Index</option></select></label>
+            <label>Trade type<select id="s-trade-type" class="input"></select></label>
+            <label>Contract type<select id="s-contract" class="input"></select></label>
+            <label>Duration<input id="s-duration" class="input" type="number" min="1" step="1" /></label>
+            <label>Duration unit<select id="s-duration-type" class="input"><option value="t">Ticks</option><option value="m">Minutes</option><option value="h">Hours</option><option value="d">Days</option></select></label>
+            <label>Stake<input id="s-stake" class="input" type="number" min="0.35" step="0.01" /></label>
+            <label>Candle interval<select id="s-gran" class="input"><option value="60">1 minute</option><option value="300">5 minutes</option><option value="900">15 minutes</option><option value="1800">30 minutes</option><option value="3600">1 hour</option></select></label>
+            <label>Restart on error<select id="s-restart-error" class="input"><option value="true">True</option><option value="false">False</option></select></label>
+          </div>
+          <div id="contract-warning" class="builder-warning hidden"></div>
+        </div>
 
-          <section class="block-canvas" id="block-canvas">
-            <div class="block-card" data-block="trade">
-              <div class="block-head"><span>1. Trade parameters</span><small>Market, direction, stake, duration</small></div>
-              <div class="block-body builder-form">
-                <label>Name<input id="s-name" class="input" maxlength="120" /></label>
-                <label>Market<select id="s-symbol" class="input"><option value="R_100">Volatility 100</option></select></label>
-                <label>Strategy<select id="s-strategy" class="input"><option value="ma_cross">Moving-average crossover</option><option value="rsi_reversal">RSI reversal</option><option value="breakout">Price breakout</option></select></label>
-                <label>Direction<select id="s-contract" class="input"><option value="BOTH">Both directions</option><option value="CALL">Rise / CALL only</option><option value="PUT">Fall / PUT only</option></select></label>
-                <label>Stake<input id="s-stake" class="input" type="number" min="0.35" step="0.01" /></label>
-                <label>Timeframe<select id="s-gran" class="input"><option value="60">1 minute</option><option value="300">5 minutes</option><option value="900">15 minutes</option><option value="3600">1 hour</option></select></label>
-              </div>
+        <div class="workspace-columns">
+          <div class="visual-block block-teal" data-block="conditions">
+            <div class="visual-block-head">2. Buy conditions</div>
+            <div class="visual-block-body">
+              <label>Strategy logic<select id="s-strategy" class="input"><option value="ma_cross">Moving-average crossover</option><option value="rsi_reversal">RSI reversal</option><option value="breakout">Price breakout</option><option value="digit_pattern">Digit pattern</option></select></label>
+              <label data-param="ma">Fast MA<input id="s-fast" class="input" type="number" min="2" max="100" /></label>
+              <label data-param="ma">Slow MA<input id="s-slow" class="input" type="number" min="3" max="250" /></label>
+              <label data-param="rsi">RSI period<input id="s-rsi" class="input" type="number" min="2" max="100" /></label>
+              <label data-param="rsi">Oversold<input id="s-oversold" class="input" type="number" min="1" max="49" /></label>
+              <label data-param="breakout">Breakout lookback<input id="s-lookback" class="input" type="number" min="2" max="250" /></label>
+              <div id="buy-preview" class="block-socket">Waiting for a buy signal.</div>
             </div>
+          </div>
 
-            <div class="block-card" data-block="buy">
-              <div class="block-head"><span>2. Buy conditions</span><small>Rules that allow a Rise/CALL entry</small></div>
-              <div class="block-body builder-form">
-                <label data-param="ma">Fast MA<input id="s-fast" class="input" type="number" min="2" max="100" /></label>
-                <label data-param="ma">Slow MA<input id="s-slow" class="input" type="number" min="3" max="250" /></label>
-                <label data-param="rsi">RSI period<input id="s-rsi" class="input" type="number" min="2" max="100" /></label>
-                <label data-param="rsi">Oversold<input id="s-oversold" class="input" type="number" min="1" max="49" /></label>
-                <label data-param="breakout">Breakout lookback<input id="s-lookback" class="input" type="number" min="2" max="250" /></label>
-                <div class="logic-chip" id="buy-preview">Buy when signal confirms upward pressure.</div>
-              </div>
+          <div class="visual-block block-purple" data-block="sell">
+            <div class="visual-block-head">3. Sell conditions</div>
+            <div class="visual-block-body">
+              <label data-param="rsi">Overbought<input id="s-overbought" class="input" type="number" min="51" max="99" /></label>
+              <label>Sell rule<select id="s-sell-rule" class="input"><option value="mirror">Mirror buy logic</option><option value="confirmation">Require momentum confirmation</option><option value="available">Sell when available</option><option value="disabled">Disable sell entries</option></select></label>
+              <div id="sell-preview" class="block-socket">If sell is available, manage the contract.</div>
             </div>
+          </div>
 
-            <div class="block-card" data-block="sell">
-              <div class="block-head"><span>3. Sell conditions</span><small>Rules that allow a Fall/PUT entry</small></div>
-              <div class="block-body builder-form">
-                <label data-param="rsi">Overbought<input id="s-overbought" class="input" type="number" min="51" max="99" /></label>
-                <label>Sell rule<select id="s-sell-rule" class="input"><option value="mirror">Mirror buy logic</option><option value="confirmation">Require momentum confirmation</option><option value="disabled">Disable sell entries</option></select></label>
-                <div class="logic-chip" id="sell-preview">Sell when signal confirms downward pressure.</div>
-              </div>
+          <div class="visual-block block-red" data-block="risk">
+            <div class="visual-block-head">4. Risk management</div>
+            <div class="visual-block-body">
+              <label>Stop loss<input id="s-stop-loss" class="input" type="number" min="0" step="0.01" /></label>
+              <label>Take profit<input id="s-take-profit" class="input" type="number" min="0" step="0.01" /></label>
+              <label>Max daily loss<input id="s-daily-loss" class="input" type="number" min="0" step="0.01" /></label>
+              <label>Max trades/day<input id="s-max-trades" class="input" type="number" min="1" max="200" /></label>
+              <label>Max consecutive losses<input id="s-max-losses" class="input" type="number" min="1" max="20" /></label>
+              <label>Execution mode<select id="s-demo-only" class="input"><option value="true">Demo only</option><option value="false">Allow real after Deriv connect</option></select></label>
             </div>
+          </div>
 
-            <div class="block-card" data-block="restart">
-              <div class="block-head"><span>4. Restart trading conditions</span><small>What happens after a trade closes</small></div>
-              <div class="block-body builder-form">
-                <label>After win<select id="s-after-win" class="input"><option value="continue">Continue scanning</option><option value="pause">Pause bot</option></select></label>
-                <label>After loss<select id="s-after-loss" class="input"><option value="continue">Continue scanning</option><option value="cooldown">Cooldown first</option><option value="pause">Pause bot</option></select></label>
-                <label>Cooldown trades<input id="s-cooldown" class="input" type="number" min="0" max="20" /></label>
-              </div>
+          <div class="visual-block block-orange" data-block="restart">
+            <div class="visual-block-head">5. Restart trading conditions</div>
+            <div class="visual-block-body">
+              <label>After win<select id="s-after-win" class="input"><option value="continue">Trade again</option><option value="pause">Pause bot</option></select></label>
+              <label>After loss<select id="s-after-loss" class="input"><option value="continue">Trade again</option><option value="cooldown">Cooldown first</option><option value="pause">Pause bot</option></select></label>
+              <label>Cooldown trades<input id="s-cooldown" class="input" type="number" min="0" max="20" /></label>
+              <div class="block-socket">Trade again block is demo-safe until real permissions are confirmed.</div>
             </div>
-
-            <div class="block-card" data-block="risk">
-              <div class="block-head"><span>5. Risk controls</span><small>Hard stops before real execution</small></div>
-              <div class="block-body builder-form">
-                <label>Daily loss limit<input id="s-daily-loss" class="input" type="number" min="0" step="0.01" /></label>
-                <label>Max trades/day<input id="s-max-trades" class="input" type="number" min="1" max="200" /></label>
-                <label>Max consecutive losses<input id="s-max-losses" class="input" type="number" min="1" max="20" /></label>
-                <label>Demo only<select id="s-demo-only" class="input"><option value="true">Yes - demo run only</option><option value="false">Allow real only after Deriv connected</option></select></label>
-              </div>
-            </div>
-          </section>
+          </div>
         </div>
       </section>
 
-      <section class="card">
-        <h2 style="margin-top:0">Execution preview</h2>
-        <div id="strategy-flow" class="strategy-flow"></div>
-      </section>
-
-      <div class="builder-actions">
-        <button id="run-backtest" class="btn">Run demo backtest</button>
-        <button id="save-bot" class="btn ok">Save to my bots</button>
-        <button id="export-bot" class="btn ghost" type="button">Export JSON</button>
-        <label class="btn ghost file-btn">Import JSON<input id="import-bot-json" type="file" accept="application/json,.json" hidden /></label>
-        <span id="builder-message" class="muted-sm"></span>
-      </div>
-
-      <section id="backtest-results" class="hidden"></section>
+      <aside class="builder-inspector">
+        <div class="card">
+          <h3>Strategy summary</h3>
+          <div id="strategy-summary" class="summary-list"></div>
+        </div>
+        <div class="card">
+          <h3>Risk score</h3>
+          <div class="risk-meter"><span id="risk-meter-fill"></span></div>
+          <strong id="risk-score">--</strong>
+          <p class="muted-sm">Estimated exposure: <span id="exposure-value">--</span></p>
+        </div>
+        <div class="card">
+          <h3>Market status</h3>
+          <div id="market-status" class="summary-list"></div>
+        </div>
+        <div class="card">
+          <h3>Validation warnings</h3>
+          <div id="validation-warnings" class="warning-list"></div>
+        </div>
+        <div class="card builder-analysis-card">
+          <h3>Live analysis</h3>
+          <div class="chart-box" style="height:170px"><canvas id="builder-chart"></canvas></div>
+          <div id="builder-ai" style="margin-top:10px"><p class="muted-sm">Loading analysis...</p></div>
+        </div>
+      </aside>
     </section>
 
-    <aside class="builder-side">
-      <div class="card sticky-card">
-        <h3 style="margin-top:0">Testing checklist</h3>
-        <ul class="check-list">
-          <li>Enough candle history</li>
-          <li>Drawdown is acceptable</li>
-          <li>More than a handful of trades</li>
-          <li>Results hold across timeframes</li>
-          <li>Demo test before real funds</li>
-        </ul>
-        <div class="notice demo">Historical performance is not a guarantee. Live payouts, latency, and market conditions differ.</div>
-        <div class="notice err" style="margin-top:10px">Safety rule: ApexBot builder runs demo/backtest first. Real trading requires your own connected Deriv account and active permissions.</div>
+    <section class="builder-terminal">
+      <div class="terminal-head">
+        <strong id="bot-run-state">Bot is not running</strong>
+        <span>Last signal: <b id="last-signal">none</b></span>
       </div>
-    </aside>
+      <div id="builder-log" class="terminal-log">
+        <div>Bot not running.</div>
+        <div>No demo execution logs yet.</div>
+      </div>
+      <section id="backtest-results" class="hidden"></section>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
@@ -153,6 +167,9 @@
   <script src="js/pb-client.js"></script>
   <script src="js/security.js"></script>
   <script src="js/mini-charts.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/ai-analysis.js"></script>
+  <script src="js/deriv-onboard.js"></script>
   <script src="js/bot-builder.js"></script>
 </body>
 </html>

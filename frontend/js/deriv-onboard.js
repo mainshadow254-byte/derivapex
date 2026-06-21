@@ -9,7 +9,11 @@
 //   DerivOnboard.mount(container,opts) -> insert the card + wire its buttons
 window.DerivOnboard = (function () {
   async function affiliateUrl() {
-    try { const cfg = await loadPublicConfig(); return cfg?.derivAffiliateLink || ''; }
+    try {
+      const cfg = await loadPublicConfig();
+      const url = cfg?.derivAffiliateLink || '';
+      return /track\.deriv\.com/i.test(url) ? 'https://deriv.com/signup/' : url;
+    }
     catch { return ''; }
   }
 

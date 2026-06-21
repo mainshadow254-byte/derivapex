@@ -50,3 +50,23 @@ export async function getSymbolsGrouped() {
   }
   return groups;
 }
+
+// Contract availability for a selected Deriv symbol. This is intentionally
+// backend-proxied so the frontend can show only contract families Deriv says
+// are currently available for that market.
+export async function getContractsFor(symbol) {
+  const msg = await once({ contracts_for: symbol, currency: 'USD', product_type: 'basic' }, 'contracts_for');
+  return (msg.contracts_for?.available || []).map((c) => ({
+    contract_type: c.contract_type,
+    contract_category: c.contract_category,
+    contract_category_display: c.contract_category_display,
+    contract_display: c.contract_display,
+    barrier_category: c.barrier_category,
+    barriers: c.barriers,
+    sentiment: c.sentiment,
+    start_type: c.start_type,
+    expiry_type: c.expiry_type,
+    min_contract_duration: c.min_contract_duration,
+    max_contract_duration: c.max_contract_duration,
+  }));
+}

@@ -15,8 +15,15 @@
     .ind{display:flex;align-items:center;gap:6px;font-size:12px;background:#0d1426;border:1px solid var(--line);padding:6px 10px;border-radius:8px;cursor:pointer}
     #main-chart{height:420px}#osc-chart{height:140px;margin-top:6px}
     .layout{display:grid;gap:16px;grid-template-columns:1fr}
-    @media(min-width:1200px){.layout{grid-template-columns:280px minmax(0,1fr) 320px}}
+    @media(min-width:1200px){.layout{grid-template-columns:280px minmax(0,1fr) 340px}}
     .col-stack{display:flex;flex-direction:column;gap:16px}
+    .dtrader-card{border-color:#2d4262}
+    .dtrader-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .dtrader-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .dtrader-ticket{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:9px;background:#080e1b;font-size:12px;color:var(--muted)}
+    .dtrader-ticket b{color:#e2e8f0}
+    .dtrader-mode{display:flex;gap:6px;margin-bottom:10px}
+    .dtrader-mode button{flex:1}
   </style>
 </head>
 <body class="app-body">
@@ -27,7 +34,7 @@
       <a class="btn ghost" href="dashboard.html">Dashboard</a>
       <a class="btn ghost" href="bot-builder.html">Builder</a>
       <a class="btn ghost" href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>
-      <a class="btn ghost" href="https://app.deriv.com/" target="_blank" rel="noopener">DTrader</a>
+      <a class="btn ghost" href="#dtrader-panel">DTrader</a>
     </div>
   </nav>
 
@@ -73,6 +80,31 @@
     <div class="col-stack">
       <div id="deriv-onboard"></div>
       <div class="card" id="account-summary"><p class="muted">Loading account…</p></div>
+      <div class="card dtrader-card" id="dtrader-panel">
+        <div class="row between">
+          <h3 style="margin:0">DTrader</h3>
+          <span id="dt-mode-badge" class="badge demo">DEMO</span>
+        </div>
+        <p class="muted-sm" style="margin:6px 0 12px">Trade inside ApexBot using the selected chart market. Real orders stay server-controlled through your connected Deriv account.</p>
+        <div class="dtrader-mode">
+          <button class="btn sm" type="button" data-dt-mode="demo">Demo</button>
+          <button class="btn sm ghost" type="button" data-dt-mode="real">Real</button>
+        </div>
+        <label class="label">Market<select id="dt-symbol" class="input"></select></label>
+        <div class="dtrader-grid" style="margin-top:8px">
+          <label class="label">Stake<input id="dt-stake" class="input" type="number" min="0.35" step="0.01" value="1"></label>
+          <label class="label">Duration<input id="dt-duration" class="input" type="number" min="1" step="1" value="5"></label>
+        </div>
+        <div class="dtrader-grid" style="margin-top:8px">
+          <label class="label">Unit<select id="dt-unit" class="input"><option value="t">Ticks</option><option value="m">Minutes</option><option value="h">Hours</option></select></label>
+          <label class="label">Last price<input id="dt-price" class="input" readonly value="--"></label>
+        </div>
+        <div class="dtrader-actions">
+          <button id="dt-rise" class="btn ok" type="button">Rise</button>
+          <button id="dt-fall" class="btn danger" type="button">Fall</button>
+        </div>
+        <div id="dt-ticket" class="dtrader-ticket">Choose Rise or Fall to place a demo trade. Switch to Real only after Deriv is connected.</div>
+      </div>
       <div class="card">
         <h3 style="margin-top:0">AI Chart Analysis</h3>
         <div id="ai"><p class="muted">Loading analysis…</p></div>
@@ -91,6 +123,7 @@
   <script src="js/indicators.js"></script>
   <script src="js/chart-terminal.js"></script>
   <script src="js/ai-analysis.js"></script>
+  <script src="js/dtrader-panel.js"></script>
   <script src="js/notifications.js"></script>
   <script src="js/devices.js"></script>
   <script src="js/workspace.js"></script>
@@ -126,6 +159,8 @@
       });
       firstSymbol = sel.value || firstSymbol;
     }catch(e){ $('market').innerHTML='<option value="R_100">Volatility 100</option>'; }
+    $('dt-symbol').innerHTML = $('market').innerHTML;
+    $('dt-symbol').value = firstSymbol;
 
     const INDICATORS=[['ema20','EMA 20'],['ema50','EMA 50'],['ma20','MA 20'],['bollinger','Bollinger'],['sr','Support/Resist'],['trendline','Trend line'],['rsi','RSI'],['macd','MACD'],['atr','ATR']];
     const term = new ChartTerminal({
@@ -140,6 +175,7 @@
         if(d.bid!=null)$('r-bid').textContent=d.bid.toFixed(4);
         if(d.ask!=null)$('r-ask').textContent=d.ask.toFixed(4);
         if(d.tickVol!=null)$('r-vol').textContent=d.tickVol;
+        if(d.quote!=null)$('dt-price').value=d.quote.toFixed(4);
       },
       onLayoutChange:()=>{ buildIndicatorUI(); }
     });
@@ -174,7 +210,8 @@
     }
     buildIndicatorUI();
 
-    $('market').onchange=()=>{ term.setSymbol($('market').value); MarketWatch.setCurrent($('market').value); refreshAI(); };
+    $('market').onchange=()=>{ term.setSymbol($('market').value); $('dt-symbol').value=$('market').value; MarketWatch.setCurrent($('market').value); refreshAI(); };
+    $('dt-symbol').onchange=()=>{ $('market').value=$('dt-symbol').value; term.setSymbol($('dt-symbol').value); MarketWatch.setCurrent($('dt-symbol').value); refreshAI(); };
     $('type').onchange=()=>term.setType($('type').value);
     $('gran').onchange=()=>{ term.setGranularity(+$('gran').value); refreshAI(); };
     $('fs').onclick=()=>term.fullscreen();
@@ -188,6 +225,13 @@
     // Account summary + trading panels (real account / recorded ledger).
     AccountSummary.load($('account-summary'));
     TradingPanels.init($('trading-panels'));
+    DTraderPanel.init({
+      me,
+      symbolEl:$('dt-symbol'), stakeEl:$('dt-stake'), durationEl:$('dt-duration'), unitEl:$('dt-unit'),
+      ticketEl:$('dt-ticket'), badgeEl:$('dt-mode-badge'), riseEl:$('dt-rise'), fallEl:$('dt-fall'),
+      modeButtons:document.querySelectorAll('[data-dt-mode]'),
+      onTrade:()=>{ TradingPanels.init($('trading-panels')); AccountSummary.load($('account-summary')); },
+    });
     setInterval(()=>AccountSummary.load($('account-summary')), 30000);
 
     // Notifications bell.

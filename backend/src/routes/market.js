@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { getEffectivePlan } from '../services/subscriptions.js';
-import { getCandles, getTickHistory, getSymbolsGrouped } from '../services/derivData.js';
+import { getCandles, getTickHistory, getSymbolsGrouped, getContractsFor } from '../services/derivData.js';
 import { analyzeChart } from '../services/chartAI.js';
 import { CHART_GRANULARITIES, ALLOWED_GRANULARITIES } from '../config.js';
 
@@ -17,6 +17,13 @@ router.get('/timeframes', requireAuth, (_req, res) => res.json({ timeframes: CHA
 router.get('/symbols', requireAuth, async (_req, res) => {
   try { res.json({ groups: await getSymbolsGrouped() }); }
   catch (e) { res.status(502).json({ error: 'Deriv symbols unavailable.', detail: e.message }); }
+});
+
+router.get('/contracts', requireAuth, async (req, res) => {
+  const { symbol } = req.query;
+  if (!symbol) return res.status(400).json({ error: 'symbol required.' });
+  try { res.json({ symbol, contracts: await getContractsFor(symbol) }); }
+  catch (e) { res.status(502).json({ error: 'Deriv contracts unavailable.', detail: e.message }); }
 });
 
 // Candles for the charting terminal. granularity in seconds.
