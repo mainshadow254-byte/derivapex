@@ -1,19 +1,17 @@
 (async function () {
   const el = (id) => document.getElementById(id);
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-  const num = (id, fallback = 0) => Number(el(id)?.value || fallback);
-  const val = (id, fallback = '') => el(id)?.value || fallback;
-  const checked = (id) => !!el(id)?.checked;
-  const fmt = (n) => Number(n || 0).toFixed(2);
+  const fmt = (value) => Number(value || 0).toFixed(2);
+  const uid = () => Math.random().toString(36).slice(2, 8);
 
   if (window.DerivOnboard) DerivOnboard.wireOAuth(document);
   if (window.ContentProtection && window.Auth?.isLoggedIn) {
     try { ContentProtection.init('ApexBot Builder'); } catch {}
   }
 
-  const API_BASE = (window.ApexConfig?.apiBaseUrl || window.APEX_CONFIG?.API_BASE_URL || '').replace(/\/$/, '');
-  const AUTOSAVE_KEY = 'apexbot_dbot_flow_v1';
-  const RESULTS_PANEL_KEY = 'apexbot_results_panel_open_v1';
+  const AUTOSAVE_KEY = 'apexbot_visual_strategy_v1';
+  const WORKSTATION_KEY = 'apexbot_workstation_open_v1';
+  const API_BASE = (window.APEX?.API_BASE || `${(window.APEX_CONFIG?.API_BASE_URL || '').replace(/\/$/, '')}/api`).replace(/\/$/, '');
 
   const tradeTypeGroups = [
     { id:'rise_fall', label:'Rise/Fall', categories:['callput'], contracts:['CALL','PUT'] },
@@ -24,9 +22,9 @@
     { id:'matches_differs', label:'Matches/Differs', categories:['digits'], contracts:['DIGITMATCH','DIGITDIFF'] },
     { id:'even_odd', label:'Even/Odd', categories:['digits'], contracts:['DIGITEVEN','DIGITODD'] },
     { id:'over_under', label:'Over/Under', categories:['digits'], contracts:['DIGITOVER','DIGITUNDER'] },
-    { id:'asians', label:'Asian Up/Asian Down', categories:['asian'], contracts:['ASIANU','ASIAND'] },
+    { id:'asian', label:'Asian Up/Asian Down', categories:['asian'], contracts:['ASIANU','ASIAND'] },
     { id:'reset', label:'Reset Call/Reset Put', categories:['reset'], contracts:['RESETCALL','RESETPUT'] },
-    { id:'call_put_spread', label:'Call/Put Spread', categories:['callputspread'], contracts:['CALLSPREAD','PUTSPREAD'] },
+    { id:'spread', label:'Call/Put Spread', categories:['callputspread'], contracts:['CALLSPREAD','PUTSPREAD'] },
     { id:'multiplier', label:'Multiplier', categories:['multiplier'], contracts:['MULTUP','MULTDOWN'] },
   ];
 
@@ -38,100 +36,128 @@
     CALLSPREAD:'Call Spread', PUTSPREAD:'Put Spread', MULTUP:'Multiplier Up', MULTDOWN:'Multiplier Down',
   };
 
-  const blockCatalog = {
-    trade: {
-      title: 'Trade Parameters',
-      blocks: [['trade_definition', 'Trade definition'], ['trade_options', 'Trade options'], ['purchase', 'Purchase'], ['run_once', 'Run once at start']],
-    },
-    markets: {
-      title: 'Markets',
-      blocks: [['synthetic', 'Synthetic / Derived'], ['volatility', 'Volatility indices'], ['boom_crash', 'Boom & Crash'], ['step_jump', 'Step / Jump'], ['forex_crypto', 'Forex / Crypto']],
-    },
-    conditions: {
-      title: 'Conditions',
-      blocks: [['if', 'If'], ['then', 'Then'], ['sell_available', 'Sell is available'], ['compare', 'Compare'], ['digit_prediction', 'Digit prediction']],
-    },
-    indicators: {
-      title: 'Indicators',
-      blocks: [['rsi', 'RSI'], ['ma', 'Moving average'], ['bollinger', 'Bollinger bands'], ['macd', 'MACD'], ['breakout', 'Breakout range']],
-    },
-    risk: {
-      title: 'Risk Management',
-      blocks: [['stop_loss', 'Stop loss'], ['take_profit', 'Take profit'], ['daily_loss', 'Max daily loss'], ['max_trades', 'Max trades'], ['loss_limit', 'Consecutive loss limit']],
-    },
-    restart: {
-      title: 'Restart Logic',
-      blocks: [['trade_again', 'Trade again'], ['after_win', 'After win'], ['after_loss', 'After loss'], ['cooldown', 'Cooldown'], ['restart_error', 'Restart on error']],
-    },
-    notifications: {
-      title: 'Notifications',
-      blocks: [['log', 'Execution log'], ['browser_alert', 'Browser alert'], ['telegram', 'Telegram alert']],
-    },
-    utilities: {
-      title: 'Utilities',
-      blocks: [['import', 'Import'], ['export', 'Export'], ['comment', 'Comment'], ['wait', 'Wait']],
-    },
+  const blockCatalog = [
+    { id:'trade', title:'Trade Parameters', blocks:[
+      ['trade_parameters','Trade Parameters','Set market, symbol, contract, duration, stake.'],
+      ['market_filter','Market Filter','Limit the strategy to a market family.'],
+      ['duration','Duration','Set duration and unit.'],
+      ['stake','Stake','Set stake and currency.'],
+    ] },
+    { id:'purchase', title:'Purchase Conditions', blocks:[
+      ['purchase_conditions','Purchase Conditions','Entry rules before buying.'],
+      ['digit_prediction','Prediction Digit','Use digit prediction for digit contracts.'],
+      ['buy_signal','Buy Signal','Signal gate before purchase.'],
+      ['condition_chain','AND / OR Chain','Combine conditions visually.'],
+    ] },
+    { id:'sell', title:'Sell Conditions', blocks:[
+      ['sell_conditions','Sell Conditions','Optional sell-before-expiry logic.'],
+      ['profit_target','Profit > target','Sell when profit target is met.'],
+      ['loss_limit','Loss > limit','Sell when loss limit is met.'],
+      ['time_exit','Time exceeded','Exit after a time condition.'],
+    ] },
+    { id:'restart', title:'Restart Conditions', blocks:[
+      ['restart_conditions','Restart Conditions','Control what happens after a trade.'],
+      ['after_win','After Win','Continue, pause, or reset.'],
+      ['after_loss','After Loss','Continue, cooldown, or pause.'],
+      ['daily_reset','Daily Reset','Restart after day boundary.'],
+    ] },
+    { id:'indicators', title:'Indicators', blocks:[
+      ['rsi','RSI','RSI threshold condition.'],
+      ['ema_cross','EMA Cross','EMA fast/slow crossover.'],
+      ['macd','MACD','MACD crossover condition.'],
+      ['volatility_filter','Volatility Filter','Volatility above or below a threshold.'],
+    ] },
+    { id:'logic', title:'Logic', blocks:[
+      ['and','AND','All connected conditions must pass.'],
+      ['or','OR','Any connected condition may pass.'],
+      ['not','NOT','Invert a condition.'],
+      ['compare','Compare','Compare two values.'],
+    ] },
+    { id:'variables', title:'Variables', blocks:[
+      ['counter','Counter','Track runs or losses.'],
+      ['profit_var','Current Profit','Use current profit.'],
+      ['loss_var','Current Loss','Use current loss.'],
+    ] },
+    { id:'risk', title:'Risk Management', blocks:[
+      ['risk_management','Risk Management','Stop loss, take profit, daily limits.'],
+      ['stop_loss','Stop Loss','Stop after loss threshold.'],
+      ['take_profit','Take Profit','Stop after profit threshold.'],
+      ['max_trades','Max Trades','Limit daily trades.'],
+      ['money_management','Money Management','Martingale or fixed stake.'],
+    ] },
+    { id:'ai', title:'AI Blocks', blocks:[
+      ['ai_signal','AI Signal','Requires backend AI analysis.'],
+      ['ai_trend','AI Trend Filter','Uses AI trend confirmation.'],
+      ['ai_volatility','AI Volatility Filter','Uses AI volatility risk.'],
+      ['ai_approval','AI Trade Approval','Approval gate before trade.'],
+    ] },
+    { id:'notifications', title:'Notifications', blocks:[
+      ['journal_note','Journal Note','Write to journal.'],
+      ['browser_alert','Browser Alert','Show local browser alert.'],
+      ['telegram_alert','Telegram Alert','Telegram notification after setup.'],
+    ] },
+    { id:'utilities', title:'Utilities', blocks:[
+      ['comment','Comment','Annotate your strategy.'],
+      ['wait','Wait','Pause before next action.'],
+      ['template_marker','Template Marker','Organize a section.'],
+    ] },
+  ];
+
+  const templates = {
+    rsi: { label:'RSI Reversal', strategy:'rsi_reversal', tradeType:'rise_fall', contract_type:'CALL', blocks:['start','trade_parameters','rsi','purchase_conditions','sell_conditions','restart_conditions','risk_management'] },
+    ema: { label:'EMA Cross', strategy:'ma_cross', tradeType:'rise_fall', contract_type:'CALL', blocks:['start','trade_parameters','ema_cross','purchase_conditions','restart_conditions','risk_management'] },
+    even: { label:'Even/Odd', strategy:'digit_pattern', tradeType:'even_odd', contract_type:'DIGITEVEN', blocks:['start','trade_parameters','digit_prediction','purchase_conditions','restart_conditions','risk_management'] },
+    over: { label:'Over/Under', strategy:'digit_pattern', tradeType:'over_under', contract_type:'DIGITOVER', blocks:['start','trade_parameters','digit_prediction','purchase_conditions','restart_conditions','risk_management'] },
+    boom: { label:'Boom Hunter', strategy:'breakout', blocks:['start','trade_parameters','volatility_filter','purchase_conditions','profit_target','restart_conditions','risk_management'] },
+    crash: { label:'Crash Hunter', strategy:'breakout', blocks:['start','trade_parameters','volatility_filter','purchase_conditions','loss_limit','restart_conditions','risk_management'] },
+    ai: { label:'AI Strategy', blocks:['start','trade_parameters','ai_signal','ai_trend','ai_approval','purchase_conditions','restart_conditions','risk_management'] },
   };
 
   const defaults = {
-    name: 'ApexBot block strategy',
+    name: 'ApexBot visual strategy',
     symbol: 'R_100',
+    marketGroup: 'Volatility',
+    submarket: '',
     tradeType: 'rise_fall',
     contract_type: 'CALL',
-    strategy: 'ma_cross',
-    stake: 1,
     duration: 1,
     durationType: 't',
-    granularity: 60,
-    fastPeriod: 10,
-    slowPeriod: 30,
-    rsiPeriod: 14,
-    conditionValue: 30,
-    lookback: 20,
-    comparator: '>',
-    prediction: '1',
+    stake: 1,
+    currency: 'AUD',
     barrier: '',
+    prediction: '1',
+    multiplier: 2,
+    strategy: 'ma_cross',
+    comparator: '<',
+    conditionValue: 30,
+    fastPeriod: 10,
+    slowPeriod: 20,
+    rsiPeriod: 14,
     sellRule: 'available',
-    restartOnError: true,
     afterWin: 'continue',
     afterLoss: 'continue',
     stopLoss: 10,
     takeProfit: 20,
     dailyLossLimit: 25,
     maxTradesPerDay: 20,
-    maxConsecutiveLosses: 3,
-    cooldownTrades: 0,
     moneyMode: 'fixed',
-    multiplier: 2,
-    demoOnly: true,
-    stacks: {
-      start: ['start trading condition'],
-      buy: ['purchase selected contract'],
-      sell: ['sell if available'],
-      restart: ['trade again'],
-    },
   };
 
-  let current = { ...defaults, stacks: structuredCloneSafe(defaults.stacks) };
+  let strategy = { ...defaults };
+  let blocks = [];
+  let selectedId = '';
   let flatSymbols = [];
   let availableContracts = [];
+  let zoom = 1;
   const botStats = { runs: 0, stake: 0, payout: 0, won: 0, lost: 0, profit: 0 };
   const transactions = [];
-
-  function structuredCloneSafe(value) {
-    return JSON.parse(JSON.stringify(value));
-  }
-
-  function authHeaders() {
-    const token = window.Auth?.token || window.pb?.authStore?.token || localStorage.getItem('pb_auth') && '';
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
+  const signals = [];
 
   async function request(path, options = {}) {
     if (typeof window.api === 'function') return api(path, options);
-    const res = await fetch(`${API_BASE}/api${path}`, {
+    const res = await fetch(`${API_BASE}${path}`, {
       ...options,
-      headers: { 'Content-Type':'application/json', ...authHeaders(), ...(options.headers || {}) },
+      headers: { 'Content-Type':'application/json', ...(options.headers || {}) },
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw Object.assign(new Error(data.error || `Request failed (${res.status})`), { status: res.status });
@@ -143,39 +169,25 @@
     row.className = tone ? `log-${tone}` : '';
     row.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
     el('builder-log').prepend(row);
-    while (el('builder-log').children.length > 80) el('builder-log').lastElementChild.remove();
+    while (el('builder-log').children.length > 100) el('builder-log').lastElementChild.remove();
   }
 
-  function setResultsPanel(open = true, tab = '') {
-    el('bot-results-panel').classList.toggle('minimized', !open);
-    el('minimize-results').textContent = open ? 'Hide' : 'Show';
-    el('minimize-results').setAttribute('aria-label', open ? 'Minimize results panel' : 'Show results panel');
-    try { localStorage.setItem(RESULTS_PANEL_KEY, open ? 'open' : 'closed'); } catch {}
-    if (tab) setResultTab(tab);
+  function blockMeta(type) {
+    if (type === 'start') return { title:'START', desc:'Strategy entry point.' };
+    for (const group of blockCatalog) {
+      const found = group.blocks.find(([id]) => id === type);
+      if (found) return { title: found[1], desc: found[2], category: group.title };
+    }
+    return { title: type.replace(/_/g, ' '), desc:'Custom builder block.' };
   }
 
-  function setResultTab(tab) {
-    document.querySelectorAll('.bot-result-tab').forEach((button) => button.classList.toggle('active', button.dataset.resultTab === tab));
-    document.querySelectorAll('.bot-result-view').forEach((view) => view.classList.toggle('active', view.dataset.resultView === tab));
+  function createBlock(type, x, y) {
+    const meta = blockMeta(type);
+    return { id:`${type}-${uid()}`, type, title: meta.title, desc: meta.desc, x, y, settings:{} };
   }
 
-  function renderTransactions() {
-    el('transaction-list').innerHTML = transactions.length ? `
-      <table class="bot-transactions-table">
-        <thead><tr><th>Time</th><th>Market</th><th>Contract</th><th>Stake</th><th>Status</th></tr></thead>
-        <tbody>${transactions.map((tx) => `<tr><td>${esc(tx.time)}</td><td>${esc(tx.symbol)}</td><td>${esc(tx.contract)}</td><td>${esc(tx.stake)}</td><td>${esc(tx.status)}</td></tr>`).join('')}</tbody>
-      </table>
-    ` : 'No transactions yet. Demo transactions will appear after Run.';
-  }
-
-  function renderSummary() {
-    el('summary-stake').textContent = `${fmt(botStats.stake)} AUD`;
-    el('summary-payout').textContent = `${fmt(botStats.payout)} AUD`;
-    el('summary-runs').textContent = botStats.runs;
-    el('summary-lost').textContent = botStats.lost;
-    el('summary-won').textContent = botStats.won;
-    el('summary-profit').textContent = `${fmt(botStats.profit)} AUD`;
-    el('summary-ready-text').classList.toggle('hidden', botStats.runs > 0);
+  function makeBlocks(types = ['start','trade_parameters','purchase_conditions','sell_conditions','restart_conditions','risk_management']) {
+    return types.map((type, index) => createBlock(type, 80 + index * 260, 130 + (index % 2) * 24));
   }
 
   function classifySymbol(s) {
@@ -203,8 +215,8 @@
     try {
       const { groups } = await request('/market/symbols');
       flatSymbols = normalizeSymbols(groups);
-      el('market-state').textContent = `${flatSymbols.length} Deriv symbols`;
-      log(`Loaded ${flatSymbols.length} live Deriv symbols.`, 'ok');
+      el('canvas-status').textContent = `${flatSymbols.length} markets`;
+      log(`Market selected: loaded ${flatSymbols.length} Deriv symbols.`, 'ok');
     } catch (e) {
       flatSymbols = [
         { symbol:'R_10', name:'Volatility 10 Index', family:'Volatility', submarket:'Continuous Indices', exchange_open:true },
@@ -213,39 +225,9 @@
         { symbol:'R_75', name:'Volatility 75 Index', family:'Volatility', submarket:'Continuous Indices', exchange_open:true },
         { symbol:'R_100', name:'Volatility 100 Index', family:'Volatility', submarket:'Continuous Indices', exchange_open:true },
       ];
-      el('market-state').textContent = 'Fallback symbols';
-      log(`Live symbols unavailable: ${e.message}`, 'warn');
+      el('canvas-status').textContent = 'Fallback markets';
+      log(`Market feed unavailable: ${e.message}`, 'warn');
     }
-    renderMarketSelectors();
-  }
-
-  function renderMarketSelectors() {
-    const groups = [...new Set(flatSymbols.map((s) => s.family || s.market || 'Other'))];
-    el('s-market-group').innerHTML = groups.map((g) => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
-    const selected = flatSymbols.find((s) => s.symbol === current.symbol) || flatSymbols[0];
-    if (selected) {
-      el('s-market-group').value = selected.family || selected.market || groups[0];
-      renderSubmarkets(selected.submarket);
-      el('s-symbol').value = selected.symbol;
-    }
-  }
-
-  function renderSubmarkets(preferred = '') {
-    const group = val('s-market-group');
-    const symbols = flatSymbols.filter((s) => (s.family || s.market || 'Other') === group);
-    const subs = [...new Set(symbols.map((s) => s.submarket || group))];
-    el('s-submarket').innerHTML = subs.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
-    if (preferred && subs.includes(preferred)) el('s-submarket').value = preferred;
-    renderSymbols();
-  }
-
-  function renderSymbols() {
-    const group = val('s-market-group');
-    const sub = val('s-submarket');
-    const symbols = flatSymbols.filter((s) => (s.family || s.market || 'Other') === group && (s.submarket || group) === sub);
-    el('s-symbol').innerHTML = symbols.map((s) => `<option value="${esc(s.symbol)}">${esc(s.name || s.symbol)}${s.exchange_open === false ? ' (closed)' : ''}</option>`).join('');
-    if (symbols.some((s) => s.symbol === current.symbol)) el('s-symbol').value = current.symbol;
-    else if (symbols[0]) el('s-symbol').value = symbols[0].symbol;
   }
 
   function contractMatchesGroup(group, contract) {
@@ -255,350 +237,562 @@
 
   async function loadContracts(symbol) {
     availableContracts = [];
-    el('contract-warning').classList.add('hidden');
     try {
       const res = await request(`/market/contracts?symbol=${encodeURIComponent(symbol)}`);
       availableContracts = res.contracts || [];
-      log(`Loaded ${availableContracts.length} contracts for ${symbol}.`, 'ok');
+      log(`Contract list updated: ${availableContracts.length} contracts for ${symbol}.`, 'ok');
     } catch (e) {
-      el('contract-warning').textContent = `Contracts unavailable for ${symbol}: ${e.message}`;
-      el('contract-warning').classList.remove('hidden');
-      log(`Contracts unavailable for ${symbol}: ${e.message}`, 'warn');
+      log(`Contract unavailable: ${e.message}`, 'warn');
     }
-    renderTradeTypes();
+    normalizeTradeSelection();
+    renderProperties();
+    validate();
   }
 
-  function renderTradeTypes() {
-    const usable = availableContracts.length
-      ? tradeTypeGroups.filter((group) => availableContracts.some((contract) => contractMatchesGroup(group, contract)))
-      : tradeTypeGroups.slice(0, 4);
-    el('s-trade-type').innerHTML = usable.map((group) => `<option value="${group.id}">${esc(group.label)}</option>`).join('');
-    if (usable.some((group) => group.id === current.tradeType)) el('s-trade-type').value = current.tradeType;
-    renderContracts();
+  function normalizeTradeSelection() {
+    const usable = tradeTypeGroups.filter((group) => !availableContracts.length || availableContracts.some((contract) => contractMatchesGroup(group, contract)));
+    if (!usable.some((group) => group.id === strategy.tradeType)) strategy.tradeType = usable[0]?.id || 'rise_fall';
+    const group = tradeTypeGroups.find((g) => g.id === strategy.tradeType) || tradeTypeGroups[0];
+    const contracts = availableContracts.length
+      ? availableContracts.filter((contract) => contractMatchesGroup(group, contract)).map((contract) => contract.contract_type)
+      : group.contracts;
+    if (!contracts.includes(strategy.contract_type)) strategy.contract_type = contracts[0] || '';
   }
 
-  function renderContracts() {
-    const group = tradeTypeGroups.find((g) => g.id === val('s-trade-type')) || tradeTypeGroups[0];
-    const metas = availableContracts.length
-      ? availableContracts.filter((contract) => contractMatchesGroup(group, contract))
-      : group.contracts.map((contract_type) => ({ contract_type }));
-    el('s-contract').innerHTML = metas.map((meta) => {
-      const label = meta.contract_display || contractLabels[meta.contract_type] || meta.contract_type;
-      return `<option value="${esc(meta.contract_type)}">${esc(label)}</option>`;
+  function renderLibrary() {
+    const query = el('block-search').value.trim().toLowerCase();
+    el('block-categories').innerHTML = blockCatalog.map((group, index) => {
+      const blocksHtml = group.blocks
+        .filter(([, label, desc]) => !query || `${label} ${desc} ${group.title}`.toLowerCase().includes(query))
+        .map(([type, label, desc]) => `<button class="library-block" type="button" draggable="true" data-block-type="${type}"><b>${esc(label)}</b><span>${esc(desc)}</span></button>`)
+        .join('');
+      if (!blocksHtml && query) return '';
+      return `<details class="library-group" ${index < 4 || query ? 'open' : ''}>
+        <summary>${esc(group.title)}</summary>
+        <div class="library-group-body">${blocksHtml || '<small>No blocks match.</small>'}</div>
+      </details>`;
     }).join('');
-    if (metas.some((meta) => meta.contract_type === current.contract_type)) el('s-contract').value = current.contract_type;
-    else if (metas[0]) el('s-contract').value = metas[0].contract_type;
-    if (!metas.length) {
-      el('contract-warning').textContent = `${group.label} is not available for ${val('s-symbol')}.`;
-      el('contract-warning').classList.remove('hidden');
-    }
-  }
-
-  function renderToolbox(category = 'trade') {
-    const catalog = blockCatalog[category] || blockCatalog.trade;
-    el('toolbox-title').textContent = catalog.title;
-    document.querySelectorAll('.dbot-tool-icon').forEach((button) => button.classList.toggle('active', button.dataset.category === category));
-    el('builder-block-library').innerHTML = catalog.blocks.map(([type, label]) => (
-      `<button class="toolbox-block" draggable="true" data-block-type="${esc(type)}" type="button"><span>${esc(type)}</span><b>${esc(label)}</b></button>`
-    )).join('');
-    el('builder-block-library').querySelectorAll('.toolbox-block').forEach((button) => {
+    document.querySelectorAll('.library-block').forEach((button) => {
       button.onclick = () => addBlock(button.dataset.blockType);
       button.ondragstart = (event) => event.dataTransfer.setData('application/x-apex-block', button.dataset.blockType);
     });
   }
 
-  function targetZoneFor(type) {
-    if (['trade_definition','trade_options','run_once','synthetic','volatility','boom_crash','step_jump','forex_crypto'].includes(type)) return 'start';
-    if (['sell_available'].includes(type)) return 'sell';
-    if (['trade_again','after_win','after_loss','cooldown','restart_error'].includes(type)) return 'restart';
-    return 'buy';
+  function renderTemplates() {
+    el('template-picker').innerHTML = '<option value="">Templates</option>' +
+      Object.entries(templates).map(([id, template]) => `<option value="${id}">${esc(template.label)}</option>`).join('');
   }
 
-  function addBlock(type, zone = targetZoneFor(type)) {
-    current.stacks[zone] ||= [];
-    const label = blockLabel(type);
-    if (current.stacks[zone].includes(label)) {
-      log(`${label} is already in this block stack.`, 'warn');
-      return;
+  function renderCanvas() {
+    el('canvas-blocks').style.transform = `scale(${zoom})`;
+    el('canvas-blocks').innerHTML = blocks.map((block, index) => `
+      <button class="visual-node ${selectedId === block.id ? 'selected' : ''} ${block.type}" data-block-id="${esc(block.id)}" draggable="true" style="left:${block.x}px;top:${block.y}px">
+        <span class="node-port in"></span>
+        <span class="node-port out"></span>
+        <small>${index + 1}</small>
+        <b>${esc(block.title)}</b>
+        <em>${esc(block.desc)}</em>
+      </button>
+    `).join('');
+    el('canvas-empty').classList.toggle('hidden', blocks.length > 0);
+    document.querySelectorAll('.visual-node').forEach((node) => {
+      node.onclick = () => { selectedId = node.dataset.blockId; renderCanvas(); renderProperties(); };
+      node.ondragstart = (event) => event.dataTransfer.setData('application/x-apex-existing-block', node.dataset.blockId);
+    });
+    renderConnections();
+    renderMiniMap();
+    el('zoom-label').textContent = `${Math.round(zoom * 100)}%`;
+    saveLocal();
+  }
+
+  function renderConnections() {
+    const svg = el('connection-layer');
+    svg.innerHTML = '';
+    for (let i = 0; i < blocks.length - 1; i++) {
+      const a = blocks[i], b = blocks[i + 1];
+      const x1 = (a.x + 220) * zoom, y1 = (a.y + 45) * zoom;
+      const x2 = b.x * zoom, y2 = (b.y + 45) * zoom;
+      svg.insertAdjacentHTML('beforeend', `<path d="M ${x1} ${y1} C ${x1 + 70} ${y1}, ${x2 - 70} ${y2}, ${x2} ${y2}" />`);
     }
-    current.stacks[zone].push(label);
-    renderStacks();
-    refresh();
-    log(`Added block: ${blockLabel(type)}`);
   }
 
-  function blockLabel(type) {
-    return Object.values(blockCatalog).flatMap((group) => group.blocks).find(([id]) => id === type)?.[1] || type.replace(/_/g, ' ');
+  function renderMiniMap() {
+    el('mini-map').innerHTML = blocks.map((block) => `<span style="left:${Math.max(2, block.x / 13)}px;top:${Math.max(2, block.y / 13)}px"></span>`).join('');
   }
 
-  function renderStacks() {
-    Object.entries({ start:'start-stack', buy:'buy-stack', sell:'sell-stack', restart:'restart-stack' }).forEach(([zone, id]) => {
-      const rows = current.stacks?.[zone] || [];
-      el(id).innerHTML = rows.map((label, index) => (
-        `<div class="dbot-nested-block" draggable="true" data-zone="${zone}" data-index="${index}">
-          <b>${esc(label)}</b><button class="block-remove" type="button" title="Remove block">x</button>
-        </div>`
-      )).join('');
+  function addBlock(type, x = 120, y = 220) {
+    blocks.push(createBlock(type, x + blocks.length * 20, y + blocks.length * 18));
+    selectedId = blocks[blocks.length - 1].id;
+    log(`Block added: ${blocks[blocks.length - 1].title}.`);
+    renderCanvas();
+    renderProperties();
+    validate();
+  }
+
+  function autoLayout() {
+    blocks.forEach((block, index) => {
+      block.x = 70 + index * 255;
+      block.y = 130 + (index % 2) * 30;
     });
-    document.querySelectorAll('.block-remove').forEach((button) => {
-      button.onclick = () => {
-        const node = button.closest('.dbot-nested-block');
-        current.stacks[node.dataset.zone].splice(Number(node.dataset.index), 1);
-        renderStacks();
-        refresh();
-      };
-    });
+    log('Strategy layout refreshed.', 'ok');
+    renderCanvas();
   }
 
-  function setupDrops() {
-    document.querySelectorAll('.dbot-drop-slot').forEach((zone) => {
-      zone.ondragover = (event) => event.preventDefault();
-      zone.ondrop = (event) => {
-        event.preventDefault();
-        const type = event.dataTransfer.getData('application/x-apex-block');
-        if (type) addBlock(type, zone.dataset.zone);
-      };
-    });
-  }
-
-  function readForm() {
+  function canvasPoint(event) {
+    const rect = el('visual-canvas').getBoundingClientRect();
+    const snap = el('snap-grid').checked ? 20 : 1;
     return {
-      ...current,
-      name: val('s-name', defaults.name),
-      marketGroup: val('s-market-group'),
-      submarket: val('s-submarket'),
-      symbol: val('s-symbol', defaults.symbol),
-      tradeType: val('s-trade-type', defaults.tradeType),
-      contract_type: val('s-contract', defaults.contract_type),
-      strategy: val('s-strategy', defaults.strategy),
-      stake: num('s-stake', defaults.stake),
-      duration: num('s-duration', defaults.duration),
-      durationType: val('s-duration-type', defaults.durationType),
-      granularity: num('s-gran', defaults.granularity),
-      restartOnError: checked('s-restart-error'),
-      fastPeriod: num('s-fast', defaults.fastPeriod),
-      slowPeriod: num('s-slow', defaults.slowPeriod),
-      rsiPeriod: num('s-rsi', defaults.rsiPeriod),
-      conditionValue: num('s-condition-value', defaults.conditionValue),
-      lookback: num('s-lookback', defaults.lookback),
-      comparator: val('s-comparator', defaults.comparator),
-      prediction: val('s-prediction', defaults.prediction),
-      barrier: val('s-barrier'),
-      sellRule: val('s-sell-rule', defaults.sellRule),
-      afterWin: val('s-after-win', defaults.afterWin),
-      afterLoss: val('s-after-loss', defaults.afterLoss),
-      stopLoss: num('s-stop-loss', defaults.stopLoss),
-      takeProfit: num('s-take-profit', defaults.takeProfit),
-      dailyLossLimit: num('s-daily-loss', defaults.dailyLossLimit),
-      maxTradesPerDay: num('s-max-trades', defaults.maxTradesPerDay),
-      maxConsecutiveLosses: num('s-max-losses', defaults.maxConsecutiveLosses),
-      cooldownTrades: num('s-cooldown', defaults.cooldownTrades),
-      moneyMode: val('s-money-mode', defaults.moneyMode),
-      multiplier: num('s-multiplier', defaults.multiplier),
-      demoOnly: checked('s-demo-only'),
-      stacks: structuredCloneSafe(current.stacks),
+      x: Math.max(0, Math.round(((event.clientX - rect.left + el('visual-canvas').scrollLeft) / zoom) / snap) * snap),
+      y: Math.max(0, Math.round(((event.clientY - rect.top + el('visual-canvas').scrollTop) / zoom) / snap) * snap),
     };
   }
 
-  function writeForm(strategy) {
-    current = { ...defaults, ...strategy, stacks: structuredCloneSafe(strategy.stacks || defaults.stacks) };
-    el('s-name').value = current.name;
-    el('s-duration').value = current.duration;
-    el('s-duration-type').value = current.durationType;
-    el('s-stake').value = current.stake;
-    el('s-gran').value = current.granularity;
-    el('s-restart-error').checked = !!current.restartOnError;
-    el('s-strategy').value = current.strategy;
-    el('s-fast').value = current.fastPeriod;
-    el('s-slow').value = current.slowPeriod;
-    el('s-rsi').value = current.rsiPeriod;
-    el('s-condition-value').value = current.conditionValue;
-    el('s-lookback').value = current.lookback;
-    el('s-comparator').value = current.comparator;
-    el('s-prediction').value = current.prediction;
-    el('s-barrier').value = current.barrier;
-    el('s-sell-rule').value = current.sellRule;
-    el('s-after-win').value = current.afterWin;
-    el('s-after-loss').value = current.afterLoss;
-    el('s-stop-loss').value = current.stopLoss;
-    el('s-take-profit').value = current.takeProfit;
-    el('s-daily-loss').value = current.dailyLossLimit;
-    el('s-max-trades').value = current.maxTradesPerDay;
-    el('s-max-losses').value = current.maxConsecutiveLosses;
-    el('s-cooldown').value = current.cooldownTrades;
-    el('s-money-mode').value = current.moneyMode;
-    el('s-multiplier').value = current.multiplier;
-    el('s-demo-only').checked = current.demoOnly !== false;
-    renderMarketSelectors();
-    renderStacks();
-    refresh();
+  function setupCanvasDrop() {
+    const canvas = el('visual-canvas');
+    canvas.ondragover = (event) => event.preventDefault();
+    canvas.ondrop = (event) => {
+      event.preventDefault();
+      const point = canvasPoint(event);
+      const type = event.dataTransfer.getData('application/x-apex-block');
+      const existingId = event.dataTransfer.getData('application/x-apex-existing-block');
+      if (type) return addBlock(type, point.x, point.y);
+      const block = blocks.find((item) => item.id === existingId);
+      if (block) {
+        block.x = point.x;
+        block.y = point.y;
+        selectedId = block.id;
+        renderCanvas();
+        renderProperties();
+      }
+    };
   }
 
-  function warnings(strategy) {
-    const list = [];
-    const symbol = flatSymbols.find((s) => s.symbol === strategy.symbol);
-    if (symbol?.exchange_open === false) list.push('Selected market is closed.');
-    if (availableContracts.length && !availableContracts.some((c) => c.contract_type === strategy.contract_type)) list.push('Selected contract is unavailable for this symbol.');
-    if (strategy.stake < 0.35) list.push('Stake must be at least 0.35.');
-    if (strategy.duration < 1) list.push('Duration must be at least 1.');
-    if (!strategy.stacks.buy?.length) list.push('Buy conditions are empty.');
-    if (!strategy.stacks.restart?.length) list.push('Restart trading conditions are empty.');
-    if (strategy.stopLoss > strategy.takeProfit && strategy.takeProfit > 0) list.push('Stop loss is greater than take profit.');
-    if (!strategy.demoOnly && !window.Auth?.user?.deriv_connected) list.push('Real mode requires Deriv connection and safety confirmation.');
-    return list;
+  function selectOptions(options, value) {
+    return options.map(([val, label]) => `<option value="${esc(val)}" ${String(val) === String(value) ? 'selected' : ''}>${esc(label)}</option>`).join('');
   }
 
-  function autosave() {
-    try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(readForm())); } catch {}
+  function marketGroupOptions() {
+    return [...new Set(flatSymbols.map((s) => s.family || s.market || 'Other'))].map((family) => [family, family]);
   }
 
-  function refresh() {
-    current = readForm();
-    document.querySelectorAll('[data-param]').forEach((node) => {
-      node.classList.toggle('hidden', node.dataset.param !== ({ ma_cross:'ma', rsi_reversal:'rsi', breakout:'breakout', digit_pattern:'digit' }[current.strategy]));
-    });
-    const risk = Math.min(100, Math.round((current.stake * 4) + current.maxTradesPerDay + current.maxConsecutiveLosses * 8 + (current.moneyMode === 'martingale' ? 18 : 0)));
-    const list = warnings(current);
-    el('validation-warnings').innerHTML = list.length ? list.map((w) => `<div>${esc(w)}</div>`).join('') : '<div class="ok-text">No validation errors.</div>';
-    el('validation-warnings').dataset.risk = `Risk: ${risk}/100 | Exposure: AUD ${fmt(current.stake * current.maxTradesPerDay)}`;
-    autosave();
+  function submarketOptions() {
+    const rows = flatSymbols.filter((s) => (s.family || s.market || 'Other') === strategy.marketGroup);
+    return [...new Set(rows.map((s) => s.submarket || strategy.marketGroup))].map((sub) => [sub, sub]);
   }
 
-  function download(name, content, type) {
-    const blob = new Blob([content], { type });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
+  function symbolOptions() {
+    const rows = flatSymbols.filter((s) => (s.family || s.market || 'Other') === strategy.marketGroup && (s.submarket || strategy.marketGroup) === strategy.submarket);
+    return rows.map((s) => [s.symbol, `${s.name || s.symbol}${s.exchange_open === false ? ' (closed)' : ''}`]);
   }
 
-  function strategyXml(strategy) {
-    return `<xml xmlns="http://www.w3.org/1999/xhtml" collection="false" is_dbot="true">
-  <block type="trade_definition" x="0" y="0">
-    <field name="SYMBOL">${esc(strategy.symbol)}</field>
-    <field name="TRADETYPE">${esc(strategy.tradeType)}</field>
-    <field name="CONTRACTTYPE">${esc(strategy.contract_type)}</field>
-    <field name="DURATION">${esc(strategy.duration)}</field>
-    <field name="AMOUNT">${esc(strategy.stake)}</field>
-  </block>
-  <block type="before_purchase" x="0" y="360"><field name="CONDITION">${esc(strategy.strategy)}</field></block>
-  <block type="during_purchase" x="620" y="0"><field name="SELL">${esc(strategy.sellRule)}</field></block>
-  <block type="after_purchase" x="620" y="220"><field name="RESTART">${esc(strategy.afterWin)}/${esc(strategy.afterLoss)}</field></block>
-</xml>`;
+  function tradeTypeOptions() {
+    return tradeTypeGroups
+      .filter((group) => !availableContracts.length || availableContracts.some((contract) => contractMatchesGroup(group, contract)))
+      .map((group) => [group.id, group.label]);
   }
 
-  async function runDemoTrade() {
-    const strategy = readForm();
-    const list = warnings(strategy);
-    if (list.length) {
-      setResultsPanel(true, 'journal');
-      log(`Run blocked: ${list.join(' ')}`, 'warn');
+  function contractOptions() {
+    const group = tradeTypeGroups.find((item) => item.id === strategy.tradeType) || tradeTypeGroups[0];
+    const rows = availableContracts.length
+      ? availableContracts.filter((contract) => contractMatchesGroup(group, contract))
+      : group.contracts.map((contract_type) => ({ contract_type }));
+    return rows.map((contract) => [contract.contract_type, contract.contract_display || contractLabels[contract.contract_type] || contract.contract_type]);
+  }
+
+  function propertyField(label, body) {
+    return `<label class="property-field"><span>${label}</span>${body}</label>`;
+  }
+
+  function renderProperties() {
+    const block = blocks.find((item) => item.id === selectedId);
+    el('selected-block-name').textContent = block ? block.title : 'No block selected';
+    if (!block) {
+      el('properties-form').innerHTML = '<p class="muted-sm">Select a block on the canvas to edit its settings.</p>';
       return;
     }
-    el('bot-run-state').textContent = 'Running demo';
-    setResultsPanel(true, 'journal');
-    log('Starting demo run. No real trade will be placed.', 'ok');
+
+    const removeButton = block.type === 'start' ? '' : '<button id="remove-selected-block" class="btn ghost danger" type="button">Remove block</button>';
+    if (block.type === 'trade_parameters') {
+      el('properties-form').innerHTML = `
+        ${propertyField('Market Category', `<select id="p-market-group" class="input">${selectOptions(marketGroupOptions(), strategy.marketGroup)}</select>`)}
+        ${propertyField('Market Symbol', `<select id="p-submarket" class="input">${selectOptions(submarketOptions(), strategy.submarket)}</select><select id="p-symbol" class="input">${selectOptions(symbolOptions(), strategy.symbol)}</select>`)}
+        ${propertyField('Trade Type', `<select id="p-trade-type" class="input">${selectOptions(tradeTypeOptions(), strategy.tradeType)}</select>`)}
+        ${propertyField('Contract Type', `<select id="p-contract" class="input">${selectOptions(contractOptions(), strategy.contract_type)}</select>`)}
+        <div class="property-grid">
+          ${propertyField('Duration', `<input id="p-duration" class="input" type="number" min="1" value="${esc(strategy.duration)}" />`)}
+          ${propertyField('Unit', `<select id="p-duration-type" class="input">${selectOptions([['t','Ticks'],['m','Minutes'],['h','Hours'],['d','Days']], strategy.durationType)}</select>`)}
+          ${propertyField('Stake', `<input id="p-stake" class="input" type="number" min="0.35" step="0.01" value="${esc(strategy.stake)}" />`)}
+          ${propertyField('Currency', `<select id="p-currency" class="input">${selectOptions([['AUD','AUD'],['USD','USD'],['KES','KES']], strategy.currency)}</select>`)}
+          ${propertyField('Barrier', `<input id="p-barrier" class="input" value="${esc(strategy.barrier)}" placeholder="+0.12" />`)}
+          ${propertyField('Prediction Digit', `<select id="p-prediction" class="input">${selectOptions(Array.from({ length: 10 }, (_, i) => [String(i), String(i)]), strategy.prediction)}</select>`)}
+          ${propertyField('Multiplier', `<input id="p-multiplier" class="input" type="number" min="1" step="0.1" value="${esc(strategy.multiplier)}" />`)}
+        </div>
+        ${removeButton}`;
+      wireTradeProperties();
+      return;
+    }
+
+    if (['purchase_conditions','rsi','ema_cross','macd','digit_prediction','volatility_filter','condition_chain'].includes(block.type)) {
+      el('properties-form').innerHTML = `
+        ${propertyField('Condition Type', `<select id="p-strategy" class="input">${selectOptions([['ma_cross','EMA cross'],['rsi_reversal','RSI'],['breakout','Breakout'],['digit_pattern','Digits'],['ai_filter','AI confidence']], strategy.strategy)}</select>`)}
+        <div class="property-grid">
+          ${propertyField('Comparator', `<select id="p-comparator" class="input">${selectOptions([['<','<'],['>','>'],['=','='],['>=','>='],['<=','<='],['cross_above','Cross Above'],['cross_below','Cross Below']], strategy.comparator)}</select>`)}
+          ${propertyField('Value', `<input id="p-condition-value" class="input" type="number" step="any" value="${esc(strategy.conditionValue)}" />`)}
+          ${propertyField('RSI Period', `<input id="p-rsi-period" class="input" type="number" min="2" value="${esc(strategy.rsiPeriod)}" />`)}
+          ${propertyField('Fast EMA', `<input id="p-fast" class="input" type="number" min="2" value="${esc(strategy.fastPeriod)}" />`)}
+          ${propertyField('Slow EMA', `<input id="p-slow" class="input" type="number" min="3" value="${esc(strategy.slowPeriod)}" />`)}
+          ${propertyField('Prediction Digit', `<select id="p-prediction" class="input">${selectOptions(Array.from({ length: 10 }, (_, i) => [String(i), String(i)]), strategy.prediction)}</select>`)}
+        </div>
+        ${removeButton}`;
+      wireGenericProperties();
+      return;
+    }
+
+    if (['sell_conditions','profit_target','loss_limit','time_exit'].includes(block.type)) {
+      el('properties-form').innerHTML = `
+        ${propertyField('Sell Logic', `<select id="p-sell-rule" class="input">${selectOptions([['available','Sell is available'],['profit','Profit > target'],['loss','Loss > limit'],['time','Time exceeded'],['ai_risk','AI risk warning'],['disabled','Disabled']], strategy.sellRule)}</select>`)}
+        ${removeButton}`;
+      el('p-sell-rule').onchange = () => { strategy.sellRule = el('p-sell-rule').value; validate(); saveLocal(); };
+      wireRemoveButton();
+      return;
+    }
+
+    if (['restart_conditions','after_win','after_loss','daily_reset'].includes(block.type)) {
+      el('properties-form').innerHTML = `
+        ${propertyField('After Win', `<select id="p-after-win" class="input">${selectOptions([['continue','Trade again'],['pause','Pause bot'],['reset','Reset stake']], strategy.afterWin)}</select>`)}
+        ${propertyField('After Loss', `<select id="p-after-loss" class="input">${selectOptions([['continue','Trade again'],['cooldown','Cooldown first'],['pause','Pause bot']], strategy.afterLoss)}</select>`)}
+        ${removeButton}`;
+      el('p-after-win').onchange = () => { strategy.afterWin = el('p-after-win').value; saveLocal(); };
+      el('p-after-loss').onchange = () => { strategy.afterLoss = el('p-after-loss').value; saveLocal(); };
+      wireRemoveButton();
+      return;
+    }
+
+    if (['risk_management','stop_loss','take_profit','max_trades','money_management'].includes(block.type)) {
+      el('properties-form').innerHTML = `
+        <div class="property-grid">
+          ${propertyField('Stop Loss', `<input id="p-stop-loss" class="input" type="number" min="0" value="${esc(strategy.stopLoss)}" />`)}
+          ${propertyField('Take Profit', `<input id="p-take-profit" class="input" type="number" min="0" value="${esc(strategy.takeProfit)}" />`)}
+          ${propertyField('Max Daily Loss', `<input id="p-daily-loss" class="input" type="number" min="0" value="${esc(strategy.dailyLossLimit)}" />`)}
+          ${propertyField('Max Trades', `<input id="p-max-trades" class="input" type="number" min="1" value="${esc(strategy.maxTradesPerDay)}" />`)}
+          ${propertyField('Money Mode', `<select id="p-money-mode" class="input">${selectOptions([['fixed','Fixed stake'],['martingale','Martingale'],['anti_martingale','Anti-Martingale'],['custom','Custom progression']], strategy.moneyMode)}</select>`)}
+        </div>
+        ${removeButton}`;
+      ['p-stop-loss','p-take-profit','p-daily-loss','p-max-trades','p-money-mode'].forEach((id) => {
+        el(id).oninput = () => {
+          strategy.stopLoss = Number(el('p-stop-loss').value || 0);
+          strategy.takeProfit = Number(el('p-take-profit').value || 0);
+          strategy.dailyLossLimit = Number(el('p-daily-loss').value || 0);
+          strategy.maxTradesPerDay = Number(el('p-max-trades').value || 1);
+          strategy.moneyMode = el('p-money-mode').value;
+          validate();
+          saveLocal();
+        };
+      });
+      wireRemoveButton();
+      return;
+    }
+
+    if (block.type.startsWith('ai_')) {
+      el('properties-form').innerHTML = `<div class="ai-property-note">AI blocks do not invent signals. They display confidence, risk, trend, and market analysis only when backend analysis is available.</div>${removeButton}`;
+      wireRemoveButton();
+      return;
+    }
+
+    el('properties-form').innerHTML = `<p class="muted-sm">${esc(block.desc)}</p>${removeButton}`;
+    wireRemoveButton();
+  }
+
+  function wireTradeProperties() {
+    el('p-market-group').onchange = () => {
+      strategy.marketGroup = el('p-market-group').value;
+      strategy.submarket = submarketOptions()[0]?.[0] || '';
+      strategy.symbol = symbolOptions()[0]?.[0] || strategy.symbol;
+      loadContracts(strategy.symbol);
+      renderProperties();
+      saveLocal();
+    };
+    el('p-submarket').onchange = () => {
+      strategy.submarket = el('p-submarket').value;
+      strategy.symbol = symbolOptions()[0]?.[0] || strategy.symbol;
+      loadContracts(strategy.symbol);
+      renderProperties();
+      saveLocal();
+    };
+    el('p-symbol').onchange = () => { strategy.symbol = el('p-symbol').value; loadContracts(strategy.symbol); saveLocal(); };
+    el('p-trade-type').onchange = () => { strategy.tradeType = el('p-trade-type').value; normalizeTradeSelection(); renderProperties(); validate(); saveLocal(); };
+    el('p-contract').onchange = () => { strategy.contract_type = el('p-contract').value; validate(); saveLocal(); };
+    ['p-duration','p-duration-type','p-stake','p-currency','p-barrier','p-prediction','p-multiplier'].forEach((id) => {
+      el(id).oninput = () => {
+        strategy.duration = Number(el('p-duration').value || 1);
+        strategy.durationType = el('p-duration-type').value;
+        strategy.stake = Number(el('p-stake').value || 0);
+        strategy.currency = el('p-currency').value;
+        strategy.barrier = el('p-barrier').value;
+        strategy.prediction = el('p-prediction').value;
+        strategy.multiplier = Number(el('p-multiplier').value || 1);
+        validate();
+        saveLocal();
+      };
+    });
+    wireRemoveButton();
+  }
+
+  function wireGenericProperties() {
+    ['p-strategy','p-comparator','p-condition-value','p-rsi-period','p-fast','p-slow','p-prediction'].forEach((id) => {
+      el(id).oninput = () => {
+        strategy.strategy = el('p-strategy').value;
+        strategy.comparator = el('p-comparator').value;
+        strategy.conditionValue = Number(el('p-condition-value').value || 0);
+        strategy.rsiPeriod = Number(el('p-rsi-period').value || 14);
+        strategy.fastPeriod = Number(el('p-fast').value || 10);
+        strategy.slowPeriod = Number(el('p-slow').value || 20);
+        strategy.prediction = el('p-prediction').value;
+        validate();
+        saveLocal();
+      };
+    });
+    wireRemoveButton();
+  }
+
+  function wireRemoveButton() {
+    const button = el('remove-selected-block');
+    if (!button) return;
+    button.onclick = () => {
+      blocks = blocks.filter((block) => block.id !== selectedId);
+      selectedId = blocks[0]?.id || '';
+      renderCanvas();
+      renderProperties();
+      validate();
+    };
+  }
+
+  function validationMessages() {
+    const messages = [];
+    if (!blocks.some((block) => block.type === 'trade_parameters')) messages.push('Missing Trade Parameters block.');
+    if (!blocks.some((block) => ['purchase_conditions','buy_signal','rsi','ema_cross','digit_prediction','ai_signal'].includes(block.type))) messages.push('Missing Purchase Conditions block.');
+    if (!blocks.some((block) => ['risk_management','stop_loss','take_profit'].includes(block.type))) messages.push('Missing Risk Controls.');
+    const symbol = flatSymbols.find((item) => item.symbol === strategy.symbol);
+    if (symbol?.exchange_open === false) messages.push('Market closed.');
+    if (availableContracts.length && !availableContracts.some((contract) => contract.contract_type === strategy.contract_type)) messages.push('Contract unavailable for selected market.');
+    if (!strategy.stake || strategy.stake < 0.35) messages.push('Stake must be at least 0.35.');
+    if (!strategy.duration || strategy.duration < 1) messages.push('Duration must be at least 1.');
+    return messages;
+  }
+
+  function validate() {
+    const messages = validationMessages();
+    el('validation-warnings').innerHTML = messages.length ? messages.map((message) => `<div>${esc(message)}</div>`).join('') : '<div class="ok-text">Strategy validation passed.</div>';
+    el('canvas-status').textContent = messages.length ? `${messages.length} warning${messages.length === 1 ? '' : 's'}` : 'Ready';
+    el('canvas-status').className = `badge ${messages.length ? 'warn' : 'real'}`;
+    return messages;
+  }
+
+  function signalText() {
+    return strategy.strategy === 'digit_pattern'
+      ? `Last digit condition: ${contractLabels[strategy.contract_type] || strategy.contract_type} with prediction ${strategy.prediction}.`
+      : strategy.strategy === 'rsi_reversal'
+        ? `RSI ${strategy.rsiPeriod} ${strategy.comparator} ${strategy.conditionValue}.`
+        : strategy.strategy === 'ma_cross'
+          ? `EMA ${strategy.fastPeriod} cross against EMA ${strategy.slowPeriod}.`
+          : 'Breakout condition waits for range confirmation.';
+  }
+
+  function addSignal(reason = 'Signal generated') {
+    signals.unshift({ at: new Date().toLocaleTimeString(), text: `${reason}: ${signalText()}` });
+    renderSignals();
+  }
+
+  function renderSignals() {
+    el('signal-list').innerHTML = signals.length
+      ? signals.slice(0, 12).map((item) => `<div><b>${esc(item.at)}</b><span>${esc(item.text)}</span></div>`).join('')
+      : 'No signals generated yet.';
+  }
+
+  function renderDigitStream() {
+    const digits = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+    el('digit-stream').innerHTML = digits.map((digit) => `<b>${digit}</b>`).join('');
+  }
+
+  function renderTransactions() {
+    el('transaction-list').innerHTML = transactions.length ? `
+      <table class="bot-transactions-table">
+        <thead><tr><th>Time</th><th>Market</th><th>Contract</th><th>Stake</th><th>Status</th></tr></thead>
+        <tbody>${transactions.map((tx) => `<tr><td>${esc(tx.time)}</td><td>${esc(tx.symbol)}</td><td>${esc(tx.contract)}</td><td>${esc(tx.stake)}</td><td>${esc(tx.status)}</td></tr>`).join('')}</tbody>
+      </table>
+    ` : 'No transactions yet.';
+  }
+
+  function setWorkstation(open = true, tab = '') {
+    el('workstation-panel').classList.toggle('minimized', !open);
+    el('toggle-workstation').textContent = open ? 'Hide' : 'Show';
+    try { localStorage.setItem(WORKSTATION_KEY, open ? 'open' : 'closed'); } catch {}
+    if (tab) setPanelTab(tab);
+  }
+
+  function setPanelTab(tab) {
+    document.querySelectorAll('.workstation-tab').forEach((button) => button.classList.toggle('active', button.dataset.panelTab === tab));
+    document.querySelectorAll('.workstation-view').forEach((view) => view.classList.toggle('active', view.dataset.panelView === tab));
+  }
+
+  function saveLocal() {
+    try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ strategy, blocks, selectedId, zoom })); } catch {}
+  }
+
+  function loadLocal() {
     try {
-      const result = await request('/trading/demo-trade', {
-        method: 'POST',
-        body: JSON.stringify({ symbol: strategy.symbol, contractType: strategy.contract_type, amount: strategy.stake, duration: strategy.duration }),
-      });
-      el('last-signal').textContent = `${strategy.contract_type} on ${strategy.symbol}`;
-      botStats.runs += 1;
-      botStats.stake += strategy.stake;
-      transactions.unshift({
-        time: new Date().toLocaleTimeString(),
-        symbol: strategy.symbol,
-        contract: strategy.contract_type,
-        stake: `${fmt(strategy.stake)} AUD`,
-        status: result.tradeId ? 'Demo recorded' : 'Demo simulation',
-      });
-      renderSummary();
-      renderTransactions();
-      log(`Demo trade recorded: ${result.tradeId || 'simulation'}.`, 'ok');
+      const saved = JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || 'null');
+      if (!saved) return false;
+      strategy = { ...defaults, ...(saved.strategy || {}) };
+      blocks = Array.isArray(saved.blocks) ? saved.blocks : makeBlocks();
+      selectedId = saved.selectedId || blocks[0]?.id || '';
+      zoom = saved.zoom || 1;
+      return true;
+    } catch { return false; }
+  }
+
+  function exportStrategy() {
+    const payload = { strategy, blocks };
+    const base = (strategy.name || 'apexbot-strategy').replace(/[^a-z0-9_-]+/gi, '-');
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${base}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    log('Strategy exported.', 'ok');
+  }
+
+  async function importStrategy(file) {
+    const text = await file.text();
+    if (text.trim().startsWith('{')) {
+      const parsed = JSON.parse(text);
+      strategy = { ...defaults, ...(parsed.strategy || parsed) };
+      blocks = Array.isArray(parsed.blocks) ? parsed.blocks : makeBlocks();
+    } else {
+      const symbol = text.match(/SYMBOL(?:_LIST)?">([^<]+)/)?.[1] || defaults.symbol;
+      const contract = text.match(/CONTRACTTYPE">([^<]+)/)?.[1] || text.match(/TYPE_LIST">([^<]+)/)?.[1] || defaults.contract_type;
+      strategy = { ...defaults, name: file.name.replace(/\.[^.]+$/, ''), symbol, contract_type: contract };
+      blocks = makeBlocks();
+    }
+    selectedId = blocks.find((block) => block.type === 'trade_parameters')?.id || blocks[0]?.id || '';
+    await loadContracts(strategy.symbol);
+    renderAll();
+    log(`Strategy imported: ${file.name}.`, 'ok');
+  }
+
+  async function saveStrategy() {
+    try {
+      const filename = `${(strategy.name || 'strategy').replace(/[^a-z0-9_-]+/gi, '-')}.json`;
+      const result = await request('/bots/import', { method:'POST', body: JSON.stringify({ filename, content: JSON.stringify({ strategy, blocks }, null, 2) }) });
+      log(`Strategy saved: ${result.bot?.name || strategy.name}.`, 'ok');
     } catch (e) {
-      const login = e.status === 401 ? ' Login is required to run the demo bot.' : '';
-      log(`Demo run failed: ${e.message}.${login}`, 'warn');
-    } finally {
-      el('bot-run-state').textContent = 'Bot is not running';
+      log(`Save failed: ${e.message}${e.status === 401 ? ' Login is required.' : ''}`, 'warn');
     }
   }
 
-  document.querySelectorAll('.dbot-tool-icon').forEach((button) => button.onclick = () => renderToolbox(button.dataset.category));
-  document.querySelectorAll('input,select').forEach((input) => input.addEventListener('input', refresh));
-  el('s-market-group').onchange = () => { renderSubmarkets(); current.symbol = val('s-symbol'); loadContracts(current.symbol).then(refresh); };
-  el('s-submarket').onchange = () => { renderSymbols(); current.symbol = val('s-symbol'); loadContracts(current.symbol).then(refresh); };
-  el('s-symbol').onchange = () => { current.symbol = val('s-symbol'); loadContracts(current.symbol).then(refresh); };
-  el('s-trade-type').onchange = () => { current.tradeType = val('s-trade-type'); renderContracts(); refresh(); };
-  el('quick-strategy').onclick = () => {
-    writeForm({ ...defaults, name: 'Quick Rise/Fall strategy' });
-    log('Quick strategy loaded.', 'ok');
-  };
-  el('new-strategy').onclick = () => {
-    writeForm({ ...defaults, name: 'ApexBot block strategy', stacks: structuredCloneSafe(defaults.stacks) });
-    log('New strategy created.');
-  };
-  el('save-bot').onclick = async () => {
-    const strategy = readForm();
+  async function backtestDemo() {
+    setWorkstation(true, 'journal');
     try {
-      const filename = `${strategy.name.replace(/[^a-z0-9_-]+/gi, '-') || 'strategy'}.json`;
-      const result = await request('/bots/import', { method:'POST', body: JSON.stringify({ filename, content: JSON.stringify(strategy, null, 2) }) });
-      log(`Saved ${result.bot?.name || strategy.name} to your bot library.`, 'ok');
+      log('Backtest started in demo mode.', 'ok');
+      const result = await request('/bots/backtest', { method:'POST', body: JSON.stringify({ strategy, count: 500 }) });
+      log(`Backtest complete: ${result.summary?.trades || 0} trades, win rate ${result.summary?.winRate || 0}%.`, 'ok');
     } catch (e) {
-      const login = e.status === 401 ? ' Please log in first.' : '';
-      log(`Save failed: ${e.message}.${login}`, 'warn');
+      log(`Backtest unavailable: ${e.message}${e.status === 401 ? ' Login is required.' : ''}`, 'warn');
     }
+  }
+
+  async function runDemo() {
+    const messages = validate();
+    if (messages.length) {
+      setWorkstation(true, 'validation');
+      log(`Trade rejected: ${messages.join(' ')}`, 'warn');
+      return;
+    }
+    setWorkstation(true, 'journal');
+    el('bot-run-state').textContent = 'Running demo';
+    log('Bot started in demo mode. No real trade will be placed.', 'ok');
+    try {
+      const result = await request('/trading/demo-trade', {
+        method:'POST',
+        body: JSON.stringify({ symbol: strategy.symbol, contractType: strategy.contract_type, amount: strategy.stake, duration: strategy.duration }),
+      });
+      botStats.runs += 1;
+      botStats.stake += strategy.stake;
+      transactions.unshift({ time:new Date().toLocaleTimeString(), symbol:strategy.symbol, contract:strategy.contract_type, stake:`${fmt(strategy.stake)} ${strategy.currency}`, status:result.tradeId ? 'Demo executed' : 'Demo simulation' });
+      el('last-signal').textContent = `${strategy.contract_type} on ${strategy.symbol}`;
+      renderTransactions();
+      addSignal('Demo signal');
+      log(`Trade executed in demo: ${strategy.contract_type} on ${strategy.symbol}.`, 'ok');
+    } catch (e) {
+      log(`Trade rejected: ${e.message}${e.status === 401 ? ' Login is required for demo execution.' : ''}`, 'warn');
+    } finally {
+      el('bot-run-state').textContent = 'Bot is not running';
+      log('Bot stopped.', 'ok');
+    }
+  }
+
+  function applyTemplate(id) {
+    const template = templates[id];
+    if (!template) return;
+    strategy = { ...defaults, ...template, name: template.label };
+    blocks = makeBlocks(template.blocks);
+    selectedId = blocks.find((block) => block.type === 'trade_parameters')?.id || blocks[0]?.id || '';
+    loadContracts(strategy.symbol).then(renderAll);
+    log(`Template loaded: ${template.label}.`, 'ok');
+  }
+
+  function renderAll() {
+    el('s-name').value = strategy.name;
+    renderCanvas();
+    renderProperties();
+    renderSignals();
+    validate();
+    renderTransactions();
+  }
+
+  el('block-search').oninput = renderLibrary;
+  el('new-strategy').onclick = () => {
+    strategy = { ...defaults };
+    blocks = makeBlocks();
+    selectedId = blocks[1].id;
+    loadContracts(strategy.symbol).then(renderAll);
+    log('New visual strategy created.');
   };
-  el('export-bot').onclick = () => {
-    const strategy = readForm();
-    const base = strategy.name.replace(/[^a-z0-9_-]+/gi, '-') || 'strategy';
-    download(`${base}.json`, JSON.stringify(strategy, null, 2), 'application/json');
-    download(`${base}.xml`, strategyXml(strategy), 'application/xml');
-    log('Exported JSON and XML.', 'ok');
-  };
+  el('template-picker').onchange = () => applyTemplate(el('template-picker').value);
+  el('auto-layout').onclick = autoLayout;
+  el('save-bot').onclick = saveStrategy;
+  el('export-bot').onclick = exportStrategy;
   el('import-bot-file').onchange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    try {
-      const text = await file.text();
-      if (/\.json$/i.test(file.name) || text.trim().startsWith('{')) writeForm({ ...defaults, ...JSON.parse(text) });
-      else {
-        const sym = text.match(/SYMBOL(?:_LIST)?">([^<]+)/)?.[1] || text.match(/symbol["'>\s:]+([A-Za-z0-9_]+)/i)?.[1];
-        const contract = text.match(/CONTRACTTYPE">([^<]+)/)?.[1] || text.match(/TYPE_LIST">([^<]+)/)?.[1] || text.match(/PURCHASE_LIST">([^<]+)/)?.[1];
-        writeForm({ ...defaults, name: file.name.replace(/\.[^.]+$/, ''), symbol: sym || defaults.symbol, contract_type: contract || defaults.contract_type });
-      }
-      await loadContracts(val('s-symbol'));
-      log(`Imported ${file.name}.`, 'ok');
-    } catch (e) {
-      log(`Import failed: ${e.message}`, 'warn');
-    } finally {
-      event.target.value = '';
-    }
+    try { await importStrategy(file); }
+    catch (e) { log(`Import failed: ${e.message}`, 'warn'); }
+    finally { event.target.value = ''; }
   };
-  el('run-backtest').onclick = () => {
-    setResultsPanel(true, 'summary');
-    log('Backtest demo is prepared from the current block settings. Use Run for demo execution.', 'ok');
-  };
-  el('run-demo-bottom').onclick = runDemoTrade;
-  el('toggle-log').onclick = () => setResultsPanel(true, 'summary');
-  el('minimize-results').onclick = () => setResultsPanel(el('bot-results-panel').classList.contains('minimized'));
-  document.querySelectorAll('.bot-result-tab').forEach((button) => button.onclick = () => setResultsPanel(true, button.dataset.resultTab));
+  el('run-backtest').onclick = backtestDemo;
+  el('run-demo-bottom').onclick = runDemo;
+  el('show-workstation').onclick = () => setWorkstation(true, 'journal');
+  el('toggle-workstation').onclick = () => setWorkstation(el('workstation-panel').classList.contains('minimized'));
+  document.querySelectorAll('.workstation-tab').forEach((button) => button.onclick = () => setWorkstation(true, button.dataset.panelTab));
+  el('zoom-in').onclick = () => { zoom = Math.min(1.4, +(zoom + 0.1).toFixed(2)); renderCanvas(); };
+  el('zoom-out').onclick = () => { zoom = Math.max(0.7, +(zoom - 0.1).toFixed(2)); renderCanvas(); };
+  el('s-name').oninput = () => { strategy.name = el('s-name').value; saveLocal(); };
 
-  renderToolbox('trade');
-  setupDrops();
+  setupCanvasDrop();
+  renderLibrary();
+  renderTemplates();
   await loadSymbols();
-  const saved = localStorage.getItem(AUTOSAVE_KEY);
-  if (saved) {
-    try { writeForm({ ...defaults, ...JSON.parse(saved) }); }
-    catch { writeForm(defaults); }
-  } else {
-    writeForm(defaults);
+  if (!loadLocal()) {
+    blocks = makeBlocks();
+    selectedId = blocks[1].id;
   }
-  await loadContracts(val('s-symbol'));
-  renderSummary();
-  renderTransactions();
-  refresh();
-  setResultsPanel(localStorage.getItem(RESULTS_PANEL_KEY) === 'open');
+  if (!strategy.marketGroup && flatSymbols[0]) strategy.marketGroup = flatSymbols[0].family;
+  if (!strategy.submarket && flatSymbols[0]) strategy.submarket = flatSymbols[0].submarket || strategy.marketGroup;
+  if (!flatSymbols.some((s) => s.symbol === strategy.symbol) && flatSymbols[0]) strategy.symbol = flatSymbols[0].symbol;
+  await loadContracts(strategy.symbol);
+  renderDigitStream();
+  renderAll();
+  setWorkstation(localStorage.getItem(WORKSTATION_KEY) === 'open');
 })();

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ApexBot - Bot Builder</title>
-  <link rel="stylesheet" href="css/styles.css?v=20260621-dbotflow" />
+  <title>ApexBot - Visual Bot Builder</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260621-visual-builder" />
 </head>
-<body class="builder-page dbot-flow-page">
+<body class="builder-page visual-builder-page">
   <nav class="nav builder-nav">
     <a class="brand" href="dashboard.html">ApexBot</a>
     <div class="nav-actions">
@@ -16,223 +16,114 @@
     </div>
   </nav>
 
-  <main class="dbot-flow-app">
-    <header class="dbot-flow-toolbar">
-      <button id="new-strategy" class="btn ghost" type="button">New strategy</button>
-      <button id="save-bot" class="btn ok" type="button">Save</button>
-      <label class="btn ghost file-btn">Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
-      <button id="export-bot" class="btn ghost" type="button">Export</button>
-      <button id="run-backtest" class="btn ghost" type="button">Backtest demo</button>
+  <main class="visual-builder-app">
+    <header class="visual-builder-topbar">
+      <label class="strategy-title-field">
+        <span>Strategy</span>
+        <input id="s-name" class="input" maxlength="120" />
+      </label>
+      <div class="visual-builder-actions">
+        <button id="new-strategy" class="btn ghost" type="button">New</button>
+        <select id="template-picker" class="input template-select" aria-label="Strategy templates">
+          <option value="">Templates</option>
+        </select>
+        <button id="auto-layout" class="btn ghost" type="button">Auto layout</button>
+        <button id="save-bot" class="btn ok" type="button">Save</button>
+        <label class="btn ghost file-btn">Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
+        <button id="export-bot" class="btn ghost" type="button">Export</button>
+        <button id="run-backtest" class="btn ghost" type="button">Backtest demo</button>
+      </div>
     </header>
 
-    <section class="dbot-flow-shell">
-      <aside class="dbot-side-rail" aria-label="Block categories">
-        <button class="dbot-tool-icon active" data-category="trade" title="Trade Parameters" type="button">TP</button>
-        <button class="dbot-tool-icon" data-category="markets" title="Markets" type="button">MK</button>
-        <button class="dbot-tool-icon" data-category="conditions" title="Conditions" type="button">IF</button>
-        <button class="dbot-tool-icon" data-category="indicators" title="Indicators" type="button">IN</button>
-        <button class="dbot-tool-icon" data-category="risk" title="Risk Management" type="button">RK</button>
-        <button class="dbot-tool-icon" data-category="restart" title="Restart Logic" type="button">RT</button>
-        <button class="dbot-tool-icon" data-category="notifications" title="Notifications" type="button">NT</button>
-        <button class="dbot-tool-icon" data-category="utilities" title="Utilities" type="button">UT</button>
+    <section class="visual-builder-layout">
+      <aside class="visual-block-library" aria-label="Blocks library">
+        <div class="library-search">
+          <input id="block-search" class="input" placeholder="Search blocks" />
+        </div>
+        <div id="block-categories" class="library-categories"></div>
+        <p class="builder-risk-note">No guaranteed profits. Trading involves risk.</p>
       </aside>
 
-      <aside class="dbot-toolbox" aria-label="Blocks">
-        <button id="quick-strategy" class="quick-strategy" type="button">Quick strategy</button>
-        <div class="dbot-toolbox-title" id="toolbox-title">Trade Parameters</div>
-        <div id="builder-block-library" class="toolbox-blocks"></div>
-        <p class="dbot-risk-note">No guaranteed profits. Trading involves risk.</p>
-      </aside>
+      <section class="visual-canvas-shell">
+        <div class="canvas-toolbar">
+          <div>
+            <strong>Visual strategy canvas</strong>
+            <span id="canvas-status" class="badge info">Loading markets</span>
+          </div>
+          <div class="canvas-tools">
+            <button id="zoom-out" class="btn ghost sm" type="button">-</button>
+            <span id="zoom-label">100%</span>
+            <button id="zoom-in" class="btn ghost sm" type="button">+</button>
+            <label class="canvas-toggle"><input id="snap-grid" type="checkbox" checked /> Snap</label>
+          </div>
+        </div>
 
-      <section class="dbot-work-area">
-        <label class="strategy-name-inline">
-          <span>Strategy</span>
-          <input id="s-name" class="input" maxlength="120" />
-        </label>
+        <div id="visual-canvas" class="visual-canvas" aria-label="Strategy canvas">
+          <div class="canvas-grid"></div>
+          <svg id="connection-layer" class="visual-connections" aria-hidden="true"></svg>
+          <div id="canvas-blocks" class="visual-canvas-blocks"></div>
+          <div id="canvas-empty" class="canvas-empty hidden">Drag blocks here to build a strategy.</div>
+        </div>
 
-        <div class="dbot-block-board">
-          <section class="dbot-root-block trade-definition" data-root="trade">
-            <div class="dbot-root-head"><span>1. Trade parameters</span><small id="market-state">Loading Deriv markets</small></div>
-            <div class="dbot-stack trade-stack">
-              <div class="dbot-row-block">
-                <span>Market:</span>
-                <select id="s-market-group" class="dbot-pill"></select>
-                <b>&gt;</b>
-                <select id="s-submarket" class="dbot-pill"></select>
-                <b>&gt;</b>
-                <select id="s-symbol" class="dbot-pill"></select>
-              </div>
-              <div class="dbot-row-block">
-                <span>Trade Type:</span>
-                <select id="s-trade-type" class="dbot-pill"></select>
-                <b>&gt;</b>
-                <select id="s-contract" class="dbot-pill"></select>
-              </div>
-              <div id="contract-warning" class="dbot-warning hidden"></div>
-              <div class="dbot-row-block">
-                <span>Default Candle Interval:</span>
-                <select id="s-gran" class="dbot-pill">
-                  <option value="60">1 minute</option>
-                  <option value="300">5 minutes</option>
-                  <option value="900">15 minutes</option>
-                  <option value="1800">30 minutes</option>
-                  <option value="3600">1 hour</option>
-                </select>
-              </div>
-              <label class="dbot-check-row">Restart buy/sell on error:
-                <input id="s-restart-error" type="checkbox" checked />
-              </label>
-              <div class="dbot-nested-head">Run once at start:</div>
-              <div id="start-stack" class="dbot-drop-slot" data-zone="start"></div>
-              <div class="dbot-nested-head">Trade options:</div>
-              <div class="dbot-row-block trade-options-row">
-                <span>Duration:</span>
-                <select id="s-duration-type" class="dbot-pill"><option value="t">Ticks</option><option value="m">Minutes</option><option value="h">Hours</option><option value="d">Days</option></select>
-                <input id="s-duration" class="dbot-number" type="number" min="1" step="1" />
-                <span>Stake:</span>
-                <span>AUD</span>
-                <input id="s-stake" class="dbot-number" type="number" min="0.35" step="0.01" />
-              </div>
-            </div>
-          </section>
-
-          <section class="dbot-root-block before-purchase" data-root="buy">
-            <div class="dbot-root-head"><span>2. Buy conditions</span><small>Before purchase</small></div>
-            <div class="dbot-stack">
-              <div class="dbot-if-row">
-                <span>if</span>
-                <select id="s-strategy" class="dbot-pill">
-                  <option value="ma_cross">MA crossover</option>
-                  <option value="rsi_reversal">RSI reversal</option>
-                  <option value="breakout">Breakout</option>
-                  <option value="digit_pattern">Digit pattern</option>
-                </select>
-                <span>then</span>
-              </div>
-              <div class="dbot-row-block condition-fields" data-param="ma">
-                <span>Fast MA</span><input id="s-fast" class="dbot-number" type="number" min="2" max="100" />
-                <span>Slow MA</span><input id="s-slow" class="dbot-number" type="number" min="3" max="250" />
-              </div>
-              <div class="dbot-row-block condition-fields" data-param="rsi">
-                <span>RSI</span><input id="s-rsi" class="dbot-number" type="number" min="2" max="100" />
-                <span>Value</span><input id="s-condition-value" class="dbot-number" type="number" step="any" />
-              </div>
-              <div class="dbot-row-block condition-fields" data-param="breakout">
-                <span>Lookback</span><input id="s-lookback" class="dbot-number" type="number" min="2" max="250" />
-              </div>
-              <div class="dbot-row-block condition-fields" data-param="digit">
-                <span>Prediction</span>
-                <select id="s-prediction" class="dbot-pill"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select>
-                <span>Barrier</span><input id="s-barrier" class="dbot-number" placeholder="+0.12" />
-              </div>
-              <div class="dbot-row-block">
-                <span>Comparator</span>
-                <select id="s-comparator" class="dbot-pill"><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option><option value=">=">&gt;=</option><option value="<=">&lt;=</option><option value="cross_above">Cross Above</option><option value="cross_below">Cross Below</option></select>
-              </div>
-              <div id="buy-stack" class="dbot-drop-slot" data-zone="buy"></div>
-            </div>
-          </section>
-
-          <section class="dbot-root-block during-purchase" data-root="sell">
-            <div class="dbot-root-head"><span>3. Sell conditions</span><small>During purchase</small></div>
-            <div class="dbot-stack">
-              <div class="dbot-if-row">
-                <span>if</span>
-                <select id="s-sell-rule" class="dbot-pill"><option value="available">Sell is available</option><option value="mirror">Mirror buy logic</option><option value="confirmation">Momentum confirmation</option><option value="disabled">Do not sell early</option></select>
-                <span>then</span>
-              </div>
-              <div class="dbot-drop-slot" data-zone="sell" id="sell-stack"></div>
-            </div>
-          </section>
-
-          <section class="dbot-root-block after-purchase" data-root="restart">
-            <div class="dbot-root-head"><span>4. Restart trading conditions</span><small>After purchase</small></div>
-            <div class="dbot-stack">
-              <div class="dbot-row-block">
-                <span>After win</span>
-                <select id="s-after-win" class="dbot-pill"><option value="continue">Trade again</option><option value="pause">Pause bot</option></select>
-              </div>
-              <div class="dbot-row-block">
-                <span>After loss</span>
-                <select id="s-after-loss" class="dbot-pill"><option value="continue">Trade again</option><option value="cooldown">Cooldown first</option><option value="pause">Pause bot</option></select>
-              </div>
-              <div class="dbot-drop-slot" data-zone="restart" id="restart-stack"></div>
-            </div>
-          </section>
-
-          <section class="dbot-root-block risk-stack" data-root="risk">
-            <div class="dbot-root-head"><span>Risk limits</span><small>Safety controls</small></div>
-            <div class="dbot-stack">
-              <div class="dbot-row-block">
-                <span>Stop loss</span><input id="s-stop-loss" class="dbot-number" type="number" min="0" step="0.01" />
-                <span>Take profit</span><input id="s-take-profit" class="dbot-number" type="number" min="0" step="0.01" />
-              </div>
-              <div class="dbot-row-block">
-                <span>Max daily loss</span><input id="s-daily-loss" class="dbot-number" type="number" min="0" step="0.01" />
-                <span>Max trades</span><input id="s-max-trades" class="dbot-number" type="number" min="1" max="200" />
-              </div>
-              <div class="dbot-row-block">
-                <span>Consecutive losses</span><input id="s-max-losses" class="dbot-number" type="number" min="1" max="20" />
-                <span>Cooldown</span><input id="s-cooldown" class="dbot-number" type="number" min="0" max="20" />
-              </div>
-              <div class="dbot-row-block">
-                <span>Money management</span>
-                <select id="s-money-mode" class="dbot-pill"><option value="fixed">Fixed stake</option><option value="martingale">Martingale</option><option value="anti_martingale">Anti-Martingale</option></select>
-                <span>Multiplier</span><input id="s-multiplier" class="dbot-number" type="number" min="1" step="0.1" />
-              </div>
-              <label class="dbot-check-row">Demo only until Deriv is connected:
-                <input id="s-demo-only" type="checkbox" checked />
-              </label>
-            </div>
-          </section>
+        <div class="canvas-footer">
+          <div class="mini-map-wrap">
+            <span>Mini-map</span>
+            <div id="mini-map" class="visual-mini-map"></div>
+          </div>
+          <div class="digit-panel">
+            <span>Recent digits</span>
+            <div id="digit-stream" class="digit-stream"><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b></div>
+          </div>
         </div>
       </section>
+
+      <aside class="visual-properties" aria-label="Selected block properties">
+        <div class="properties-head">
+          <span>Properties</span>
+          <b id="selected-block-name">No block selected</b>
+        </div>
+        <div id="properties-form" class="properties-form"></div>
+      </aside>
     </section>
 
-    <section id="bot-results-panel" class="bot-results-panel minimized" aria-label="Bot performance and journal">
-      <div class="bot-results-tabs">
-        <button class="bot-result-tab active" data-result-tab="summary" type="button">Summary</button>
-        <button class="bot-result-tab" data-result-tab="transactions" type="button">Transactions</button>
-        <button class="bot-result-tab" data-result-tab="journal" type="button">Journal</button>
-        <button id="minimize-results" class="bot-results-toggle" type="button" aria-label="Minimize results panel">Hide</button>
+    <section id="workstation-panel" class="workstation-panel minimized">
+      <div class="workstation-tabs">
+        <button class="workstation-tab active" data-panel-tab="journal" type="button">Journal</button>
+        <button class="workstation-tab" data-panel-tab="transactions" type="button">Transactions</button>
+        <button class="workstation-tab" data-panel-tab="signals" type="button">Signals</button>
+        <button class="workstation-tab" data-panel-tab="ai" type="button">AI Analysis</button>
+        <button class="workstation-tab" data-panel-tab="validation" type="button">Validation</button>
+        <button id="toggle-workstation" class="workstation-toggle" type="button">Show</button>
       </div>
-      <div class="bot-results-body">
-        <div id="validation-warnings" class="bot-validation-strip"></div>
-
-        <section class="bot-result-view active" data-result-view="summary">
-          <p id="summary-ready-text" class="bot-empty-text">When you're ready to trade, hit <b>Run</b>. You'll be able to track your bot's performance here.</p>
-          <div class="bot-summary-grid">
-            <div><b>Total stake</b><span id="summary-stake">0.00 AUD</span></div>
-            <div><b>Total payout</b><span id="summary-payout">0.00 AUD</span></div>
-            <div><b>No. of runs</b><span id="summary-runs">0</span></div>
-            <div><b>Contracts lost</b><span id="summary-lost">0</span></div>
-            <div><b>Contracts won</b><span id="summary-won">0</span></div>
-            <div><b>Total profit/loss</b><span id="summary-profit">0.00 AUD</span></div>
-          </div>
-        </section>
-
-        <section class="bot-result-view" data-result-view="transactions">
-          <div id="transaction-list" class="bot-table-empty">No transactions yet. Demo transactions will appear after Run.</div>
-        </section>
-
-        <section class="bot-result-view" data-result-view="journal">
-          <div id="builder-log" class="bot-journal-log">
+      <div class="workstation-body">
+        <section class="workstation-view active" data-panel-view="journal">
+          <div id="builder-log" class="builder-journal">
             <div>Bot not running.</div>
-            <div>No demo execution logs yet.</div>
+            <div>Build a strategy visually, then run in demo mode.</div>
           </div>
         </section>
-
-        <section id="backtest-results" class="hidden"></section>
+        <section class="workstation-view" data-panel-view="transactions">
+          <div id="transaction-list" class="table-empty">No transactions yet.</div>
+        </section>
+        <section class="workstation-view" data-panel-view="signals">
+          <div id="signal-list" class="signal-list">No signals generated yet.</div>
+        </section>
+        <section class="workstation-view" data-panel-view="ai">
+          <div id="ai-analysis-panel" class="ai-analysis-panel">AI blocks show analysis only after backend analysis is available. No fake outputs are displayed.</div>
+        </section>
+        <section class="workstation-view" data-panel-view="validation">
+          <div id="validation-warnings" class="validation-list"></div>
+        </section>
       </div>
     </section>
 
-    <section class="dbot-run-panel">
-      <button id="run-demo-bottom" class="btn run-wide" type="button">Run</button>
-      <div class="dbot-status-box">
+    <section class="builder-runbar">
+      <button id="run-demo-bottom" class="btn run-wide" type="button">Run demo</button>
+      <div class="run-status-box">
         <strong id="bot-run-state">Bot is not running</strong>
         <span>Last signal: <b id="last-signal">none</b></span>
       </div>
-      <button id="toggle-log" class="btn ghost" type="button">Results</button>
+      <button id="show-workstation" class="btn ghost" type="button">Journal</button>
     </section>
   </main>
 
@@ -242,6 +133,6 @@
   <script src="js/pb-client.js"></script>
   <script src="js/security.js"></script>
   <script src="js/deriv-onboard.js"></script>
-  <script src="js/bot-builder.js?v=20260621-dbotflow"></script>
+  <script src="js/bot-builder.js?v=20260621-visual-builder"></script>
 </body>
 </html>
