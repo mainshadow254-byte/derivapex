@@ -11,8 +11,7 @@ window.DerivOnboard = (function () {
   async function affiliateUrl() {
     try {
       const cfg = await loadPublicConfig();
-      const url = cfg?.derivAffiliateLink || '';
-      return /track\.deriv\.com/i.test(url) ? 'https://deriv.com/signup/' : url;
+      return cfg?.derivAffiliateLink || '';
     }
     catch { return ''; }
   }
@@ -74,6 +73,7 @@ window.DerivOnboard = (function () {
         <a class="btn ghost" data-deriv-affiliate>${createText}</a>
         <a class="btn" data-deriv-oauth>Connect Deriv Account</a>
       </div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">If Deriv login shows a 403 page, open the connect page and use the API-token fallback while the Deriv app ID is being updated.</p>
     </div>`;
   }
 

@@ -16,6 +16,15 @@
       <p class="muted">Authorize ApexBot to trade on your behalf using your own Deriv account. You'll be sent to Deriv to log in and approve; your token is stored encrypted and never shown again.</p>
       <button id="go-oauth" class="btn" style="width:100%">Connect with Deriv</button>
       <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account</a>
+      <div class="notice demo" style="margin-top:12px">
+        If Deriv login opens a 403 page, app ID 1089 is being routed through Deriv's blocked Traders Hub login. Use the secure API-token fallback below, or replace DERIV_APP_ID with your own Deriv app ID.
+      </div>
+      <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
+        <label class="label">Deriv API token fallback</label>
+        <input id="manual-token" class="input" type="password" placeholder="Paste Deriv API token with read/trade scope" autocomplete="off" />
+        <button id="manual-connect" class="btn ghost" type="button" style="width:100%;justify-content:center;margin-top:8px">Connect with API token</button>
+        <p class="muted" style="font-size:12px;margin-top:8px">The token is sent to the backend only, verified with Deriv, encrypted, and never returned to the browser.</p>
+      </div>
       <p class="muted" style="font-size:12px;margin-top:10px">Real trading requires an active Premium plan. You stay in control — disconnect anytime.</p>
     </div>
 
@@ -39,6 +48,7 @@
       <p class="muted" id="fail-detail"></p>
       <button id="retry" class="btn" style="width:100%">Try again</button>
       <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account to Continue</a>
+      <button id="fallback" class="btn ghost" type="button" style="width:100%;justify-content:center;margin-top:8px">Use API-token fallback</button>
     </div>
   </div>
 
@@ -68,6 +78,34 @@
         location.href = oauthUrl.toString();
       });
     }
+    async function connectToken(rawToken){
+      const manualToken = String(rawToken || '').trim();
+      if (!manualToken) throw new Error('Paste your Deriv API token first.');
+      show('working');
+      history.replaceState({}, '', 'deriv-callback.html?connecting=1');
+      const r = await api('/deriv/connect', {
+        method: 'POST',
+        body: JSON.stringify({ token: manualToken }),
+      });
+      $('done-detail').innerHTML = `Account <strong>${r.loginid || ''}</strong> (${r.currency || ''}) linked. ` +
+        (r.balance != null ? `Current balance: <strong>${r.balance} ${r.currency || ''}</strong>.` : '');
+      history.replaceState({}, '', 'deriv-callback.html');
+      show('done');
+    }
+    function wireManualFallback(){
+      const button = $('manual-connect');
+      if (button) button.onclick = async () => {
+        button.disabled = true;
+        try { await connectToken($('manual-token').value); }
+        catch (e) {
+          history.replaceState({}, '', 'deriv-callback.html');
+          $('fail-detail').textContent = e?.body?.detail || e?.message || 'Could not connect that Deriv token.';
+          show('fail');
+        } finally { button.disabled = false; }
+      };
+      const fallback = $('fallback');
+      if (fallback) fallback.onclick = () => show('start');
+    }
 
     // Surface "Create Deriv Account" affiliate buttons (link from safe config).
     DerivOnboard.wireAffiliate();
@@ -76,6 +114,7 @@
       // Must be logged in to attach a Deriv account to the user.
       if (!Auth.isLoggedIn) { location.href = 'auth.html?mode=login'; return; }
 
+      wireManualFallback();
       if (!token) { show('start'); $('go-oauth').onclick = startOAuth; return; }
 
       show('working');
@@ -95,6 +134,7 @@
         $('fail-detail').textContent = e?.body?.detail || e?.message || 'Authorization failed. Please try again. If this keeps happening, set your Deriv app redirect URL to https://derivsignalhub.com/deriv-callback.html.';
         show('fail');
         $('retry').onclick = startOAuth;
+        wireManualFallback();
       }
     })();
   </script>
