@@ -6,3 +6,145 @@
   gap: 8px;
   margin-top: 18px;
 }
+
+.hero-badges span,
+.contract-pills span {
+  border: 1px solid rgba(129, 140, 248, .32);
+  background: rgba(79, 70, 229, .10);
+  color: #dbeafe;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.builder-preview-grid {
+  grid-template-columns: 135px 1fr;
+}
+
+.visual-preview-flow {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.visual-preview-flow div {
+  position: relative;
+  border: 1px solid #2d4262;
+  border-left: 5px solid #22d3ee;
+  background: linear-gradient(135deg, rgba(15, 23, 42, .98), rgba(13, 20, 38, .92));
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, .18);
+}
+
+.visual-preview-flow div::after {
+  content: '↓';
+  position: absolute;
+  left: 50%;
+  bottom: -16px;
+  transform: translateX(-50%);
+  color: #64748b;
+  font-weight: 900;
+}
+
+.visual-preview-flow div:last-child::after {
+  display: none;
+}
+
+.visual-preview-flow small,
+.visual-preview-flow strong,
+.visual-preview-flow em {
+  display: block;
+}
+
+.visual-preview-flow small {
+  color: #7dd3fc;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.visual-preview-flow strong {
+  margin-top: 3px;
+  color: #f8fafc;
+}
+
+.visual-preview-flow em {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.builder-showcase .feature-card,
+.community-grid .card {
+  min-height: 178px;
+}
+
+.contract-pills {
+  justify-content: center;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.comparison-section .table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 15px 16px;
+  vertical-align: top;
+}
+
+.comparison-table thead th {
+  background: #0a1120;
+  color: #bfdbfe;
+}
+
+.comparison-table tbody tr:hover td {
+  background: rgba(34, 211, 238, .035);
+}
+
+.comparison-table td:first-child {
+  color: #e2e8f0;
+  font-weight: 800;
+}
+
+.comparison-table td:nth-child(2) {
+  color: #bbf7d0;
+  font-weight: 900;
+}
+
+.community-section .card a,
+.builder-showcase .feature-card a {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .builder-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-badges,
+  .contract-pills {
+    gap: 6px;
+  }
+
+  .hero-badges span,
+  .contract-pills span {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    min-width: 150px;
+    padding: 12px;
+  }
+}
