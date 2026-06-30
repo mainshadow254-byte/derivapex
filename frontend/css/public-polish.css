@@ -1,0 +1,8 @@
+/* Public landing polish: clearer bot-builder positioning and competitor-proof feature sections. */
+.hero-badges,
+.contract-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
