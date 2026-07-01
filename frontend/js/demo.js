@@ -19,12 +19,12 @@ window.DEMO = (function () {
     if (nav) {
       const items = [
         ['free-bots.html', 'Free Bots'],
-        ['demo-dashboard.html', 'Dashboard'],
         ['demo-bots.html', 'Bots & Copy'],
         ['demo-scanner.html', 'AI Scanner'],
         ['tutorials.html', 'Tutorials'],
+        ['community.html', 'Community'],
+        ['proof.html', 'Proof'],
         ['request-strategy.html', 'Request'],
-        ['guide.html', 'Guide'],
       ];
       nav.innerHTML = items.map(([href, label]) => `<a class="btn ${href === active ? '' : 'ghost'}" href="${href}">${label}</a>`).join('') + `<a class="btn ok" href="auth.html">Sign up</a>`;
     }
