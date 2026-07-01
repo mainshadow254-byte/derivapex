@@ -27,6 +27,7 @@
   const riskClass = (risk) => risk === 'high' ? 'warn' : risk === 'low' ? 'real' : 'demo';
   const builderUrl = (bot) => `bot-builder.html?${new URLSearchParams({ template:bot.template || 'ema', symbol:bot.symbol || 'R_100', contract:bot.contract_type || 'CALL' }).toString()}`;
   const scannerUrl = (bot) => `demo-scanner.html?symbol=${encodeURIComponent(bot.symbol || 'R_100')}`;
+  const detailUrl = (bot) => `bot-detail.html?id=${encodeURIComponent(bot.id)}`;
 
   function botCard(bot){
     return `<article class="card template-card-pro" data-category="${esc(bot.category)}" data-risk="${esc(bot.risk_rating)}">
@@ -44,7 +45,7 @@
       </div>
       <div class="block-list">${(bot.blocks || []).map((b)=>`<span>${esc(b)}</span>`).join('')}</div>
       <div class="risk-note">${esc(bot.warning)}</div>
-      <div class="bot-actions"><a class="btn" href="${builderUrl(bot)}">Open in builder</a><a class="btn ghost" href="${scannerUrl(bot)}">Scan market</a><a class="btn ghost" href="demo-dashboard.html">Demo test</a></div>
+      <div class="bot-actions"><a class="btn" href="${builderUrl(bot)}">Open builder</a><a class="btn ghost" href="${detailUrl(bot)}">Details + JSON</a><a class="btn ghost" href="${scannerUrl(bot)}">Scan</a></div>
     </article>`;
   }
 
@@ -55,6 +56,7 @@
       <div class="template-score"><div><small>Followers</small><strong>${esc(strategy.followers ?? 0)}</strong></div><div><small>Risk score</small><strong>${esc(strategy.risk_score ?? '—')}</strong></div><div><small>History</small><strong>${strategy.hasHistory ? 'Recorded' : 'Required'}</strong></div><div><small>Symbol</small><strong>${esc(strategy.symbol || '—')}</strong></div></div>
       <div class="safeguards">${(strategy.safeguards || []).map((s)=>`<span>✓ ${esc(s)}</span>`).join('')}</div>
       <div class="risk-note">No fake followers, win rate, or profit. Real rankings require backend trade records.</div>
+      <div class="bot-actions"><a class="btn ghost" href="copy-strategy.html?id=${encodeURIComponent(strategy.id)}">View profile</a></div>
     </article>`;
   }
 
