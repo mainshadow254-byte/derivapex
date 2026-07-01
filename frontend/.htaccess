@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Hostinger serves the frontend, Railway serves the backend API.
+# Keep /api/... usable on the public domain without exposing backend secrets.
+RewriteRule ^api/(.*)$ https://apexbot-backend-production.up.railway.app/api/$1 [R=307,L]
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 hour"
+  ExpiresByType application/javascript "access plus 1 hour"
+  ExpiresByType text/javascript "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
