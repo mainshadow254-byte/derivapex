@@ -9,45 +9,39 @@
 <body>
   <nav class="nav"><a class="brand" href="dashboard.html">ApexBot</a><a class="btn ghost" href="dashboard.html">Dashboard</a></nav>
 
-  <div class="container" style="max-width:480px;padding-top:40px">
-    <!-- Start: begin OAuth (no token in URL yet) -->
+  <div class="container" style="max-width:520px;padding-top:40px">
     <div id="start" class="card hidden">
       <h2 style="margin-top:0">Connect your Deriv account</h2>
-      <p class="muted">Authorize ApexBot to trade on your behalf using your own Deriv account. You'll be sent to Deriv to log in and approve; your token is stored encrypted and never shown again.</p>
-      <button id="go-oauth" class="btn" style="width:100%">Connect with Deriv</button>
+      <p class="muted">Real trading features use your own Deriv account. OAuth works only when your Deriv app ID and redirect URL are configured. The fallback token flow is available for testing and production recovery.</p>
+      <div id="oauth-note" class="notice demo hidden" style="margin:12px 0"></div>
+      <button id="go-oauth" class="btn" style="width:100%">Connect with Deriv OAuth</button>
       <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account</a>
-      <div class="notice demo" style="margin-top:12px">
-        If Deriv login opens a 403 page, app ID 1089 is being routed through Deriv's blocked Traders Hub login. Use the secure API-token fallback below, or replace DERIV_APP_ID with your own Deriv app ID.
-      </div>
       <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px">
         <label class="label">Deriv API token fallback</label>
         <input id="manual-token" class="input" type="password" placeholder="Paste Deriv API token with read/trade scope" autocomplete="off" />
         <button id="manual-connect" class="btn ghost" type="button" style="width:100%;justify-content:center;margin-top:8px">Connect with API token</button>
-        <p class="muted" style="font-size:12px;margin-top:8px">The token is sent to the backend only, verified with Deriv, encrypted, and never returned to the browser.</p>
+        <p class="muted" style="font-size:12px;margin-top:8px">The token is sent to the backend only, verified with Deriv, encrypted at rest, and never returned to the browser.</p>
       </div>
-      <p class="muted" style="font-size:12px;margin-top:10px">Real trading requires an active Premium plan. You stay in control — disconnect anytime.</p>
+      <p class="muted" style="font-size:12px;margin-top:10px">Real trading requires an active Premium plan. You can disconnect anytime.</p>
     </div>
 
-    <!-- Working: exchanging token -->
     <div id="working" class="card">
       <h2 style="margin-top:0">Linking your Deriv account…</h2>
-      <p class="muted">Verifying your authorization with Deriv. This takes a few seconds.</p>
+      <p class="muted">Verifying your authorization with Deriv.</p>
       <div id="msg"></div>
     </div>
 
-    <!-- Success -->
     <div id="done" class="card hidden">
       <h2 style="margin-top:0">✅ Deriv account connected</h2>
       <div id="done-detail" class="muted"></div>
       <a class="btn ok" href="dashboard.html" style="width:100%;justify-content:center;margin-top:12px">Back to dashboard</a>
     </div>
 
-    <!-- Failure -->
     <div id="fail" class="card hidden">
       <h2 style="margin-top:0">⚠️ Could not connect</h2>
       <p class="muted" id="fail-detail"></p>
-      <button id="retry" class="btn" style="width:100%">Try again</button>
-      <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account to Continue</a>
+      <button id="retry" class="btn" style="width:100%">Try OAuth again</button>
+      <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account</a>
       <button id="fallback" class="btn ghost" type="button" style="width:100%;justify-content:center;margin-top:8px">Use API-token fallback</button>
     </div>
   </div>
@@ -61,23 +55,42 @@
     const $ = (id) => document.getElementById(id);
     function show(id){ ['start','working','done','fail'].forEach(s=>$(s).classList.toggle('hidden', s!==id)); }
 
-    // Deriv OAuth returns token(s) in the query string: token1, acct1, cur1, ...
-    const params = new URLSearchParams(location.search);
-    const token = params.get('token1') || params.get('token');
-    const loginid = params.get('acct1') || '';
-    const currency = params.get('cur1') || '';
-
-    function startOAuth(){
-      loadPublicConfig().then((cfg)=>{
-        const appId = cfg.derivAppId || '1089';
-        const oauthUrl = new URL(cfg.derivOAuthUrl || `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(appId)}`);
-        oauthUrl.searchParams.set('app_id', oauthUrl.searchParams.get('app_id') || appId);
-        oauthUrl.searchParams.set('redirect_uri', cfg.derivOAuthRedirect || window.APEX.DERIV_CALLBACK_URL || 'https://derivsignalhub.com/deriv-callback.html');
-        // Send the user to Deriv to authorize. Redirect URI is configured in your
-        // Deriv app settings and should point back to this page.
-        location.href = oauthUrl.toString();
-      });
+    function mergedParams(){
+      const out = new URLSearchParams(location.search || '');
+      const hash = String(location.hash || '').replace(/^#/, '');
+      if (hash) {
+        const hp = new URLSearchParams(hash.startsWith('?') ? hash.slice(1) : hash);
+        hp.forEach((value, key) => { if (!out.has(key)) out.set(key, value); });
+      }
+      return out;
     }
+
+    const params = mergedParams();
+    const token = params.get('token1') || params.get('token') || params.get('access_token');
+    const loginid = params.get('acct1') || params.get('loginid') || '';
+    const currency = params.get('cur1') || params.get('currency') || '';
+    const oauthError = params.get('error') || params.get('error_description') || '';
+    const manualOnly = params.get('manual') === '1';
+    const manualReason = params.get('reason') || '';
+
+    async function refreshSessionIfPossible(){
+      if (!Auth.isLoggedIn) return false;
+      try { await pb.collection('users').authRefresh(); return true; }
+      catch { Auth.logout(); return false; }
+    }
+
+    async function startOAuth(){
+      const cfg = await loadPublicConfig().catch(() => ({}));
+      if (!cfg.derivOAuthReady) {
+        const note = $('oauth-note');
+        note.textContent = cfg.derivOAuthIssue || 'Deriv OAuth is not configured yet. Use the API-token fallback below.';
+        note.classList.remove('hidden');
+        show('start');
+        return;
+      }
+      location.href = await DerivOnboard.oauthUrl();
+    }
+
     async function connectToken(rawToken){
       const manualToken = String(rawToken || '').trim();
       if (!manualToken) throw new Error('Paste your Deriv API token first.');
@@ -85,13 +98,14 @@
       history.replaceState({}, '', 'deriv-callback.html?connecting=1');
       const r = await api('/deriv/connect', {
         method: 'POST',
-        body: JSON.stringify({ token: manualToken }),
+        body: JSON.stringify({ token: manualToken, loginid, currency }),
       });
       $('done-detail').innerHTML = `Account <strong>${r.loginid || ''}</strong> (${r.currency || ''}) linked. ` +
         (r.balance != null ? `Current balance: <strong>${r.balance} ${r.currency || ''}</strong>.` : '');
       history.replaceState({}, '', 'deriv-callback.html');
       show('done');
     }
+
     function wireManualFallback(){
       const button = $('manual-connect');
       if (button) button.onclick = async () => {
@@ -104,37 +118,56 @@
         } finally { button.disabled = false; }
       };
       const fallback = $('fallback');
-      if (fallback) fallback.onclick = () => show('start');
+      if (fallback) fallback.onclick = async () => {
+        await prepareStartCard();
+        show('start');
+      };
+      const retry = $('retry');
+      if (retry) retry.onclick = startOAuth;
     }
 
-    // Surface "Create Deriv Account" affiliate buttons (link from safe config).
-    DerivOnboard.wireAffiliate();
+    async function prepareStartCard(){
+      const cfg = await loadPublicConfig().catch(() => ({}));
+      const note = $('oauth-note');
+      if (manualReason || !cfg.derivOAuthReady) {
+        note.textContent = manualReason || cfg.derivOAuthIssue || 'Deriv OAuth is not configured yet. Use the API-token fallback below.';
+        note.classList.remove('hidden');
+      } else {
+        note.classList.add('hidden');
+      }
+      $('go-oauth').disabled = !cfg.derivOAuthReady;
+      $('go-oauth').textContent = cfg.derivOAuthReady ? 'Connect with Deriv OAuth' : 'OAuth needs Deriv app configuration';
+      $('go-oauth').onclick = startOAuth;
+      DerivOnboard.wireAffiliate();
+    }
 
     (async function(){
-      // Must be logged in to attach a Deriv account to the user.
-      if (!Auth.isLoggedIn) { location.href = 'auth.html?mode=login'; return; }
-
       wireManualFallback();
-      if (!token) { show('start'); $('go-oauth').onclick = startOAuth; return; }
+      if (!(await refreshSessionIfPossible())) {
+        const next = encodeURIComponent('deriv-callback.html');
+        location.href = `auth.html?mode=login&next=${next}`;
+        return;
+      }
 
-      show('working');
-      history.replaceState({}, '', 'deriv-callback.html?connecting=1');
-      try {
-        const r = await api('/deriv/connect', {
-          method: 'POST',
-          body: JSON.stringify({ token, loginid, currency }),
-        });
-        $('done-detail').innerHTML = `Account <strong>${r.loginid || ''}</strong> (${r.currency || ''}) linked. ` +
-          (r.balance != null ? `Current balance: <strong>${r.balance} ${r.currency || ''}</strong>.` : '');
-        show('done');
-        // Clean the token out of the URL so it isn't left in history.
-        history.replaceState({}, '', 'deriv-callback.html');
-      } catch (e) {
-        history.replaceState({}, '', 'deriv-callback.html');
-        $('fail-detail').textContent = e?.body?.detail || e?.message || 'Authorization failed. Please try again. If this keeps happening, set your Deriv app redirect URL to https://derivsignalhub.com/deriv-callback.html.';
+      if (oauthError) {
+        $('fail-detail').textContent = `Deriv authorization failed: ${oauthError}. Check your Deriv app ID and redirect URL, or use the API-token fallback.`;
         show('fail');
-        $('retry').onclick = startOAuth;
-        wireManualFallback();
+        DerivOnboard.wireAffiliate();
+        return;
+      }
+
+      if (manualOnly || !token) {
+        await prepareStartCard();
+        show('start');
+        return;
+      }
+
+      try { await connectToken(token); }
+      catch (e) {
+        history.replaceState({}, '', 'deriv-callback.html');
+        $('fail-detail').textContent = e?.body?.detail || e?.message || 'Authorization failed. Confirm your Deriv app redirect URL points to this deriv-callback.html page, or use the API-token fallback.';
+        show('fail');
+        DerivOnboard.wireAffiliate();
       }
     })();
   </script>
