@@ -57,6 +57,9 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 app.get('/api/public-config', (_req, res) => {
   res.json({
     derivAppId: config.deriv.appId, // public app id for chart tick streams
+    derivOAuthAppId: config.deriv.oauthAppId,
+    derivOAuthReady: config.deriv.oauthReady,
+    derivOAuthIssue: config.deriv.oauthIssue,
     derivOAuthUrl: config.deriv.oauthUrl, // public OAuth authorize URL, no token
     derivOAuthRedirect: config.deriv.oauthRedirect || `${config.publicAppUrl.replace(/\/$/, '')}/deriv-callback.html`,
     derivAffiliateLink: config.deriv.affiliateLink, // public-safe referral link
