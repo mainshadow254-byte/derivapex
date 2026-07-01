@@ -43,6 +43,14 @@ app.use(express.json({
 // Global rate limit (tighten per-route as needed).
 app.use(rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false }));
 
+app.get('/', (_req, res) => res.json({
+  ok: true,
+  service: 'ApexBot backend',
+  health: '/api/health',
+  publicConfig: '/api/public-config',
+  ts: Date.now(),
+}));
+app.get('/api', (_req, res) => res.json({ ok: true, service: 'ApexBot API', health: '/api/health' }));
 app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
 // Public config the frontend is allowed to know (NO secrets).
@@ -87,10 +95,10 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/deriv', derivRoutes);
 
-app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
-app.use((err, _req, res, _next) => {
+app.use((req, res) => res.status(404).json({ error: 'Not found.', path: req.originalUrl }));
+app.use((err, req, res, _next) => {
   console.error('[error]', err);
-  void notifyAdminError('Unhandled API error', err, { path: _req.originalUrl, method: _req.method });
+  void notifyAdminError('Unhandled API error', err, { path: req.originalUrl, method: req.method });
   res.status(500).json({ error: 'Internal server error.' });
 });
 
@@ -113,7 +121,6 @@ const SEED_SYMBOLS = [
 
 app.listen(config.port, () => {
   console.log(`[apexbot] backend on :${config.port} | ownerConfigured=${Boolean(config.ownerEmail)}`);
-  if (!config.ownerEmail) console.warn('[apexbot] WARNING: OWNER_EMAIL is not set — no owner will be recognized.');
   // dynamic discovery ON: subscribe to every live Deriv market, seeded by the set above.
   startMarketFeed({ dynamic: true, seed: SEED_SYMBOLS });
   startTelegramRuntime().catch((error) => {

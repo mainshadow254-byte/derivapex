@@ -3,21 +3,38 @@
 // endpoints the browser legitimately needs.
 const apexConfig = window.APEX_CONFIG || {};
 const apexIsLocal = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
-const apexRuntimeHost = apexIsLocal ? window.location.hostname : window.location.hostname;
+const apexRuntimeHost = window.location.hostname;
 const apexRuntimeProtocol = apexIsLocal ? 'http:' : window.location.protocol;
+
+function normalizeBaseUrl(value) {
+  return String(value || '').trim().replace(/\/$/, '');
+}
+
 function normalizeApiBase(value) {
-  const base = String(value || '').trim().replace(/\/$/, '');
+  const base = normalizeBaseUrl(value);
   return base && !base.endsWith('/api') ? `${base}/api` : base;
 }
+
+function publicConfigFallback() {
+  return {
+    derivAppId: '1089',
+    derivOAuthUrl: 'https://oauth.deriv.com/oauth2/authorize?app_id=1089',
+    derivOAuthRedirect: `${window.APEX.PUBLIC_APP_URL}/deriv-callback.html`,
+    derivAffiliateLink: '',
+    telegram: {},
+    degraded: true,
+  };
+}
+
 const apexApiBase = normalizeApiBase(window.APEX_API_BASE_URL
   || window.APEX_API_BASE
   || apexConfig.API_BASE_URL
   || apexConfig.API_BASE
   || (apexIsLocal ? `${apexRuntimeProtocol}//${apexRuntimeHost}:8787/api` : `${window.location.origin}/api`));
-const apexPocketBaseUrl = window.APEX_POCKETBASE_URL
+const apexPocketBaseUrl = normalizeBaseUrl(window.APEX_POCKETBASE_URL
   || apexConfig.POCKETBASE_URL
-  || (apexIsLocal ? `${apexRuntimeProtocol}//${apexRuntimeHost}:8090` : window.location.origin);
-const apexPublicAppUrl = String(apexConfig.PUBLIC_APP_URL || window.location.origin).replace(/\/$/, '');
+  || (apexIsLocal ? `${apexRuntimeProtocol}//${apexRuntimeHost}:8090` : window.location.origin));
+const apexPublicAppUrl = normalizeBaseUrl(apexConfig.PUBLIC_APP_URL || window.location.origin);
 
 window.APEX = {
   // Your backend (Node) base URL. All sensitive logic goes through here.
@@ -38,10 +55,21 @@ window.APEX = {
 window.loadPublicConfig = async function () {
   if (window.APEX.public) return window.APEX.public;
   try {
-    const r = await fetch(`${window.APEX.API_BASE}/public-config`);
-    window.APEX.public = await r.json();
-  } catch {
-    window.APEX.public = { derivAppId: "1089", telegram: {} };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 7000);
+    const r = await fetch(`${window.APEX.API_BASE}/public-config`, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!r.ok) throw new Error(`Public config unavailable (${r.status})`);
+    const data = await r.json();
+    window.APEX.public = {
+      ...publicConfigFallback(),
+      ...data,
+      telegram: data.telegram || {},
+      degraded: false,
+    };
+  } catch (error) {
+    console.warn('[apex-config] Falling back to local public config:', error?.message || error);
+    window.APEX.public = publicConfigFallback();
   }
   return window.APEX.public;
 };

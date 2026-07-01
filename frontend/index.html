@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Transparent Deriv market analysis, no-code strategy backtesting, copy trading, and validated trading bots." />
-  <title>ApexBot - Transparent AI Trading and Bot Backtesting</title>
+  <meta name="description" content="Build Deriv trading bots visually, scan live markets, copy strategies, manage risk, and test everything in demo before real trading." />
+  <title>ApexBot - Deriv Bot Builder, AI Scanner and Copy Trading Hub</title>
   <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <link rel="stylesheet" href="css/public-polish.css?v=20260701-1" />
 </head>
 <body>
   <nav class="nav public-nav">
     <a class="brand" href="index.html">ApexBot</a>
     <div class="links muted">
-      <a href="#product">Product</a><a href="#features">Features</a><a href="#plans">Plans</a><a href="#faq">FAQ</a><a href="guide.html">Guide</a>
+      <a href="#builder">Bot Builder</a><a href="#features">Features</a><a href="#compare">Compare</a><a href="#plans">Plans</a><a href="guide.html">Guide</a>
     </div>
     <div class="nav-actions">
       <select id="language" class="input language-select" aria-label="Language"><option value="en">EN</option><option value="sw">SW</option></select>
@@ -25,49 +26,93 @@
   <header class="container public-hero">
     <div class="hero-copy">
       <span class="status-chip"><i></i> Live Deriv market infrastructure</span>
-      <span class="eyebrow" data-i18n="eyebrow" style="display:block;margin-top:18px">BUILD. TEST. UNDERSTAND.</span>
-      <h1 data-i18n="headline">Automate trading ideas without hiding the risk.</h1>
-      <p class="muted hero-lead" data-i18n="lead">Build a strategy visually, backtest it on real historical Deriv candles, inspect every simulated trade, and move to demo or real tools only when you are ready.</p>
+      <span class="eyebrow" data-i18n="eyebrow" style="display:block;margin-top:18px">BUILD. TEST. AUTOMATE.</span>
+      <h1 data-i18n="headline">Build Deriv bots, scan live markets, and copy strategies safely.</h1>
+      <p class="muted hero-lead" data-i18n="lead">Create visual trading bots, test them in demo, inspect risk clearly, and connect real Deriv trading only when you are ready. ApexBot keeps secrets, roles, payments, and tokens on the backend.</p>
       <div class="hero-actions">
         <a class="btn" href="auth.html" data-i18n="createAccount">Create free account</a>
         <a class="btn ghost" href="demo-dashboard.html" data-i18n="tryDemo">Try the live demo</a>
+        <a class="btn ghost" href="bot-builder.html">Open bot builder</a>
       </div>
       <div class="trust-row"><span>No credit card for demo</span><span>$10,000 simulated account</span><span>No guaranteed profits</span></div>
-      <div class="hero-system-grid"><div><small>MARKET LAYER</small><strong>Live Deriv feed</strong></div><div><small>STRATEGY LAYER</small><strong>Validated bot logic</strong></div><div><small>CONTROL LAYER</small><strong>Backend permissions</strong></div></div>
+      <div class="hero-badges"><span>Rise/Fall</span><span>Even/Odd</span><span>Over/Under</span><span>Boom/Crash</span><span>Multipliers</span></div>
+      <div class="hero-system-grid"><div><small>MARKET LAYER</small><strong>Live Deriv feed</strong></div><div><small>STRATEGY LAYER</small><strong>Visual bot logic</strong></div><div><small>CONTROL LAYER</small><strong>Backend permissions</strong></div></div>
     </div>
     <div class="product-window" aria-label="ApexBot product preview">
-      <div class="product-window-bar"><span></span><span></span><span></span><small>APEXBOT / STRATEGY LAB</small></div>
-      <div class="preview-grid">
-        <div class="preview-sidebar"><b>Strategy flow</b><span class="active">1 Market</span><span>2 Signal</span><span>3 Direction</span><span>4 Risk</span><span>5 Backtest</span></div>
+      <div class="product-window-bar"><span></span><span></span><span></span><small>APEXBOT / BOT BUILDER</small></div>
+      <div class="preview-grid builder-preview-grid">
+        <div class="preview-sidebar"><b>Strategy flow</b><span class="active">1 Market</span><span>2 Contract</span><span>3 Signal</span><span>4 Risk</span><span>5 Test</span></div>
         <div class="preview-main">
-          <div class="preview-metrics"><div><small>TEST TRADES</small><strong>124</strong></div><div><small>WIN RATE</small><strong>57.3%</strong></div><div><small>MAX DD</small><strong class="down">-6.4%</strong></div></div>
+          <div class="visual-preview-flow">
+            <div><small>TRADE</small><strong>Volatility 100</strong><em>Rise/Fall</em></div>
+            <div><small>SIGNAL</small><strong>EMA Cross</strong><em>Fast 10 / Slow 20</em></div>
+            <div><small>RISK</small><strong>Stop loss $10</strong><em>Take profit $20</em></div>
+          </div>
+          <div class="preview-metrics"><div><small>DEMO TRADES</small><strong>124</strong></div><div><small>WIN RATE</small><strong>57.3%</strong></div><div><small>MAX DD</small><strong class="down">-6.4%</strong></div></div>
           <svg class="preview-chart" viewBox="0 0 600 180" role="img" aria-label="Illustrative backtest equity curve"><polyline points="0,145 45,132 90,140 135,105 180,115 225,85 270,98 315,60 360,72 405,45 450,56 495,30 540,42 600,18" /></svg>
-          <div class="notice demo">Illustrative preview. Actual backtests use historical candle data.</div>
+          <div class="notice demo">Illustrative preview. Real results come from your trade ledger, demo records, and live Deriv data.</div>
         </div>
       </div>
     </div>
   </header>
 
   <main>
+    <section id="builder" class="container section-block builder-showcase">
+      <div class="section-heading"><span class="eyebrow">VISUAL DERIV BOT BUILDER</span><h2>Build bots like blocks, not guesswork</h2><p class="muted">ApexBot is positioned around the thing Deriv bot traders care about most: fast strategy creation, clear contract types, and honest demo testing before real execution.</p></div>
+      <div class="grid cols-3">
+        <article class="card feature-card"><h3>Full contract coverage</h3><p class="muted">Rise/Fall, Higher/Lower, Touch/No Touch, Ends/Stays, Digits, Asian, Reset, Spread, and Multipliers are grouped clearly.</p></article>
+        <article class="card feature-card"><h3>Ready templates</h3><p class="muted">Start with RSI Reversal, EMA Cross, Even/Odd, Over/Under, Boom Hunter, Crash Hunter, or AI Strategy templates.</p></article>
+        <article class="card feature-card"><h3>Risk-first testing</h3><p class="muted">Configure stake, duration, stop loss, take profit, daily limits, and restart rules before you consider real trading.</p></article>
+      </div>
+      <div class="contract-pills" aria-label="Supported Deriv contract types"><span>CALL / PUT</span><span>Digits</span><span>Touch</span><span>Range</span><span>Asian</span><span>Reset</span><span>Spread</span><span>Multiplier</span></div>
+    </section>
+
     <section id="product" class="container section-block">
       <div class="section-heading"><span class="eyebrow">HOW IT WORKS</span><h2>From an idea to an auditable strategy</h2><p class="muted">A guided workflow designed to slow down risky decisions, not encourage blind automation.</p></div>
       <div class="grid cols-4 process-grid">
-        <article class="card"><span class="step-number">01</span><h3>Choose a template</h3><p class="muted">Start with moving-average, RSI-reversal, or breakout logic.</p></article>
-        <article class="card"><span class="step-number">02</span><h3>Configure visually</h3><p class="muted">Set market, direction, timeframe, signal periods, and stake without code.</p></article>
-        <article class="card"><span class="step-number">03</span><h3>Backtest honestly</h3><p class="muted">Review every simulated trade, win rate, return, equity, and drawdown.</p></article>
-        <article class="card"><span class="step-number">04</span><h3>Journal and improve</h3><p class="muted">Record lessons privately and compare performance before using real funds.</p></article>
+        <article class="card"><span class="step-number">01</span><h3>Choose a template</h3><p class="muted">Start with moving-average, RSI-reversal, digit, Boom/Crash, or AI-assisted logic.</p></article>
+        <article class="card"><span class="step-number">02</span><h3>Configure visually</h3><p class="muted">Set market, contract type, duration, signal periods, stake, and risk blocks without code.</p></article>
+        <article class="card"><span class="step-number">03</span><h3>Backtest honestly</h3><p class="muted">Review simulated trades, win rate, return, equity, drawdown, and failed safety checks.</p></article>
+        <article class="card"><span class="step-number">04</span><h3>Improve or copy</h3><p class="muted">Journal lessons, compare strategies, or follow copy-trading profiles with risk limits.</p></article>
       </div>
     </section>
 
     <section id="features" class="container section-block">
-      <div class="section-heading"><span class="eyebrow">PLATFORM</span><h2>Serious tools, clear boundaries</h2></div>
+      <div class="section-heading"><span class="eyebrow">PLATFORM</span><h2>Bot builder, scanner, copy trading, marketplace</h2><p class="muted">The public site now makes the core value clear immediately: build, scan, copy, test, and manage Deriv automation from one secure hub.</p></div>
       <div class="grid cols-3">
         <article class="card feature-card"><h3>Visual bot builder</h3><p class="muted">Quick templates, editable rule blocks, validation, private bot storage, and historical testing.</p><a href="bot-builder.html">Open builder</a></article>
         <article class="card feature-card"><h3>Transparent AI scanner</h3><p class="muted">Confidence, support, resistance, risk, invalidation, and safer alternatives when conditions are poor.</p><a href="demo-scanner.html">Preview scanner</a></article>
         <article class="card feature-card"><h3>Professional terminal</h3><p class="muted">Candles, indicators, watchlists, positions, history, TradingView and DTrader access.</p><a href="demo-terminal.html">Preview terminal</a></article>
-        <article class="card feature-card"><h3>Trading journal</h3><p class="muted">Private notes attached to your own trade records, alongside transaction history and analytics.</p></article>
-        <article class="card feature-card"><h3>Copy trading controls</h3><p class="muted">Real follower counts and ledger-derived statistics, with capital and loss limits.</p></article>
-        <article class="card feature-card"><h3>Account security</h3><p class="muted">Backend-controlled roles, encrypted broker tokens, device revocation, and append-only audits.</p></article>
+        <article class="card feature-card"><h3>Copy trading controls</h3><p class="muted">Follow strategies using real follower counts and ledger-derived statistics, with capital and loss limits.</p></article>
+        <article class="card feature-card"><h3>Bot marketplace</h3><p class="muted">Upload, install, share, publish, review, sell, and buy bots with honest records and risk labels.</p></article>
+        <article class="card feature-card"><h3>Telegram and security</h3><p class="muted">Optional Telegram alerts, backend-controlled roles, encrypted broker tokens, device revocation, and audit logs.</p></article>
+      </div>
+    </section>
+
+    <section id="compare" class="container section-block comparison-section">
+      <div class="section-heading"><span class="eyebrow">WHY APEXBOT</span><h2>Built to compete with bot-builder and trading-community sites</h2><p class="muted">Competitors may focus on a builder or a community. ApexBot combines builder, scanner, copy trading, marketplace, education, and backend security.</p></div>
+      <div class="card table-card">
+        <div class="table-wrap">
+          <table class="comparison-table">
+            <thead><tr><th>Capability</th><th>ApexBot</th><th>Basic bot sites</th><th>Training/community sites</th></tr></thead>
+            <tbody>
+              <tr><td>Visual Deriv bot builder</td><td>Yes</td><td>Sometimes</td><td>Usually no</td></tr>
+              <tr><td>Live Deriv scanner</td><td>Yes</td><td>Limited</td><td>Limited</td></tr>
+              <tr><td>Copy trading controls</td><td>Yes</td><td>Sometimes</td><td>Usually signals only</td></tr>
+              <tr><td>Bot marketplace</td><td>Yes</td><td>Rare</td><td>No</td></tr>
+              <tr><td>Demo and real mode separation</td><td>Yes</td><td>Varies</td><td>Varies</td></tr>
+              <tr><td>Backend token/security model</td><td>Yes</td><td>Not always clear</td><td>Not the focus</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="container section-block community-section">
+      <div class="grid cols-3 community-grid">
+        <article class="card"><span class="eyebrow">LEARN</span><h3>Beginner guide</h3><p class="muted">Understand demo testing, contract types, risk, and what backtests cannot promise.</p><a href="guide.html">Read guide</a></article>
+        <article class="card"><span class="eyebrow">CONNECT</span><h3>Telegram community</h3><p class="muted">Join the configured Telegram channel or bot for alerts, support, updates, and verification.</p><a href="support.html">Find support</a></article>
+        <article class="card"><span class="eyebrow">PROTECT</span><h3>No fake success states</h3><p class="muted">Payments, roles, subscriptions, and real trading permissions are checked by the backend.</p><a href="privacy.html">Privacy</a></article>
       </div>
     </section>
 
@@ -99,7 +144,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
   <script src="apex-config.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/public-home.js"></script>
+  <script src="js/config.js?v=20260701-1"></script>
+  <script src="js/public-home.js?v=20260701-1"></script>
 </body>
 </html>
