@@ -24,6 +24,7 @@ window.DEMO = (function () {
     const nav = document.getElementById('demo-nav');
     if (nav) {
       const items = [
+        ['free-bots.html', 'Free Bots'],
         ['demo-dashboard.html', 'Dashboard'],
         ['demo-bots.html', 'Bots & Copy'],
         ['demo-scanner.html', 'AI Scanner'],
