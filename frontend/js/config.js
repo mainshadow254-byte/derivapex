@@ -18,7 +18,10 @@ function normalizeApiBase(value) {
 function publicConfigFallback() {
   return {
     derivAppId: '1089',
-    derivOAuthUrl: 'https://oauth.deriv.com/oauth2/authorize?app_id=1089',
+    derivOAuthAppId: '',
+    derivOAuthReady: false,
+    derivOAuthIssue: 'Backend public config is unavailable. Deriv OAuth is disabled until the backend is reachable; API-token fallback remains available.',
+    derivOAuthUrl: '',
     derivOAuthRedirect: `${window.APEX.PUBLIC_APP_URL}/deriv-callback.html`,
     derivAffiliateLink: 'https://deriv.com/signup/',
     telegram: {},
