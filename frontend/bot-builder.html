@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ApexBot - Visual Bot Builder</title>
+  <title>ApexBot - Visual Deriv Bot Builder</title>
   <link rel="stylesheet" href="css/styles.css?v=20260621-visual-builder" />
+  <link rel="stylesheet" href="css/builder-upgrade.css?v=20260702-1" />
 </head>
 <body class="builder-page visual-builder-page">
   <nav class="nav builder-nav">
-    <a class="brand" href="dashboard.html">ApexBot</a>
+    <a class="brand" href="index.html">ApexBot</a>
     <div class="nav-actions">
+      <a class="btn ghost" href="demo-dashboard.html">Demo</a>
+      <a class="btn ghost" href="guide.html">Guide</a>
       <a class="btn ghost" href="dashboard.html">Dashboard</a>
       <a class="btn ghost" href="terminal.html">DTrader</a>
       <a class="btn ghost" data-deriv-oauth>Connect Deriv</a>
@@ -30,7 +33,7 @@
         <button id="auto-layout" class="btn ghost" type="button">Auto layout</button>
         <button id="save-bot" class="btn ok" type="button">Save</button>
         <label class="btn ghost file-btn">Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
-        <button id="export-bot" class="btn ghost" type="button">Export</button>
+        <button id="export-bot" class="btn ghost" type="button">Export JSON</button>
         <button id="run-backtest" class="btn ghost" type="button">Backtest demo</button>
       </div>
     </header>
@@ -41,7 +44,7 @@
           <input id="block-search" class="input" placeholder="Search blocks" />
         </div>
         <div id="block-categories" class="library-categories"></div>
-        <p class="builder-risk-note">No guaranteed profits. Trading involves risk.</p>
+        <p class="builder-risk-note">No guaranteed profits. Trading involves risk. Demo-test every strategy before real mode.</p>
       </aside>
 
       <section class="visual-canvas-shell">
@@ -62,7 +65,7 @@
           <div class="canvas-grid"></div>
           <svg id="connection-layer" class="visual-connections" aria-hidden="true"></svg>
           <div id="canvas-blocks" class="visual-canvas-blocks"></div>
-          <div id="canvas-empty" class="canvas-empty hidden">Drag blocks here to build a strategy.</div>
+          <div id="canvas-empty" class="canvas-empty hidden">Choose a template or drag blocks here to build a strategy.</div>
         </div>
 
         <div class="canvas-footer">
@@ -99,7 +102,7 @@
         <section class="workstation-view active" data-panel-view="journal">
           <div id="builder-log" class="builder-journal">
             <div>Bot not running.</div>
-            <div>Build a strategy visually, then run in demo mode.</div>
+            <div>Choose a template, edit blocks, then run in demo mode.</div>
           </div>
         </section>
         <section class="workstation-view" data-panel-view="transactions">
@@ -134,5 +137,6 @@
   <script src="js/security.js"></script>
   <script src="js/deriv-onboard.js"></script>
   <script src="js/bot-builder.js?v=20260621-visual-builder"></script>
+  <script src="js/builder-upgrade.js?v=20260702-1"></script>
 </body>
 </html>
