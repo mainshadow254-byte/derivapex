@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Demo Bots & Copy</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <link rel="stylesheet" href="css/launch-fixes.css?v=20260702-1" />
+  <link rel="stylesheet" href="css/product-loop.css?v=20260702-1" />
+</head>
+<body class="app-body">
+  <nav class="nav">
+    <a class="brand" href="index.html">ApexBot</a>
+    <div id="demo-nav"></div>
+  </nav>
+
+  <main class="container section-block">
+    <section class="loop-hero">
+      <div class="card launch-highlight">
+        <span class="eyebrow">PUBLIC BOT LAB</span>
+        <h1>Discover, inspect, build, scan, test, then copy carefully.</h1>
+        <p class="muted page-lead">This page connects the whole ApexBot loop. Competitor sites often show bots or communities first; ApexBot shows templates, risk controls, live-data status, and copy-trading safeguards before asking users to trust anything.</p>
+        <div class="loop-kpis">
+          <div class="loop-kpi"><small>Real trade risk</small><strong>Always</strong></div>
+          <div class="loop-kpi"><small>Demo trades</small><strong>Safe</strong></div>
+          <div class="loop-kpi"><small>Fake profits</small><strong>Blocked</strong></div>
+        </div>
+      </div>
+      <div class="card">
+        <span class="eyebrow">PRODUCT LOOP</span>
+        <div class="loop-flow" style="margin-top:10px">
+          <div class="loop-flow-row"><b>1</b><div><strong>Pick template</strong><span>Start with a visible strategy structure.</span></div></div>
+          <div class="loop-flow-row"><b>2</b><div><strong>Open builder</strong><span>Edit every market, contract, signal, and risk block.</span></div></div>
+          <div class="loop-flow-row"><b>3</b><div><strong>Scan market</strong><span>Check live Deriv trend, volatility, confidence, and invalidation.</span></div></div>
+          <div class="loop-flow-row"><b>4</b><div><strong>Test demo</strong><span>Run/backtest before any real account connection.</span></div></div>
+          <div class="loop-flow-row"><b>5</b><div><strong>Copy carefully</strong><span>Use capital, per-trade, and daily-loss limits.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading"><span class="eyebrow">LIVE READINESS</span><h2>Platform status without secrets</h2><p class="muted">Shows whether the public demo is connected to the backend and whether the live market feed has enough data.</p></div>
+      <div id="demo-status"><p class="muted">Loading status…</p></div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading"><span class="eyebrow">BOT TEMPLATES</span><h2>Free templates that open in the builder</h2><p class="muted">Each template is a learning structure with risk notes. No card claims profit.</p></div>
+      <div class="template-toolbar card">
+        <input id="template-search" class="input" placeholder="Search template, market, contract…" />
+        <select id="template-category" class="input"><option value="">All categories</option><option>Digits</option><option>Trend</option><option>Volatility</option><option>AI Filter</option></select>
+        <select id="template-risk" class="input"><option value="">All risk levels</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+      </div>
+      <div id="template-list" class="grid cols-3"><p class="muted">Loading templates…</p></div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading"><span class="eyebrow">COPY PREVIEW</span><h2>Copy trading with limits, not hype</h2><p class="muted">These preview cards show the trust standard ApexBot should enforce before any real copy strategy is ranked.</p></div>
+      <div id="copy-preview-list" class="grid cols-2"><p class="muted">Loading copy preview…</p></div>
+    </section>
+
+    <section class="section-block">
+      <div class="card final-cta launch-highlight">
+        <div><span class="eyebrow">NEXT STEP</span><h2>Build one bot, then scan the market</h2><p class="muted">The strongest flow is template → builder → live scanner → demo test → saved bot.</p></div>
+        <div class="row"><a class="btn" href="bot-builder.html?template=over">Open builder</a><a class="btn ghost" href="demo-scanner.html">Open scanner</a></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="apex-config.js"></script>
+  <script src="js/config.js?v=20260702-1"></script>
+  <script src="js/demo.js?v=20260702-2"></script>
+  <script src="js/demo-hub.js?v=20260702-1"></script>
+</body>
+</html>
