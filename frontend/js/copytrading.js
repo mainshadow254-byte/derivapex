@@ -238,7 +238,7 @@ window.CopyTrading = (function () {
 
   return {
     load,
-    setCanCopy(v) { state.canCopy = v; },
+    setCanCopy(v) { state.canCopy = v; state.canPublish = v; },
     setCanPublish(v) { state.canPublish = v; },
   };
 })();
