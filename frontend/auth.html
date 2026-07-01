@@ -67,7 +67,18 @@
   <script src="js/pb-client.js"></script>
   <script src="js/deriv-onboard.js"></script>
   <script>
-    let mode = new URLSearchParams(location.search).get('mode') === 'login' ? 'login' : 'signup';
+    const pageParams = new URLSearchParams(location.search);
+    let mode = pageParams.get('mode') === 'login' ? 'login' : 'signup';
+    const requestedNext = pageParams.get('next') || '';
+    function safeNextUrl(){
+      if (!requestedNext) return 'dashboard.html';
+      try {
+        const decoded = decodeURIComponent(requestedNext);
+        if (/^https?:\/\//i.test(decoded) || decoded.startsWith('//')) return 'dashboard.html';
+        if (!/^[a-z0-9_./?#=&%-]+$/i.test(decoded)) return 'dashboard.html';
+        return decoded;
+      } catch { return 'dashboard.html'; }
+    }
     const $ = (id) => document.getElementById(id);
     function msg(text, kind='err'){ $('msg').innerHTML = `<div class="notice ${kind}">${text}</div>`; }
     function loginError(){
@@ -106,7 +117,7 @@
       try {
         const sync = await Auth.googleLogin();
         if (sync.needsEmailVerification) location.href = 'verify.html';
-        else location.href = 'dashboard.html';
+        else location.href = safeNextUrl();
       } catch (err) {
         msg(err?.message || 'Google sign-in failed. Please try again.');
       } finally {
@@ -130,7 +141,7 @@
           await Auth.login(email, password);
           const me = await api('/me').catch(()=>null);
           if (me && !me.verified) location.href = 'verify.html?email='+encodeURIComponent(email);
-          else location.href = 'dashboard.html';
+          else location.href = safeNextUrl();
         }
       } catch (err) {
         safeError(err);
