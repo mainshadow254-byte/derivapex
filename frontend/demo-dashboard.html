@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ApexBot — Demo Dashboard</title>
   <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <link rel="stylesheet" href="css/launch-fixes.css?v=20260702-1" />
 </head>
 <body class="app-body">
   <nav class="nav">
@@ -13,13 +14,23 @@
   </nav>
 
   <div class="container">
-    <div class="card page-hero" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div class="card page-hero launch-highlight" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
       <div>
         <span class="platform-kicker">Workspace online</span>
         <h2 style="margin:0">Demo Dashboard <span class="demo-tag">DEMO</span></h2>
-        <p class="muted" style="margin:4px 0 0;font-size:13px">A full preview with no login. Balances & positions are simulated; market data & AI are live.</p>
+        <p class="muted" style="margin:4px 0 0;font-size:13px">No login required. Balances and positions are simulated; market data and scanner analysis are live when the backend feed is online.</p>
       </div>
-      <a class="btn ok" href="auth.html">Create free account</a>
+      <div class="row"><a class="btn ghost" href="index.html#free-bots">Free bots</a><a class="btn ok" href="auth.html">Create free account</a></div>
+    </div>
+
+    <div class="card section-card">
+      <div class="row between"><div><span class="eyebrow">TRY FIRST</span><h3 style="margin:4px 0 0">Demo playbook</h3></div><a class="btn ghost" href="guide.html">Read guide</a></div>
+      <div class="demo-playbook" style="margin-top:12px">
+        <div class="card"><h4>1. Pick a template</h4><p>Start from a free bot idea instead of guessing from a blank page.</p></div>
+        <div class="card"><h4>2. Scan the market</h4><p>Check trend, confidence, risk, support, resistance, and invalidation.</p></div>
+        <div class="card"><h4>3. View the chart</h4><p>Confirm the scanner explanation against live Deriv ticks and candles.</p></div>
+        <div class="card"><h4>4. Set risk limits</h4><p>Define stake, loss limit, stop rule, and max trades before real mode.</p></div>
+      </div>
     </div>
 
     <!-- Connect / upgrade section -->
@@ -30,6 +41,17 @@
       <h3 style="margin-top:0">Account summary <span class="demo-tag">SIMULATED</span></h3>
       <div id="acct" class="grid cols-4"><p class="muted">Loading…</p></div>
       <div id="acct-note" class="muted" style="font-size:12px;margin-top:8px"></div>
+    </div>
+
+    <div class="card section-card">
+      <div class="row between"><div><span class="eyebrow">FREE BOT TEMPLATES</span><h3 style="margin:4px 0 0">Start here before building from scratch</h3></div><a class="btn" href="bot-builder.html">Open builder</a></div>
+      <div class="grid cols-4 bot-library-grid" style="margin-top:12px">
+        <article class="bot-card"><small>DIGITS</small><h3>Over/Under Guard</h3><p class="muted">Practice digit rules with stake caps, restart limits, and no martingale hype.</p><div class="bot-meta"><span>Demo</span><span>Digits</span><span>Starter</span></div></article>
+        <article class="bot-card"><small>DIGITS</small><h3>Even/Odd Rhythm</h3><p class="muted">A readable Even/Odd template for testing pattern logic without pretending streaks are certain.</p><div class="bot-meta"><span>Free</span><span>Even/Odd</span><span>Learning</span></div></article>
+        <article class="bot-card"><small>TREND</small><h3>EMA Rise/Fall</h3><p class="muted">Moving-average structure for checking trend ideas against chart and scanner output.</p><div class="bot-meta"><span>Trend</span><span>Backtest</span><span>Rules</span></div></article>
+        <article class="bot-card"><small>BOOM/CRASH</small><h3>Spike Guard</h3><p class="muted">Conservative Boom/Crash starter with filters and high-risk warnings.</p><div class="bot-meta"><span>Filters</span><span>Risk</span><span>Demo</span></div></article>
+      </div>
+      <p class="muted-sm" style="margin-top:12px">Templates are learning structures, not profit promises. Edit and test them before any real use.</p>
     </div>
 
     <div class="grid cols-2">
@@ -52,21 +74,22 @@
 
     <!-- AI scanner top picks -->
     <div class="card section-card">
-      <h3 style="margin-top:0">AI Scanner — top picks <span class="demo-tag">DEMO</span></h3>
+      <div class="row between"><h3 style="margin:0">AI Scanner — top picks <span class="demo-tag">DEMO</span></h3><a class="btn ghost" href="demo-scanner.html">Full scanner</a></div>
+      <p class="muted" style="font-size:13px">The scanner should wait for enough data instead of inventing fake signals. If markets are warming up, keep the chart open and retry shortly.</p>
       <div id="scan" class="grid cols-2"><p class="muted">Scanning…</p></div>
     </div>
   </div>
 
   <script src="apex-config.js"></script>
-  <script src="js/config.js"></script>
+  <script src="js/config.js?v=20260702-1"></script>
   <script src="js/charts.js"></script>
-  <script src="js/demo.js"></script>
+  <script src="js/demo.js?v=20260702-1"></script>
   <script src="js/deriv-onboard.js"></script>
   <script>
     DEMO.mountChrome('demo-dashboard.html');
     DerivOnboard.mount(document.getElementById('deriv-onboard'), {
       title: 'Connect Your Deriv Account',
-      body: 'To use real trading features, connect your Deriv account. If you don\u2019t have one, create one first using the button below, then sign up / log in and connect.',
+      body: 'Real trading features require your own Deriv account. Create one first if needed, then sign up / log in and connect. Demo mode remains the recommended starting point.',
     });
     const el = (id)=>document.getElementById(id);
     const money = (n,c='USD')=> (n<0?'-':'') + (c==='USD'?'$':'') + Math.abs(+n).toFixed(2);
@@ -105,7 +128,7 @@
       try {
         const r = await DEMO.get('/scan');
         const list = (r.markets||[]).slice(0,4);
-        if (!list.length){ el('scan').innerHTML = '<p class="muted">Markets warming up — live signals appear after ~1–2 minutes of ticks.</p>'; return; }
+        if (!list.length){ el('scan').innerHTML = '<p class="muted">Markets warming up — live signals appear after ~1–2 minutes of ticks. The scanner never invents signals.</p>'; return; }
         el('scan').innerHTML = list.map(m=>`<div class="card scanner-card">
           <div style="display:flex;justify-content:space-between;align-items:center"><strong>${m.symbol}</strong> ${riskBadge(m.riskLevel)}</div>
           <div class="muted" style="font-size:13px;margin:6px 0">Direction: <b>${m.direction}</b> · Confidence: <b>${m.confidence ?? '—'}%</b></div>
