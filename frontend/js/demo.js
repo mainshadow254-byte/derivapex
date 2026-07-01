@@ -18,7 +18,7 @@ window.DEMO = (function () {
       const b = document.createElement('div');
       b.id = 'demo-banner';
       b.className = 'demo-banner';
-      b.textContent = 'DEMO MODE — SIMULATED DATA';
+      b.textContent = 'DEMO MODE — SIMULATED DATA — NO REAL TRADES';
       document.body.prepend(b);
     }
     const nav = document.getElementById('demo-nav');
@@ -28,6 +28,8 @@ window.DEMO = (function () {
         ['demo-scanner.html', 'AI Scanner'],
         ['demo-terminal.html', 'Charts'],
         ['demo-markets.html', 'Markets'],
+        ['index.html#free-bots', 'Free Bots'],
+        ['guide.html', 'Guide'],
       ];
       nav.innerHTML = items.map(([href, label]) =>
         `<a class="btn ${href === active ? '' : 'ghost'}" href="${href}">${label}</a>`).join('') +
