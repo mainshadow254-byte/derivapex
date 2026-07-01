@@ -21,9 +21,9 @@ export function getSymbolInfo(symbol) {
   return symbolInfo.get(symbol) || inferSymbolInfo(symbol);
 }
 
-// Returns only symbols we actually have live ticks for (ready for analysis).
+// Returns only symbols we actually have enough live ticks for scanner analysis.
 export function getReadySymbols() {
-  return activeSymbols.filter((s) => (ticks.get(s) || []).length >= 60);
+  return activeSymbols.filter((s) => (ticks.get(s) || []).length >= 80);
 }
 
 export function getTicks(symbol) {
