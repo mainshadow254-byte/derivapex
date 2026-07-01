@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Request a Strategy</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <link rel="stylesheet" href="css/launch-fixes.css?v=20260702-1" />
+  <link rel="stylesheet" href="css/product-loop.css?v=20260702-1" />
+</head>
+<body class="app-body">
+  <nav class="nav public-nav"><a class="brand" href="index.html">ApexBot</a><div id="demo-nav"></div></nav>
+  <main class="container section-block">
+    <section class="loop-hero">
+      <div class="card launch-highlight">
+        <span class="eyebrow">REQUEST A STRATEGY</span>
+        <h1>Tell us the Deriv bot you want next.</h1>
+        <p class="muted page-lead">This gives the project crowd energy without faking users. Requests are stored locally for now and can be sent through the configured support/community route.</p>
+      </div>
+      <form id="request-form" class="card">
+        <label class="label">Strategy name</label>
+        <input id="req-name" class="input" placeholder="Example: Volatility 75 EMA guard" required />
+        <label class="label" style="margin-top:10px">Market</label>
+        <input id="req-market" class="input" placeholder="Example: R_75, BOOM500, frxEURUSD" />
+        <label class="label" style="margin-top:10px">Contract type</label>
+        <input id="req-contract" class="input" placeholder="Example: Rise/Fall, Even/Odd, Over/Under" />
+        <label class="label" style="margin-top:10px">What should it do?</label>
+        <textarea id="req-notes" class="input" placeholder="Rules, risk limits, when to avoid, and what you want to learn"></textarea>
+        <button class="btn" type="submit" style="margin-top:12px;width:100%">Save request</button>
+        <div id="request-msg"></div>
+      </form>
+    </section>
+    <section class="section-block"><div class="card"><h2>Saved requests on this device</h2><div id="request-list" class="grid cols-2"></div></div></section>
+    <section class="section-block"><div class="card final-cta launch-highlight"><div><span class="eyebrow">SEND IT</span><h2>Share request with support</h2><p class="muted">Use the support hub to send the request to admin/community once your Telegram/support links are configured.</p></div><div class="row"><a class="btn" href="support.html">Open support</a><a class="btn ghost" href="free-bots.html">Open free bots</a></div></div></section>
+  </main>
+  <script src="apex-config.js"></script>
+  <script src="js/config.js?v=20260702-2"></script>
+  <script src="js/demo.js?v=20260702-3"></script>
+  <script src="js/request-strategy.js?v=20260702-1"></script>
+</body>
+</html>
