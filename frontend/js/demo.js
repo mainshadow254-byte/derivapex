@@ -8,7 +8,7 @@ window.DEMO = (function () {
     const r = await fetch(`${BASE}${path}`);
     let body = null;
     try { body = await r.json(); } catch {}
-    if (!r.ok) { const e = new Error(body?.error || `Request failed (${r.status})`); e.status = r.status; throw e; }
+    if (!r.ok) { const e = new Error(body?.error || `Request failed (${r.status})`); e.status = r.status; e.body = body; throw e; }
     return body;
   }
 
@@ -25,10 +25,10 @@ window.DEMO = (function () {
     if (nav) {
       const items = [
         ['demo-dashboard.html', 'Dashboard'],
+        ['demo-bots.html', 'Bots & Copy'],
         ['demo-scanner.html', 'AI Scanner'],
         ['demo-terminal.html', 'Charts'],
         ['demo-markets.html', 'Markets'],
-        ['index.html#free-bots', 'Free Bots'],
         ['guide.html', 'Guide'],
       ];
       nav.innerHTML = items.map(([href, label]) =>
