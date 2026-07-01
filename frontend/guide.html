@@ -1,12 +1,123 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ApexBot — Guide</title><link rel="stylesheet" href="css/styles.css?v=20260620-2"/></head><body>
-<nav class="nav"><a class="brand" href="index.html">ApexBot</a><a class="btn ghost" href="index.html">Home</a></nav>
-<div class="container" style="max-width:760px">
-  <h1>Getting started</h1>
-  <div class="card"><h3>1. Sign up & verify email</h3><p class="muted">Create an account with email and password, then click the verification link we email you. Telegram is optional and can be finished later for alerts and community access.</p></div>
-  <div class="card" style="margin-top:14px"><h3>2. Telegram setup</h3><p class="muted">Telegram is optional. Open the ApexBot Telegram bot from onboarding or Account Settings if you want alerts and community access, verify your community join if required, or skip and continue using the dashboard.</p></div>
-  <div class="card" style="margin-top:14px"><h3>3. Demo first</h3><p class="muted">Free accounts get the demo scanner preview, demo trades, and live charts — clearly labeled DEMO. Nothing here uses real money.</p></div>
-  <div class="card" style="margin-top:14px"><h3>4. Upgrade for real tools</h3><p class="muted">Paid plans unlock the full AI scanner, copy trading, bot imports, and real trading via your own Deriv account. Subscriptions activate only after a verified payment.</p></div>
-  <div class="card" style="margin-top:14px"><h3>Risk</h3><p class="muted">Trading involves real financial risk. The AI shows confidence and risk warnings but never guarantees profit. Only trade what you can afford to lose.</p></div>
-</div></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexBot — Beginner Guide</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <link rel="stylesheet" href="css/launch-fixes.css?v=20260702-1" />
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="index.html">ApexBot</a>
+    <div class="nav-actions"><a class="btn ghost" href="index.html">Home</a><a class="btn ghost" href="demo-dashboard.html">Demo</a><a class="btn" href="bot-builder.html">Bot Builder</a></div>
+  </nav>
+
+  <main class="container section-block">
+    <div class="section-heading">
+      <span class="eyebrow">BEGINNER GUIDE</span>
+      <h1>How to use ApexBot without gambling blindly</h1>
+      <p class="muted page-lead">Start with demo mode, understand the contract type, test the strategy, and only consider real trading after you understand the risk and limits.</p>
+    </div>
+
+    <div class="guide-layout">
+      <section class="guide-stack">
+        <article class="card guide-card" id="start">
+          <h3>1. Start with the public demo</h3>
+          <p>Open the demo dashboard first. The demo uses simulated balance and positions, while market data and scanner analysis are clearly labeled. Do not connect real trading until you understand what each button does.</p>
+          <div class="quick-win-grid">
+            <div class="quick-win"><b>Open demo</b><span>Check dashboard, scanner, and charts without login.</span></div>
+            <div class="quick-win"><b>Pick a template</b><span>Use a starter bot idea instead of building from nothing.</span></div>
+            <div class="quick-win"><b>Set limits</b><span>Stake, daily loss, stop loss, and max trades come before entries.</span></div>
+          </div>
+        </article>
+
+        <article class="card guide-card" id="account">
+          <h3>2. Sign up and verify your email</h3>
+          <p>Create an account with email and password, then click the verification link. Google sign-in is for normal users only; admin access should stay controlled by backend rules and owner permissions.</p>
+          <ul>
+            <li>Use a strong password.</li>
+            <li>Do not reuse your Deriv password.</li>
+            <li>Do not share verification links or one-time codes.</li>
+          </ul>
+        </article>
+
+        <article class="card guide-card" id="telegram">
+          <h3>3. Telegram is optional</h3>
+          <p>Telegram can help with alerts, community updates, and support, but it should not block the dashboard. If the public Telegram links are not configured yet, you can still use the demo, guide, scanner, and account dashboard.</p>
+        </article>
+
+        <article class="card guide-card" id="digits">
+          <h3>4. Digits: Over/Under, Even/Odd, Matches/Differs</h3>
+          <p>Digit contracts are simple to understand but easy to misuse. A streak does not guarantee the next result. Use digit templates only for demo learning and always set strict loss limits.</p>
+          <ol>
+            <li>Select a digit market and contract type.</li>
+            <li>Define the exact rule that creates a signal.</li>
+            <li>Backtest several market conditions, not only one good period.</li>
+            <li>Stop after your daily loss limit is reached.</li>
+          </ol>
+        </article>
+
+        <article class="card guide-card" id="volatility">
+          <h3>5. Volatility indices: R_10 to R_100</h3>
+          <p>Volatility markets can move quickly. Use the scanner to check trend, volatility, confidence, support, resistance, and invalidation. A good setup should explain why you enter and when the idea is invalid.</p>
+          <ul>
+            <li><b>Trend:</b> avoid trading against strong movement unless the strategy is designed for reversal.</li>
+            <li><b>Volatility:</b> reduce stake or skip when risk is high.</li>
+            <li><b>Invalidation:</b> decide what proves the trade idea wrong before entering.</li>
+          </ul>
+        </article>
+
+        <article class="card guide-card" id="boom-crash">
+          <h3>6. Boom and Crash need extra caution</h3>
+          <p>Boom/Crash markets can spike aggressively. A bot that looks calm in demo can still fail when conditions change. Use filters, avoid oversized stakes, and never rely on a single indicator.</p>
+          <ul>
+            <li>Use spike-aware rules and volatility checks.</li>
+            <li>Do not increase stake after every loss unless you fully understand the drawdown risk.</li>
+            <li>Prefer small demo tests across multiple sessions over one lucky run.</li>
+          </ul>
+        </article>
+
+        <article class="card guide-card" id="imports">
+          <h3>7. Importing XML or JSON bots</h3>
+          <p>ApexBot can import Deriv XML bots and JSON strategy files, but unknown files should be treated carefully. Validate the file, inspect the rules, and run in demo first.</p>
+          <ol>
+            <li>Import the file in the bot area or visual builder.</li>
+            <li>Check contract type, stake, duration, stop loss, and restart rules.</li>
+            <li>Run a demo backtest before saving it as a usable strategy.</li>
+            <li>Do not run files from strangers in real mode without inspection.</li>
+          </ol>
+        </article>
+
+        <article class="card guide-card" id="upgrade">
+          <h3>8. Upgrade only for tools, not promises</h3>
+          <p>Paid plans unlock more scanner, copy trading, bot import, marketplace, and real trading features. A subscription does not reduce market risk and does not guarantee profit. Payment status should activate only after backend verification.</p>
+        </article>
+
+        <article class="card guide-card risk-callout" id="risk">
+          <h3>Risk rule</h3>
+          <p>Trading involves real financial risk. The AI can show confidence and warnings, but it cannot know the future. Never trade borrowed money, school fees, rent, emergency funds, or money you cannot afford to lose.</p>
+        </article>
+      </section>
+
+      <aside class="guide-side">
+        <div class="card">
+          <span class="eyebrow">START HERE</span>
+          <a href="demo-dashboard.html">Open demo dashboard</a>
+          <a href="demo-scanner.html">Open AI scanner</a>
+          <a href="demo-terminal.html">Open charts</a>
+          <a href="bot-builder.html">Open bot builder</a>
+        </div>
+        <div class="card">
+          <span class="eyebrow">GUIDE SECTIONS</span>
+          <a href="#digits">Digits</a>
+          <a href="#volatility">Volatility indices</a>
+          <a href="#boom-crash">Boom/Crash</a>
+          <a href="#imports">Bot imports</a>
+          <a href="#risk">Risk rule</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
