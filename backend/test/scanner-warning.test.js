@@ -26,7 +26,7 @@ test('warns about high volatility even when another market is the safe top pick'
   assert.deepEqual(result.volatileMarkets.map((item) => item.symbol), ['VOLATILE']);
   assert.equal(result.saferAlternative.symbol, 'SAFE_TOP');
   assert.equal(result.alternativeAnalysis.unsafeMarket, 'VOLATILE');
-  assert.match(result.warning, /VOLATILE is the riskiest/);
+  assert.match(result.warning, /VOLATILE is volatile\/unsafe now/);
   assert.match(result.warning, /SAFE_TOP/);
 });
 

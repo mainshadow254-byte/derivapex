@@ -172,7 +172,7 @@ export function validateRuntimeConfig(runtime = config) {
   }
   if (errors.length) throw new Error(`Invalid production configuration:\n- ${errors.join('\n- ')}`);
 
-  if (!runtime.deriv.oauthReady) {
+  if (!runtime.deriv?.oauthReady) {
     console.warn('[config] Deriv OAuth connect is not fully configured. Set DERIV_OAUTH_APP_ID or DERIV_OAUTH_URL. API-token fallback remains available.');
   }
   if (runtime.telegram.botToken && !runtime.telegram.usePolling && !runtime.publicBackendUrl) {

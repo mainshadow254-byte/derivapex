@@ -73,7 +73,7 @@ test('valid structured model advice passes the backend safety gate', async () =>
 
   assert.equal(advice.source, 'openai');
   assert.equal(advice.selectedMarket, 'R_25');
-  assert.deepEqual(Object.keys(advice.structured).sort(), ['confidence', 'market', 'recommendation', 'risk_score', 'summary', 'warnings']);
+  assert.deepEqual(Object.keys(advice.structured).sort(), ['confidence', 'indicators', 'market', 'recommendation', 'risk_score', 'summary', 'warnings']);
   assert.match(request.url, /\/v1\/chat\/completions$/);
   assert.equal(request.options.headers.Authorization, 'Bearer test-key');
   assert.doesNotMatch(request.options.body, /test-key/);
@@ -112,5 +112,5 @@ test('missing AI config fails safely without fake AI success', async () => {
 test('AI setup-required helper returns the public structured API shape', () => {
   const advice = aiSetupRequiredAdvice(scanFixture());
   assert.equal(advice.setupRequired, true);
-  assert.deepEqual(Object.keys(advice.structured).sort(), ['confidence', 'market', 'recommendation', 'risk_score', 'summary', 'warnings']);
+  assert.deepEqual(Object.keys(advice.structured).sort(), ['confidence', 'indicators', 'market', 'recommendation', 'risk_score', 'summary', 'warnings']);
 });
