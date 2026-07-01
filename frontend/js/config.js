@@ -20,7 +20,7 @@ function publicConfigFallback() {
     derivAppId: '1089',
     derivOAuthUrl: 'https://oauth.deriv.com/oauth2/authorize?app_id=1089',
     derivOAuthRedirect: `${window.APEX.PUBLIC_APP_URL}/deriv-callback.html`,
-    derivAffiliateLink: '',
+    derivAffiliateLink: 'https://deriv.com/signup/',
     telegram: {},
     degraded: true,
   };
