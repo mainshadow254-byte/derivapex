@@ -18,93 +18,21 @@ function demoMeta(extra = {}) {
 }
 
 const DEMO_TEMPLATES = [
-  {
-    id: 'over-under-guard', template: 'over', title: 'Over/Under Guard', category: 'Digits', symbol: 'R_100', contract_type: 'DIGITOVER', risk_rating: 'medium', stake: 1, duration: '1 tick', readiness: 88,
-    blocks: ['Trade Parameters', 'Prediction Digit', 'Purchase Conditions', 'Restart Conditions', 'Risk Management'],
-    bestFor: 'Learning Over/Under structure on synthetic digits',
-    avoidWhen: 'Avoid during long losing streaks or when scanner volatility is extreme.',
-    why: 'Good for learning digit contracts because prediction, stake, and restart rules are visible before demo testing.',
-    warning: 'Digit streaks do not predict the future. Use demo testing and hard daily loss limits.',
-  },
-  {
-    id: 'even-odd-rhythm', template: 'even', title: 'Even/Odd Rhythm', category: 'Digits', symbol: 'R_75', contract_type: 'DIGITEVEN', risk_rating: 'medium', stake: 1, duration: '1 tick', readiness: 85,
-    blocks: ['Trade Parameters', 'Prediction Digit', 'Purchase Conditions', 'Restart Conditions', 'Risk Management'],
-    bestFor: 'Practicing Even/Odd rules with a simple visible structure',
-    avoidWhen: 'Avoid raising stake after losses; digit randomness can punish martingale logic.',
-    why: 'Beginner-friendly structure for testing Even/Odd ideas without pretending that streaks are guaranteed.',
-    warning: 'Avoid increasing stake after losses unless you fully understand drawdown risk.',
-  },
-  {
-    id: 'ema-rise-fall', template: 'ema', title: 'EMA Rise/Fall', category: 'Trend', symbol: 'R_50', contract_type: 'CALL', risk_rating: 'low', stake: 1, duration: '5 ticks', readiness: 91,
-    blocks: ['Trade Parameters', 'EMA Cross', 'Purchase Conditions', 'Restart Conditions', 'Risk Management'],
-    bestFor: 'Learning trend-following structure with chart confirmation',
-    avoidWhen: 'Avoid when market is sideways and EMA signals flip repeatedly.',
-    why: 'Uses a readable trend rule that can be checked against the live chart and scanner reasoning.',
-    warning: 'Trend logic can fail in choppy markets; wait when scanner trend and momentum disagree.',
-  },
-  {
-    id: 'rsi-reversal-lab', template: 'rsi', title: 'RSI Reversal Lab', category: 'Trend', symbol: 'R_25', contract_type: 'PUT', risk_rating: 'medium', stake: 1, duration: '5 ticks', readiness: 84,
-    blocks: ['Trade Parameters', 'RSI Filter', 'Purchase Conditions', 'Take Profit', 'Risk Management'],
-    bestFor: 'Testing overbought/oversold reversal ideas in demo',
-    avoidWhen: 'Avoid in strong trends where RSI can stay stretched longer than expected.',
-    why: 'A practical mean-reversion template that forces users to confirm signal context before testing.',
-    warning: 'RSI is not a reversal guarantee. Treat it as a filter, not a trigger by itself.',
-  },
-  {
-    id: 'boom-500-guard', template: 'boom', title: 'Boom 500 Guard', category: 'Volatility', symbol: 'BOOM500', contract_type: 'CALL', risk_rating: 'high', stake: 0.5, duration: '5 ticks', readiness: 79,
-    blocks: ['Trade Parameters', 'Volatility Filter', 'Purchase Conditions', 'Profit Target', 'Risk Management'],
-    bestFor: 'Learning spike-market caution on Boom 500',
-    avoidWhen: 'Avoid immediately after large spikes or when volatility warning is high.',
-    why: 'Built around caution: the strategy structure makes volatility filters and stop rules visible first.',
-    warning: 'Boom/Crash spikes can invalidate calm-looking demo runs. Treat as advanced/high risk.',
-  },
-  {
-    id: 'crash-500-guard', template: 'boom', title: 'Crash 500 Guard', category: 'Volatility', symbol: 'CRASH500', contract_type: 'PUT', risk_rating: 'high', stake: 0.5, duration: '5 ticks', readiness: 78,
-    blocks: ['Trade Parameters', 'Volatility Filter', 'Purchase Conditions', 'Profit Target', 'Risk Management'],
-    bestFor: 'Practicing crash-spike awareness with strict limits',
-    avoidWhen: 'Avoid when scanner says no-trade, spread looks unstable, or spike risk is unclear.',
-    why: 'Gives Crash learners a structured risk-first starting point instead of blind spike chasing.',
-    warning: 'Crash markets are advanced. Stay in demo until you understand spike behavior.',
-  },
-  {
-    id: 'step-index-discipline', template: 'ema', title: 'Step Index Discipline', category: 'Step', symbol: 'stpRNG', contract_type: 'CALL', risk_rating: 'medium', stake: 1, duration: '5 ticks', readiness: 82,
-    blocks: ['Trade Parameters', 'Trend Filter', 'Purchase Conditions', 'Max Trades', 'Risk Management'],
-    bestFor: 'Testing strict trade-count and trend-filter rules on Step/Range-style markets',
-    avoidWhen: 'Avoid when movement is too flat or scanner confidence is low.',
-    why: 'Shows beginners how to cap trades and avoid over-clicking in slower synthetic conditions.',
-    warning: 'Low movement can still cause losses. Do not force trades when scanner says wait.',
-  },
-  {
-    id: 'ai-approval-gate', template: 'ai', title: 'AI Approval Gate', category: 'AI Filter', symbol: 'R_25', contract_type: 'CALL', risk_rating: 'medium', stake: 1, duration: '3 ticks', readiness: 83,
-    blocks: ['Trade Parameters', 'AI Signal', 'AI Trend Filter', 'AI Approval', 'Risk Management'],
-    bestFor: 'Using scanner/AI confirmation as a safety gate before demo testing',
-    avoidWhen: 'Avoid when AI explanation is uncertain or backend scanner rejects the setup.',
-    why: 'Shows how AI/scanner confirmation can be used as a gate, not as an automatic profit claim.',
-    warning: 'AI output is analysis, not certainty. Backend safety checks and manual review still matter.',
-  },
+  { id: 'over-under-guard', template: 'over', title: 'Over/Under Guard', category: 'Digits', symbol: 'R_100', contract_type: 'DIGITOVER', risk_rating: 'medium', stake: 1, duration: '1 tick', readiness: 88, blocks: ['Trade Parameters', 'Prediction Digit', 'Purchase Conditions', 'Restart Conditions', 'Risk Management'], bestFor: 'Learning Over/Under structure on synthetic digits', avoidWhen: 'Avoid during long losing streaks or when scanner volatility is extreme.', why: 'Good for learning digit contracts because prediction, stake, and restart rules are visible before demo testing.', warning: 'Digit streaks do not predict the future. Use demo testing and hard daily loss limits.' },
+  { id: 'even-odd-rhythm', template: 'even', title: 'Even/Odd Rhythm', category: 'Digits', symbol: 'R_75', contract_type: 'DIGITEVEN', risk_rating: 'medium', stake: 1, duration: '1 tick', readiness: 85, blocks: ['Trade Parameters', 'Prediction Digit', 'Purchase Conditions', 'Restart Conditions', 'Risk Management'], bestFor: 'Practicing Even/Odd rules with a simple visible structure', avoidWhen: 'Avoid raising stake after losses; digit randomness can punish martingale logic.', why: 'Beginner-friendly structure for testing Even/Odd ideas without pretending that streaks are guaranteed.', warning: 'Avoid increasing stake after losses unless you fully understand drawdown risk.' },
+  { id: 'ema-rise-fall', template: 'ema', title: 'EMA Rise/Fall', category: 'Trend', symbol: 'R_50', contract_type: 'CALL', risk_rating: 'low', stake: 1, duration: '5 ticks', readiness: 91, blocks: ['Trade Parameters', 'EMA Cross', 'Purchase Conditions', 'Restart Conditions', 'Risk Management'], bestFor: 'Learning trend-following structure with chart confirmation', avoidWhen: 'Avoid when market is sideways and EMA signals flip repeatedly.', why: 'Uses a readable trend rule that can be checked against the live chart and scanner reasoning.', warning: 'Trend logic can fail in choppy markets; wait when scanner trend and momentum disagree.' },
+  { id: 'rsi-reversal-lab', template: 'rsi', title: 'RSI Reversal Lab', category: 'Trend', symbol: 'R_25', contract_type: 'PUT', risk_rating: 'medium', stake: 1, duration: '5 ticks', readiness: 84, blocks: ['Trade Parameters', 'RSI Filter', 'Purchase Conditions', 'Take Profit', 'Risk Management'], bestFor: 'Testing overbought/oversold reversal ideas in demo', avoidWhen: 'Avoid in strong trends where RSI can stay stretched longer than expected.', why: 'A practical mean-reversion template that forces users to confirm signal context before testing.', warning: 'RSI is not a reversal guarantee. Treat it as a filter, not a trigger by itself.' },
+  { id: 'boom-500-guard', template: 'boom', title: 'Boom 500 Guard', category: 'Volatility', symbol: 'BOOM500', contract_type: 'CALL', risk_rating: 'high', stake: 0.5, duration: '5 ticks', readiness: 79, blocks: ['Trade Parameters', 'Volatility Filter', 'Purchase Conditions', 'Profit Target', 'Risk Management'], bestFor: 'Learning spike-market caution on Boom 500', avoidWhen: 'Avoid immediately after large spikes or when volatility warning is high.', why: 'Built around caution: the strategy structure makes volatility filters and stop rules visible first.', warning: 'Boom/Crash spikes can invalidate calm-looking demo runs. Treat as advanced/high risk.' },
+  { id: 'crash-500-guard', template: 'boom', title: 'Crash 500 Guard', category: 'Volatility', symbol: 'CRASH500', contract_type: 'PUT', risk_rating: 'high', stake: 0.5, duration: '5 ticks', readiness: 78, blocks: ['Trade Parameters', 'Volatility Filter', 'Purchase Conditions', 'Profit Target', 'Risk Management'], bestFor: 'Practicing crash-spike awareness with strict limits', avoidWhen: 'Avoid when scanner says no-trade, spread looks unstable, or spike risk is unclear.', why: 'Gives Crash learners a structured risk-first starting point instead of blind spike chasing.', warning: 'Crash markets are advanced. Stay in demo until you understand spike behavior.' },
+  { id: 'step-index-discipline', template: 'ema', title: 'Step Index Discipline', category: 'Step', symbol: 'stpRNG', contract_type: 'CALL', risk_rating: 'medium', stake: 1, duration: '5 ticks', readiness: 82, blocks: ['Trade Parameters', 'Trend Filter', 'Purchase Conditions', 'Max Trades', 'Risk Management'], bestFor: 'Testing strict trade-count and trend-filter rules on Step/Range-style markets', avoidWhen: 'Avoid when movement is too flat or scanner confidence is low.', why: 'Shows beginners how to cap trades and avoid over-clicking in slower synthetic conditions.', warning: 'Low movement can still cause losses. Do not force trades when scanner says wait.' },
+  { id: 'ai-approval-gate', template: 'ai', title: 'AI Approval Gate', category: 'AI Filter', symbol: 'R_25', contract_type: 'CALL', risk_rating: 'medium', stake: 1, duration: '3 ticks', readiness: 83, blocks: ['Trade Parameters', 'AI Signal', 'AI Trend Filter', 'AI Approval', 'Risk Management'], bestFor: 'Using scanner/AI confirmation as a safety gate before demo testing', avoidWhen: 'Avoid when AI explanation is uncertain or backend scanner rejects the setup.', why: 'Shows how AI/scanner confirmation can be used as a gate, not as an automatic profit claim.', warning: 'AI output is analysis, not certainty. Backend safety checks and manual review still matter.' },
 ];
 
 const DEMO_COPY_STRATEGIES = [
-  {
-    id: 'copy-ema-trend-lab', name: 'EMA Trend Lab', provider_name: 'ApexBot Lab', category: 'synthetic', symbol: 'R_50', risk_score: 42, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'Demo preview only',
-    safeguards: ['Capital allocation required', 'Max risk per trade required', 'Daily loss limit required', 'Pause/stop controls'],
-    description: 'Provider-style preview for a trend-following copy strategy. Real ranking stays locked until backend trade history exists.',
-  },
-  {
-    id: 'copy-digit-discipline-demo', name: 'Digit Discipline Demo', provider_name: 'ApexBot Lab', category: 'synthetic', symbol: 'R_100', risk_score: 58, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'Demo preview only',
-    safeguards: ['No martingale by default', 'Hard daily loss limit', 'Trade count cap', 'Ledger stats required before ranking'],
-    description: 'A copy-trading card that teaches users what risk controls must be visible before following anyone.',
-  },
-  {
-    id: 'copy-boom-crash-guard', name: 'Boom/Crash Guard Preview', provider_name: 'ApexBot Lab', category: 'synthetic', symbol: 'BOOM500', risk_score: 72, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'High-risk preview',
-    safeguards: ['Advanced-risk label visible', 'Auto-stop daily loss required', 'Manual review before follow', 'No fake win rate'],
-    description: 'Shows how high-risk copy strategies should look: clear warnings first, performance later only when recorded.',
-  },
-  {
-    id: 'copy-ai-confirmation-gate', name: 'AI Confirmation Gate', provider_name: 'ApexBot Lab', category: 'mixed', symbol: 'R_25', risk_score: 49, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'Demo preview only',
-    safeguards: ['AI is advisory only', 'Scanner rejection respected', 'Risk limits required', 'No auto-follow without user approval'],
-    description: 'Preview of copy logic that waits for scanner confirmation instead of blindly copying every signal.',
-  },
+  { id: 'copy-ema-trend-lab', name: 'EMA Trend Lab', provider_name: 'ApexBot Lab', category: 'synthetic', symbol: 'R_50', risk_score: 42, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'Demo preview only', safeguards: ['Capital allocation required', 'Max risk per trade required', 'Daily loss limit required', 'Pause/stop controls'], description: 'Provider-style preview for a trend-following copy strategy. Real ranking stays locked until backend trade history exists.' },
+  { id: 'copy-digit-discipline-demo', name: 'Digit Discipline Demo', provider_name: 'ApexBot Lab', category: 'synthetic', symbol: 'R_100', risk_score: 58, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'Demo preview only', safeguards: ['No martingale by default', 'Hard daily loss limit', 'Trade count cap', 'Ledger stats required before ranking'], description: 'A copy-trading card that teaches users what risk controls must be visible before following anyone.' },
+  { id: 'copy-boom-crash-guard', name: 'Boom/Crash Guard Preview', provider_name: 'ApexBot Lab', category: 'synthetic', symbol: 'BOOM500', risk_score: 72, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'High-risk preview', safeguards: ['Advanced-risk label visible', 'Auto-stop daily loss required', 'Manual review before follow', 'No fake win rate'], description: 'Shows how high-risk copy strategies should look: clear warnings first, performance later only when recorded.' },
+  { id: 'copy-ai-confirmation-gate', name: 'AI Confirmation Gate', provider_name: 'ApexBot Lab', category: 'mixed', symbol: 'R_25', risk_score: 49, maxDrawdown: 0, followers: 0, hasHistory: false, winRate: null, netProfit: null, trustLabel: 'Demo preview only', safeguards: ['AI is advisory only', 'Scanner rejection respected', 'Risk limits required', 'No auto-follow without user approval'], description: 'Preview of copy logic that waits for scanner confirmation instead of blindly copying every signal.' },
 ];
 
 function productReadiness() {
@@ -115,13 +43,7 @@ function productReadiness() {
     botTemplates: DEMO_TEMPLATES.length,
     copyPreviews: DEMO_COPY_STRATEGIES.length,
     marketFeed: { tracked: trackedSymbols.length, ready: readySymbols.length, status: readySymbols.length ? 'live-data-ready' : 'warming-up' },
-    trust: [
-      'No real trade from public demo endpoints',
-      'Demo balances and positions are labeled simulated',
-      'Scanner returns no-trade/wait instead of fake signals',
-      'Copy and marketplace performance must come from backend records',
-      'Tokens and permissions stay backend-controlled',
-    ],
+    trust: ['No real trade from public demo endpoints', 'Demo balances and positions are labeled simulated', 'Scanner returns no-trade/wait instead of fake signals', 'Copy and marketplace performance must come from backend records', 'Tokens and permissions stay backend-controlled'],
     productLoop: ['Pick free bot', 'Open builder', 'Scan live market', 'Run demo/backtest', 'Copy with limits', 'Publish with real stats'],
   };
 }
@@ -132,8 +54,14 @@ router.get('/templates', (_req, res) => res.json({ ...demoMeta(), templates: DEM
 router.get('/copy-preview', (_req, res) => res.json({ ...demoMeta(), strategies: DEMO_COPY_STRATEGIES, disclaimer: 'Copy-trading is not a guarantee. Real rankings require recorded backend trade history.' }));
 router.get('/markets', (_req, res) => { res.json({ ...demoMeta(), tracked: getTrackedSymbols(), ready: getReadySymbols() }); });
 router.get('/symbols', async (_req, res) => { try { res.json({ ...demoMeta({ simulated: false }), groups: await getSymbolsGrouped() }); } catch (e) { res.status(502).json({ error: 'Deriv symbols unavailable.', detail: e.message }); } });
-router.get('/scan', (_req, res) => { const result = scanAll(); const readiness = productReadiness(); res.json({ ...demoMeta({ preview: true, simulated: false }), ...result, readiness, markets: (result.markets || []).slice(0, 6) }); });
-router.get('/scan/:symbol', (req, res) => { const a = analyzeSymbol(req.params.symbol); if (!a) return res.status(425).json({ error: 'Not enough live data yet for this symbol. Try again shortly.' }); res.json({ ...demoMeta({ simulated: false }), ...a }); });
+router.get('/scan', (_req, res) => { const result = scanAll(); const readiness = productReadiness(); res.json({ ...demoMeta({ preview: true, simulated: false }), ...result, readiness, markets: (result.markets || []).slice(0, 8) }); });
+router.get('/scan/:symbol', (req, res) => {
+  const a = analyzeSymbol(req.params.symbol);
+  if (!a) return res.status(425).json({ error: 'Not enough live data yet for this symbol. Try again shortly.' });
+  const full = scanAll();
+  const safer = (full.safeCandidates || []).find((m) => m.symbol !== a.symbol) || null;
+  res.json({ ...demoMeta({ simulated: false }), ...a, saferAlternative: !a.safe ? safer : null, warning: !a.safe ? `${a.symbol} does not pass the safety gate. ${safer ? `Safer alternative: ${safer.symbol}.` : 'No safer alternative currently passes the safety gate.'}` : null });
+});
 router.get('/candles', async (req, res) => {
   const { symbol, granularity = 60, count = 200 } = req.query;
   if (!symbol) return res.status(400).json({ error: 'symbol required.' });
@@ -157,21 +85,13 @@ router.get('/overview', (_req, res) => {
   const r = scanAll();
   const m = r.markets || [];
   if (!m.length) return res.json({ ...demoMeta({ simulated: false }), ready: false, message: 'Markets are warming up — overview appears once enough live ticks are collected.' });
-  const volatilityRanking = [...m].sort((a, b) => b.volatility - a.volatility).map((x) => ({ symbol: x.symbol, volatility: x.volatility, risk: x.riskLevel }));
+  const volatilityRanking = [...m].sort((a, b) => b.riskScore - a.riskScore).map((x) => ({ symbol: x.symbol, volatility: x.volatility, risk: x.riskLevel, riskScore: x.riskScore }));
   const mostActive = [...m].sort((a, b) => Math.abs(b.momentum) - Math.abs(a.momentum)).map((x) => ({ symbol: x.symbol, momentum: x.momentum }));
-  const opportunityRanking = [...m].map((x) => ({ symbol: x.symbol, score: x.safe ? x.confidence : x.confidence - 40, confidence: x.confidence, safe: x.safe })).sort((a, b) => b.score - a.score);
+  const opportunityRanking = [...m].sort((a, b) => b.safetyScore - a.safetyScore).map((x) => ({ symbol: x.symbol, safetyScore: x.safetyScore, confidence: x.confidence, safe: x.safe }));
   res.json({ ...demoMeta({ simulated: false }), ready: true, count: m.length, volatilityRanking, mostActive, opportunityRanking });
 });
 router.get('/account', (_req, res) => {
-  res.json({
-    ...demoMeta(), currency: 'USD', balance: 10000.0, equity: 10120.5, marginUsed: 250.0, freeMargin: 9870.5, openPositions: 2,
-    note: 'Simulated demo balance. No real funds. Sign up and connect Deriv for real trading.',
-    profitLoss: { daily: 42.5, weekly: 120.5, monthly: 380.0 },
-    positions: [
-      { symbol: 'R_100', contract_type: 'CALL', buy_price: 100, payout: 195, longcode: 'DEMO — Higher than entry', purchase_time: Math.floor(Date.now() / 1000) - 600 },
-      { symbol: 'BOOM500', contract_type: 'PUT', buy_price: 150, payout: 288, longcode: 'DEMO — Lower than entry', purchase_time: Math.floor(Date.now() / 1000) - 1800 },
-    ],
-  });
+  res.json({ ...demoMeta(), currency: 'USD', balance: 10000.0, equity: 10120.5, marginUsed: 250.0, freeMargin: 9870.5, openPositions: 2, note: 'Simulated demo balance. No real funds. Sign up and connect Deriv for real trading.', profitLoss: { daily: 42.5, weekly: 120.5, monthly: 380.0 }, positions: [ { symbol: 'R_100', contract_type: 'CALL', buy_price: 100, payout: 195, longcode: 'DEMO — Higher than entry', purchase_time: Math.floor(Date.now() / 1000) - 600 }, { symbol: 'BOOM500', contract_type: 'PUT', buy_price: 150, payout: 288, longcode: 'DEMO — Lower than entry', purchase_time: Math.floor(Date.now() / 1000) - 1800 } ] });
 });
 
 export default router;
