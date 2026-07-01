@@ -16,6 +16,11 @@ function pick(names, fallback = undefined) {
   return fallback;
 }
 
+function hasEnv(names) {
+  const list = Array.isArray(names) ? names : [names];
+  return list.some((name) => process.env[name] !== undefined && process.env[name] !== '');
+}
+
 // Build a Resend "from" string. Prefers RESEND_FROM; otherwise composes it from
 // RESEND_FROM_NAME + RESEND_FROM_EMAIL.
 function resolveResendFrom() {
@@ -39,8 +44,10 @@ function resolveTelegramBotUrl() {
 }
 
 const derivAppId = pick('DERIV_APP_ID', '1089');
+const derivOAuthAppId = pick(['DERIV_OAUTH_APP_ID', 'DERIV_CONNECT_APP_ID'], derivAppId);
+const derivOAuthExplicit = hasEnv(['DERIV_OAUTH_URL', 'DERIV_OAUTH_APP_ID', 'DERIV_CONNECT_APP_ID']) || derivAppId !== '1089';
 const defaultDerivAffiliateLink = 'https://deriv.com/signup/';
-const defaultDerivOAuthUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(derivAppId)}`;
+const defaultDerivOAuthUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(derivOAuthAppId)}`;
 const aiProvider = pick('AI_PROVIDER', pick('OPENAI_API_KEY', '') ? 'openai' : '');
 const aiApiKey = pick(['AI_API_KEY', 'OPENAI_API_KEY'], '');
 const aiModel = pick(['AI_MODEL', 'OPENAI_MODEL'], 'gpt-5.4-mini');
@@ -79,7 +86,14 @@ export const config = {
   publicBackendUrl: pick(['PUBLIC_BACKEND_URL', 'RAILWAY_BACKEND_URL'], ''),
 
   deriv: {
+    // App id used for public WebSocket market data.
     appId: derivAppId,
+    // OAuth can use a different Deriv app id because the redirect URL must be
+    // configured inside that Deriv app. Do not rely on the public 1089 fallback
+    // for real account connect.
+    oauthAppId: derivOAuthAppId,
+    oauthReady: derivOAuthExplicit,
+    oauthIssue: derivOAuthExplicit ? '' : 'Deriv OAuth is using the public fallback app id. Set DERIV_OAUTH_APP_ID or DERIV_OAUTH_URL with your Deriv app redirect URL.',
     oauthUrl: pick('DERIV_OAUTH_URL', defaultDerivOAuthUrl),
     oauthRedirect: pick('DERIV_OAUTH_REDIRECT', ''),
     // Public-safe affiliate/referral link used to guide users who don't yet have
@@ -158,6 +172,9 @@ export function validateRuntimeConfig(runtime = config) {
   }
   if (errors.length) throw new Error(`Invalid production configuration:\n- ${errors.join('\n- ')}`);
 
+  if (!runtime.deriv.oauthReady) {
+    console.warn('[config] Deriv OAuth connect is not fully configured. Set DERIV_OAUTH_APP_ID or DERIV_OAUTH_URL. API-token fallback remains available.');
+  }
   if (runtime.telegram.botToken && !runtime.telegram.usePolling && !runtime.publicBackendUrl) {
     console.warn('[config] Telegram webhook disabled: PUBLIC_BACKEND_URL is required when TELEGRAM_USE_POLLING=false.');
   }
