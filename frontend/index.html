@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Build Deriv trading bots visually, scan live markets, copy strategies, manage risk, and test everything in demo before real trading." />
-  <title>ApexBot - Deriv Bot Builder, AI Scanner and Copy Trading Hub</title>
+  <meta name="description" content="Free Deriv bot templates, a live AI scanner, copy trading controls, visual bot building, and safe demo testing before real trading." />
+  <title>ApexBot - Free Deriv Bots, AI Scanner and Copy Trading Hub</title>
   <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
   <link rel="stylesheet" href="css/public-polish.css?v=20260701-1" />
+  <link rel="stylesheet" href="css/launch-fixes.css?v=20260702-1" />
 </head>
 <body>
   <nav class="nav public-nav">
     <a class="brand" href="index.html">ApexBot</a>
     <div class="links muted">
-      <a href="#builder">Bot Builder</a><a href="#features">Features</a><a href="#compare">Compare</a><a href="#plans">Plans</a><a href="guide.html">Guide</a>
+      <a href="#free-bots">Free Bots</a><a href="#builder">Builder</a><a href="#strategy-guide">Strategies</a><a href="#plans">Plans</a><a href="support.html">Support</a>
     </div>
     <div class="nav-actions">
       <select id="language" class="input language-select" aria-label="Language"><option value="en">EN</option><option value="sw">SW</option></select>
       <a class="btn ghost login-link" href="auth.html?mode=login" data-i18n="login">Log in</a>
-      <a class="btn" href="auth.html" data-i18n="getStarted">Get started</a>
+      <a class="btn" href="demo-dashboard.html" data-i18n="getStarted">Open demo</a>
     </div>
   </nav>
 
@@ -25,38 +26,52 @@
 
   <header class="container public-hero">
     <div class="hero-copy">
-      <span class="status-chip"><i></i> Live Deriv market infrastructure</span>
-      <span class="eyebrow" data-i18n="eyebrow" style="display:block;margin-top:18px">BUILD. TEST. AUTOMATE.</span>
-      <h1 data-i18n="headline">Build Deriv bots, scan live markets, and copy strategies safely.</h1>
-      <p class="muted hero-lead" data-i18n="lead">Create visual trading bots, test them in demo, inspect risk clearly, and connect real Deriv trading only when you are ready. ApexBot keeps secrets, roles, payments, and tokens on the backend.</p>
+      <span class="status-chip"><i></i> Public demo online</span>
+      <span class="eyebrow" data-i18n="eyebrow" style="display:block;margin-top:18px">FREE BOTS. LIVE SCANNER. SAFE DEMO.</span>
+      <h1 data-i18n="headline">Free Deriv bots, AI scanner, copy trading, and safe demo testing.</h1>
+      <p class="muted hero-lead" data-i18n="lead">Start with ready bot templates, inspect live Deriv market conditions, test everything in demo, then connect real trading only when you understand the risk. No fake profits, no hidden token handling, no blind automation.</p>
       <div class="hero-actions">
-        <a class="btn" href="auth.html" data-i18n="createAccount">Create free account</a>
-        <a class="btn ghost" href="demo-dashboard.html" data-i18n="tryDemo">Try the live demo</a>
-        <a class="btn ghost" href="bot-builder.html">Open bot builder</a>
+        <a class="btn" href="#free-bots" data-i18n="tryBot">Try free bot templates</a>
+        <a class="btn ghost" href="demo-scanner.html" data-i18n="tryScanner">Open AI scanner</a>
+        <a class="btn ghost" href="support.html" data-i18n="joinSupport">Join / support</a>
       </div>
-      <div class="trust-row"><span>No credit card for demo</span><span>$10,000 simulated account</span><span>No guaranteed profits</span></div>
-      <div class="hero-badges"><span>Rise/Fall</span><span>Even/Odd</span><span>Over/Under</span><span>Boom/Crash</span><span>Multipliers</span></div>
-      <div class="hero-system-grid"><div><small>MARKET LAYER</small><strong>Live Deriv feed</strong></div><div><small>STRATEGY LAYER</small><strong>Visual bot logic</strong></div><div><small>CONTROL LAYER</small><strong>Backend permissions</strong></div></div>
+      <div class="trust-row"><span>No login for demo</span><span>Free bot templates</span><span>Live Deriv market data</span><span>No guaranteed profits</span></div>
+      <div class="hero-badges"><span>Over/Under</span><span>Even/Odd</span><span>Rise/Fall</span><span>Boom/Crash</span><span>Multipliers</span></div>
+      <div class="value-strip">
+        <div class="value-chip"><small>START FAST</small><strong>Use templates</strong><span>Open ready Deriv bot ideas and edit them visually.</span></div>
+        <div class="value-chip"><small>CHECK MARKET</small><strong>Scan live ticks</strong><span>Confidence, risk, support, resistance, and invalidation.</span></div>
+        <div class="value-chip"><small>CONTROL RISK</small><strong>Demo first</strong><span>Simulated balance, clear labels, and risk warnings before real mode.</span></div>
+      </div>
     </div>
-    <div class="product-window" aria-label="ApexBot product preview">
-      <div class="product-window-bar"><span></span><span></span><span></span><small>APEXBOT / BOT BUILDER</small></div>
+    <div class="product-window launch-highlight" aria-label="ApexBot product preview">
+      <div class="product-window-bar"><span></span><span></span><span></span><small>APEXBOT / FREE BOT PREVIEW</small></div>
       <div class="preview-grid builder-preview-grid">
-        <div class="preview-sidebar"><b>Strategy flow</b><span class="active">1 Market</span><span>2 Contract</span><span>3 Signal</span><span>4 Risk</span><span>5 Test</span></div>
+        <div class="preview-sidebar"><b>Demo flow</b><span class="active">1 Pick bot</span><span>2 Scan market</span><span>3 Backtest</span><span>4 Set limits</span><span>5 Learn</span></div>
         <div class="preview-main">
           <div class="visual-preview-flow">
-            <div><small>TRADE</small><strong>Volatility 100</strong><em>Rise/Fall</em></div>
-            <div><small>SIGNAL</small><strong>EMA Cross</strong><em>Fast 10 / Slow 20</em></div>
-            <div><small>RISK</small><strong>Stop loss $10</strong><em>Take profit $20</em></div>
+            <div><small>BOT</small><strong>Over/Under Guard</strong><em>Digits · Demo</em></div>
+            <div><small>SIGNAL</small><strong>Live scanner check</strong><em>Wait / trade / avoid</em></div>
+            <div><small>RISK</small><strong>Daily loss limit</strong><em>Stop before real damage</em></div>
           </div>
-          <div class="preview-metrics"><div><small>DEMO TRADES</small><strong>124</strong></div><div><small>WIN RATE</small><strong>57.3%</strong></div><div><small>MAX DD</small><strong class="down">-6.4%</strong></div></div>
+          <div class="preview-metrics"><div><small>MODE</small><strong>DEMO</strong></div><div><small>STATUS</small><strong>Editable</strong></div><div><small>RISK</small><strong class="down">Visible</strong></div></div>
           <svg class="preview-chart" viewBox="0 0 600 180" role="img" aria-label="Illustrative backtest equity curve"><polyline points="0,145 45,132 90,140 135,105 180,115 225,85 270,98 315,60 360,72 405,45 450,56 495,30 540,42 600,18" /></svg>
-          <div class="notice demo">Illustrative preview. Real results come from your trade ledger, demo records, and live Deriv data.</div>
+          <div class="notice demo">Illustrative preview. Real results must come from demo records, trade ledgers, and live Deriv data.</div>
         </div>
       </div>
     </div>
   </header>
 
   <main>
+    <section id="free-bots" class="container section-block">
+      <div class="section-heading"><span class="eyebrow">FREE BOT LIBRARY</span><h2>Give visitors something useful immediately</h2><p class="muted">These are starter templates for learning and demo testing. They do not promise profit and should be edited, backtested, and risk-limited before any real use.</p></div>
+      <div class="grid cols-4 bot-library-grid">
+        <article class="card bot-card"><small>DIGITS</small><h3>Over/Under Guard</h3><p class="muted">A beginner digit template for Over/Under ideas with strict stake, loss, and restart limits.</p><div class="bot-meta"><span>Demo</span><span>Digits</span><span>Risk-first</span></div><div class="bot-actions"><a class="btn" href="bot-builder.html">Open builder</a><a class="btn ghost" href="demo-scanner.html">Check market</a></div></article>
+        <article class="card bot-card"><small>DIGITS</small><h3>Even/Odd Rhythm</h3><p class="muted">A simple Even/Odd training bot structure for testing streak rules without fake certainty.</p><div class="bot-meta"><span>Free</span><span>Even/Odd</span><span>Practice</span></div><div class="bot-actions"><a class="btn" href="bot-builder.html">Open builder</a><a class="btn ghost" href="guide.html#digits">Learn digits</a></div></article>
+        <article class="card bot-card"><small>TREND</small><h3>EMA Rise/Fall</h3><p class="muted">Uses moving-average logic as a readable starting point for Rise/Fall demo testing.</p><div class="bot-meta"><span>Trend</span><span>Rise/Fall</span><span>Backtest</span></div><div class="bot-actions"><a class="btn" href="bot-builder.html">Open builder</a><a class="btn ghost" href="demo-terminal.html">View chart</a></div></article>
+        <article class="card bot-card"><small>VOLATILITY</small><h3>Boom/Crash Guard</h3><p class="muted">A conservative structure for Boom/Crash learners focused on avoiding bad conditions.</p><div class="bot-meta"><span>Boom/Crash</span><span>Filters</span><span>Warnings</span></div><div class="bot-actions"><a class="btn" href="bot-builder.html">Open builder</a><a class="btn ghost" href="guide.html#boom-crash">Learn</a></div></article>
+      </div>
+    </section>
+
     <section id="builder" class="container section-block builder-showcase">
       <div class="section-heading"><span class="eyebrow">VISUAL DERIV BOT BUILDER</span><h2>Build bots like blocks, not guesswork</h2><p class="muted">ApexBot is positioned around the thing Deriv bot traders care about most: fast strategy creation, clear contract types, and honest demo testing before real execution.</p></div>
       <div class="grid cols-3">
@@ -89,13 +104,24 @@
       </div>
     </section>
 
+    <section id="strategy-guide" class="container section-block">
+      <div class="section-heading"><span class="eyebrow">STRATEGY EDUCATION</span><h2>Beginner-friendly Deriv strategy pages</h2><p class="muted">Competitors win attention with strategy names. ApexBot now shows visitors exactly what they can learn and test.</p></div>
+      <div class="strategy-hub">
+        <article class="strategy-card" id="digits"><small>Digits</small><h3>Over/Under + Even/Odd</h3><p>Learn how digit contracts work, why streaks are dangerous, and how to demo-test limits.</p><a href="guide.html#digits">Read guide</a></article>
+        <article class="strategy-card"><small>Synthetics</small><h3>Volatility Indices</h3><p>Use the scanner to check trend, volatility, support, resistance, and no-trade conditions.</p><a href="guide.html#volatility">Read guide</a></article>
+        <article class="strategy-card" id="boom-crash"><small>Boom / Crash</small><h3>Spike awareness</h3><p>Understand why spike markets need conservative filters, demo testing, and strict stop rules.</p><a href="guide.html#boom-crash">Read guide</a></article>
+        <article class="strategy-card"><small>Automation</small><h3>Import XML safely</h3><p>Validate imported Deriv bots before saving or running them, and never trust unknown files blindly.</p><a href="guide.html#imports">Read guide</a></article>
+      </div>
+    </section>
+
     <section id="compare" class="container section-block comparison-section">
-      <div class="section-heading"><span class="eyebrow">WHY APEXBOT</span><h2>Built to compete with bot-builder and trading-community sites</h2><p class="muted">Competitors may focus on a builder or a community. ApexBot combines builder, scanner, copy trading, marketplace, education, and backend security.</p></div>
+      <div class="section-heading"><span class="eyebrow">WHY APEXBOT</span><h2>Built to compete with bot-builder and trading-community sites</h2><p class="muted">Competitors may focus on a builder or a community. ApexBot combines free templates, scanner, copy trading, marketplace, education, and backend security.</p></div>
       <div class="card table-card">
         <div class="table-wrap">
           <table class="comparison-table">
             <thead><tr><th>Capability</th><th>ApexBot</th><th>Basic bot sites</th><th>Training/community sites</th></tr></thead>
             <tbody>
+              <tr><td>Free starter bot templates</td><td>Yes</td><td>Sometimes</td><td>Usually external</td></tr>
               <tr><td>Visual Deriv bot builder</td><td>Yes</td><td>Sometimes</td><td>Usually no</td></tr>
               <tr><td>Live Deriv scanner</td><td>Yes</td><td>Limited</td><td>Limited</td></tr>
               <tr><td>Copy trading controls</td><td>Yes</td><td>Sometimes</td><td>Usually signals only</td></tr>
@@ -111,7 +137,7 @@
     <section class="container section-block community-section">
       <div class="grid cols-3 community-grid">
         <article class="card"><span class="eyebrow">LEARN</span><h3>Beginner guide</h3><p class="muted">Understand demo testing, contract types, risk, and what backtests cannot promise.</p><a href="guide.html">Read guide</a></article>
-        <article class="card"><span class="eyebrow">CONNECT</span><h3>Telegram community</h3><p class="muted">Join the configured Telegram channel or bot for alerts, support, updates, and verification.</p><a href="support.html">Find support</a></article>
+        <article class="card"><span class="eyebrow">CONNECT</span><h3>Support hub</h3><p class="muted">Use configured Telegram, community, and support routes when they are available from the backend.</p><a href="support.html">Find support</a></article>
         <article class="card"><span class="eyebrow">PROTECT</span><h3>No fake success states</h3><p class="muted">Payments, roles, subscriptions, and real trading permissions are checked by the backend.</p><a href="privacy.html">Privacy</a></article>
       </div>
     </section>
@@ -121,19 +147,20 @@
     </section>
 
     <section id="plans" class="container section-block">
-      <div class="section-heading"><span class="eyebrow">PRICING</span><h2>Choose tools, not promises</h2><p class="muted">Free users can explore the demo. Paid access never changes the financial risk.</p></div>
+      <div class="section-heading"><span class="eyebrow">PRICING</span><h2>Clear tool access, no profit promises</h2><p class="muted">Free users can explore the demo and bot templates. Paid access unlocks more tools, but never removes financial risk.</p></div>
       <div id="plans-grid" class="grid cols-4"></div>
     </section>
 
     <section id="faq" class="container section-block faq-wrap">
       <div class="section-heading"><span class="eyebrow">FAQ</span><h2>Know what you are using</h2></div>
+      <details><summary>Are the free bots guaranteed to win?</summary><p>No. They are learning templates for demo testing. You must edit, backtest, and risk-limit any strategy before considering real trading.</p></details>
       <details><summary>Does a successful backtest guarantee profit?</summary><p>No. It is a historical simulation with stated assumptions. Live payouts, latency, and future conditions can differ.</p></details>
       <details><summary>Can ApexBot trade without my permission?</summary><p>Real trading requires your connected Deriv account and backend authorization. Tokens are encrypted and never sent to the frontend.</p></details>
-      <details><summary>Are marketplace statistics real?</summary><p>Follower counts, reviews, installs, trades, profit, and drawdown are calculated from backend records rather than browser storage.</p></details>
+      <details><summary>Are marketplace statistics real?</summary><p>Follower counts, reviews, installs, trades, profit, and drawdown should be calculated from backend records rather than browser storage.</p></details>
       <details><summary>Where should a beginner start?</summary><p>Use the no-login demo, follow the guide, build a template, compare several backtests, and remain in demo mode until you understand the risk.</p></details>
     </section>
 
-    <section class="container section-block"><div class="card support-cta"><div><span class="eyebrow">SUPPORT</span><h2>Need help before you trade?</h2><p class="muted">Read the guide, check responsible-trading information, or contact the configured support channel.</p></div><div class="row"><a class="btn" href="support.html">Support center</a><a class="btn ghost" href="guide.html">Getting started</a></div></div></section>
+    <section class="container section-block"><div class="card support-cta final-cta"><div><span class="eyebrow">START HERE</span><h2>Open the demo before risking anything</h2><p class="muted">Try a template, scan the market, view a chart, then read the guide.</p></div><div class="row"><a class="btn" href="demo-dashboard.html">Open demo</a><a class="btn ghost" href="guide.html">Getting started</a></div></div></section>
   </main>
 
   <footer class="container public-footer">
@@ -144,7 +171,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
   <script src="apex-config.js"></script>
-  <script src="js/config.js?v=20260701-1"></script>
-  <script src="js/public-home.js?v=20260701-1"></script>
+  <script src="js/config.js?v=20260702-1"></script>
+  <script src="js/public-home.js?v=20260702-1"></script>
 </body>
 </html>
