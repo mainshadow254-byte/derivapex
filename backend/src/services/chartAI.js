@@ -6,6 +6,7 @@ import { getCandles } from './derivData.js';
 const mean = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
 const stdev = (a) => { if (a.length < 2) return 0; const m = mean(a); return Math.sqrt(mean(a.map((x) => (x - m) ** 2))); };
 const pct = (a, b) => b ? ((a - b) / b) * 100 : 0;
+const ratioPct = (a, b) => b ? (a / b) * 100 : 0;
 const round = (n, d = 4) => Number.isFinite(n) ? +n.toFixed(d) : null;
 const last = (a) => a[a.length - 1];
 function sma(values, n) { return values.length >= n ? mean(values.slice(-n)) : null; }
@@ -30,7 +31,7 @@ function macd(values) {
 function bollinger(values, n = 20, mult = 2) {
   if (values.length < n) return null;
   const win = values.slice(-n), mid = mean(win), sd = stdev(win), upper = mid + sd * mult, lower = mid - sd * mult, price = last(values);
-  return { upper, middle: mid, lower, widthPct: pct(upper - lower, mid), position: upper === lower ? 0.5 : (price - lower) / (upper - lower) };
+  return { upper, middle: mid, lower, widthPct: ratioPct(upper - lower, mid), position: upper === lower ? 0.5 : (price - lower) / (upper - lower) };
 }
 function stochastic(candles, n = 14) {
   if (candles.length < n) return null;
@@ -70,7 +71,7 @@ export async function analyzeChart(symbol, granularity = 60) {
   const slope = pct(e20, ema20[ema20.length - 10]);
   const momentum = pct(price, closes[closes.length - 14]);
   const m = macd(closes), r = rsi(closes, 14), b = bollinger(closes, 20, 2), st = stochastic(candles, 14);
-  const a = atr(candles, 14), atrPct = pct(a, price);
+  const a = atr(candles, 14), atrPct = ratioPct(a, price);
   let volLevel = 'low'; if (atrPct > 0.12 || (b?.widthPct || 0) > 0.35) volLevel = 'medium'; if (atrPct > 0.35 || (b?.widthPct || 0) > 0.75) volLevel = 'high';
   const { support, resistance } = levels(candles);
 
@@ -91,7 +92,7 @@ export async function analyzeChart(symbol, granularity = 60) {
   let confidence = 35 + Math.abs(slope) * 60 + Math.min(18, Math.abs(momentum) * 18) + Math.abs(bullish.length - bearish.length) * 7;
   if (volLevel === 'low') confidence += 10; if (volLevel === 'high') confidence -= 28; if (overextended) confidence -= 15;
   confidence = Math.max(5, Math.min(88, Math.round(confidence)));
-  const risk = Math.round(Math.min(100, atrPct * 130 + ((b?.widthPct || 0) * 45) + (overextended ? 18 : 0) + (bias === 'neutral' ? 15 : 0)));
+  const risk = Math.round(Math.max(1, Math.min(100, atrPct * 130 + ((b?.widthPct || 0) * 45) + (overextended ? 18 : 0) + (bias === 'neutral' ? 15 : 0))));
 
   const reasons = {
     selection: safe ? `${symbol} is safer because ${bias} indicator confluence is present while volatility is ${volLevel}.` : `${symbol} is not safe for entry now: ${bias === 'neutral' ? 'confluence is mixed' : overextended ? 'move is overextended' : 'volatility is too high'}.`,

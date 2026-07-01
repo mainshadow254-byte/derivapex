@@ -6,6 +6,7 @@ import { getTicks, getTrackedSymbols, getSymbolInfo } from './deriv.js';
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const round = (n, d = 4) => Number.isFinite(n) ? +n.toFixed(d) : null;
 const pct = (a, b) => b ? ((a - b) / b) * 100 : 0;
+const ratioPct = (a, b) => b ? (a / b) * 100 : 0;
 const mean = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
 const stdev = (a) => {
   if (a.length < 2) return 0;
@@ -51,7 +52,7 @@ function bollinger(values, n = 20, mult = 2) {
   const upper = mid + sd * mult;
   const lower = mid - sd * mult;
   const price = last(values);
-  const widthPct = pct(upper - lower, mid);
+  const widthPct = ratioPct(upper - lower, mid);
   const position = upper === lower ? 0.5 : (price - lower) / (upper - lower);
   return { upper, middle: mid, lower, widthPct, position, nearUpper: position > 0.82, nearLower: position < 0.18 };
 }
