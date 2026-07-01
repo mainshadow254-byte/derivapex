@@ -5,92 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ApexBot — Demo AI Scanner</title>
   <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <link rel="stylesheet" href="css/product-loop.css?v=20260702-1" />
 </head>
 <body class="app-body">
-  <nav class="nav">
-    <a class="brand" href="index.html">ApexBot</a>
-    <div id="demo-nav"></div>
-  </nav>
-
+  <nav class="nav"><a class="brand" href="index.html">ApexBot</a><div id="demo-nav"></div></nav>
   <div class="container">
     <div class="card page-hero">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div>
-          <span class="platform-kicker">Market intelligence</span><h2 style="margin:0">AI Market Scanner <span class="demo-tag">DEMO</span></h2>
-          <p class="muted" style="margin:4px 0 0;font-size:13px">Live Deriv ticks · confidence, risk, reasoning & invalidation. Never invents signals. No login required.</p>
+          <span class="platform-kicker">Market intelligence</span>
+          <h2 style="margin:0">Multi-indicator AI Safety Scanner <span class="demo-tag">DEMO</span></h2>
+          <p class="muted" style="margin:4px 0 0;font-size:13px">Live Deriv ticks · EMA, MACD, RSI, Bollinger, stochastic, volatility, confluence and safer alternatives. No login required.</p>
         </div>
-        <button id="rescan" class="btn">Scan now</button>
+        <button id="rescan" class="btn">Scan all markets</button>
+      </div>
+      <div class="card" style="margin-top:12px;background:#0d1426">
+        <div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px"><label class="label">Scan one market</label><input id="single-symbol" class="input" placeholder="Example: R_100, R_75, BOOM500, CRASH500" value="R_100" /></div>
+          <button id="scan-one" class="btn ghost" type="button">Analyze symbol</button>
+          <button id="chart-one" class="btn ghost" type="button">Analyze chart</button>
+        </div>
       </div>
       <div id="scan-warning" style="margin-top:10px"></div>
       <div id="scan-results" class="grid cols-2" style="margin-top:12px"></div>
     </div>
   </div>
-
   <script src="apex-config.js"></script>
   <script src="js/config.js"></script>
   <script src="js/demo.js"></script>
+  <script src="js/demo-scanner-upgrade.js?v=20260702-1"></script>
   <script>
     DEMO.mountChrome('demo-scanner.html');
-    const el = (id) => document.getElementById(id);
-
-    function riskBadge(level){ return level==='high'?'<span class="badge warn">HIGH RISK</span>':level==='medium'?'<span class="badge demo">MEDIUM</span>':'<span class="badge real">LOW</span>'; }
-    function explainBlock(x){
-      if(!x) return '';
-      const row=(label,txt)=>txt?`<div style="margin:5px 0;font-size:12px"><b>${label}:</b> ${txt}</div>`:'';
-      return `<details style="margin-top:8px"><summary class="muted" style="cursor:pointer;font-size:12px">Full scanner reasoning</summary>
-        <div style="margin-top:6px;border-left:2px solid var(--brand);padding-left:10px">
-          ${row('Why selected',x.selection)} ${row('Why trending',x.trending)}
-          ${row('Why bullish',x.bullish)} ${row('Why bearish',x.bearish)}
-          ${row('Volatility',x.volatility)} ${row('Confidence',x.confidence)}
-          ${row('Risk',x.risk)} ${row('Entry reasoning',x.entry)} ${row('Exit reasoning',x.exit)}
-        </div></details>`;
-    }
-    function levelsBlock(m){
-      const s=(m.support||[]).map(v=>(+v).toFixed(4)).join(', ');
-      const r=(m.resistance||[]).map(v=>(+v).toFixed(4)).join(', ');
-      if(!s && !r) return '';
-      return `<div class="muted" style="font-size:12px;margin-top:6px">🟢 Support: ${s||'—'} · 🔴 Resistance: ${r||'—'}</div>`;
-    }
-    function marketCard(m){
-      return `<div class="card scanner-card">
-        <div style="display:flex;justify-content:space-between;align-items:center"><strong>${m.symbol}</strong> ${riskBadge(m.riskLevel)}</div>
-        <div class="muted" style="font-size:13px;margin:6px 0">Direction: <strong>${m.direction}</strong> · Confidence: <strong>${m.confidence ?? '—'}%</strong></div>
-        ${m.reason?`<div style="font-size:13px">${m.reason}</div>`:''}
-        ${levelsBlock(m)} ${explainBlock(m.explain)}
-        ${m.invalidation?`<div class="muted" style="font-size:12px;margin-top:6px">Invalidation: ${m.invalidation}</div>`:''}
-        <div class="muted" style="font-size:11px;margin-top:6px">${m.riskWarning||'No outcome is guaranteed.'}</div>
-      </div>`;
-    }
-
-    async function runScan(){
-      el('scan-results').innerHTML = '<p class="muted">Scanning live markets…</p>';
-      el('scan-warning').innerHTML = '';
-      try {
-        const r = await DEMO.get('/scan');
-        if (r.warning) {
-          const a = r.alternativeAnalysis;
-          el('scan-warning').innerHTML = `<div class="notice err">⚠️ ${r.warning}</div>` + (a ? `
-            <div class="card" style="border-color:#f59e0b">
-              <strong>Alternative Market Analysis</strong>
-              <div style="font-size:13px;margin-top:6px"><b>Why ${a.unsafeMarket} is unsafe:</b> ${a.whyUnsafe}</div>
-              <div style="font-size:13px;margin-top:4px"><b>Risks:</b> ${a.risks}</div>
-              ${a.alternative?`<div style="font-size:13px;margin-top:4px"><b>Suggested alternative:</b> ${a.alternative}</div>`:''}
-              <div style="font-size:13px;margin-top:4px"><b>Why it's better:</b> ${a.whyBetter}</div>
-            </div>` : '');
-        }
-        const list = r.markets || [];
-        if (!list.length) { el('scan-results').innerHTML = '<p class="muted">Not enough live data yet — markets warm up after ~1–2 minutes of ticks. The scanner never invents signals.</p>'; return; }
-        let html = '';
-        if (r.best) html += `<div class="card" style="grid-column:1/-1;border-color:#6366f1"><div class="muted" style="font-size:12px">TOP PICK</div>${marketCard(r.best)}</div>`;
-        html += list.map(marketCard).join('');
-        el('scan-results').innerHTML = html;
-      } catch (e) {
-        el('scan-results').innerHTML = `<div class="notice err">${e.message}</div>`;
-      }
-    }
-    el('rescan').onclick = runScan;
-    runScan();
-    setInterval(runScan, 20000);
+    document.getElementById('rescan').onclick = ApexDemoScanner.scanAll;
+    document.getElementById('scan-one').onclick = ApexDemoScanner.scanOne;
+    document.getElementById('chart-one').onclick = ApexDemoScanner.chartOne;
+    ApexDemoScanner.scanAll();
+    setInterval(ApexDemoScanner.scanAll, 20000);
   </script>
 </body>
 </html>
