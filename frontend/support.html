@@ -1,6 +1,107 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ApexBot - Support Center</title><link rel="stylesheet" href="css/styles.css?v=20260620-2"></head><body>
-<nav class="nav"><a class="brand" href="index.html">ApexBot</a><div class="nav-actions"><a class="btn ghost" href="guide.html">Guide</a><a class="btn" href="auth.html">Open ApexBot</a></div></nav>
-<main class="container section-block"><div class="section-heading"><span class="eyebrow">SUPPORT CENTER</span><h1>Get help without sharing account secrets</h1><p class="muted">ApexBot support will never ask for your PocketBase password, Deriv token, payment secret, or one-time code.</p></div>
-<div class="grid cols-3"><article class="card"><h3>Getting started</h3><p class="muted">Account verification, demo mode, bot templates, and responsible first steps.</p><a href="guide.html">Read the guide</a></article><article class="card"><h3>Community</h3><p class="muted">Join the Apex Reborn communities for announcements and peer discussion.</p><a id="community-link" href="#" class="hidden" target="_blank" rel="noopener">Open community</a><br><a id="secondary-community-link" href="#" class="hidden" target="_blank" rel="noopener">Open second community</a><span id="community-empty" class="muted-sm">Community links are not configured yet.</span></article><article class="card"><h3>Telegram bot</h3><p class="muted">Open the official ApexBot Telegram bot.</p><a id="bot-link" href="#" class="hidden" target="_blank" rel="noopener">Open ApexBot</a><span id="bot-empty" class="muted-sm">Bot link is not configured yet.</span></article><article class="card"><h3>Direct support</h3><p class="muted">Use the official support bot for account or platform questions.</p><a id="support-link" href="#" class="hidden" target="_blank" rel="noopener">Contact support</a><span id="support-empty" class="muted-sm">Support link is not configured yet.</span></article></div>
-<div class="card" style="margin-top:18px"><h2>Before contacting support</h2><ol><li>Record the page and exact error message.</li><li>State whether you were in DEMO or REAL mode.</li><li>Never include passwords, tokens, API keys, or payment details.</li><li>For financial risk concerns, stop trading first.</li></ol><p><a href="https://deriv.com/responsible/" target="_blank" rel="noopener">Deriv responsible trading resources</a></p></div></main>
-<script src="apex-config.js"></script><script src="js/config.js"></script><script>(async()=>{try{const c=await loadPublicConfig();const map=[['community-link','community-empty',c.telegram?.community],['secondary-community-link','community-empty',c.telegram?.secondaryCommunity],['bot-link','bot-empty',c.telegram?.bot],['support-link','support-empty',c.telegram?.support]];map.forEach(([linkId,emptyId,url])=>{if(url&&!/your_|t\.me\/your/i.test(url)){const a=document.getElementById(linkId);a.href=url;a.classList.remove('hidden');document.getElementById(emptyId).classList.add('hidden')}})}catch{}})();</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ApexBot - Support Center</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260620-2" />
+  <link rel="stylesheet" href="css/launch-fixes.css?v=20260702-1" />
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="index.html">ApexBot</a>
+    <div class="nav-actions"><a class="btn ghost" href="guide.html">Guide</a><a class="btn ghost" href="demo-dashboard.html">Demo</a><a class="btn" href="auth.html">Open ApexBot</a></div>
+  </nav>
+
+  <main class="container section-block">
+    <div class="section-heading">
+      <span class="eyebrow">SUPPORT CENTER</span>
+      <h1>Get help without sharing account secrets</h1>
+      <p class="muted page-lead">Use official support routes only. ApexBot support will never ask for your PocketBase password, Deriv token, payment secret, one-time code, or API key.</p>
+    </div>
+
+    <div class="grid cols-3">
+      <article class="card support-option">
+        <small>FAST START</small>
+        <h3>Getting started</h3>
+        <p>Account verification, demo mode, free bot templates, scanner results, and responsible first steps.</p>
+        <div class="support-actions"><a class="btn" href="guide.html">Read the guide</a><a class="btn ghost" href="demo-dashboard.html">Open demo</a></div>
+      </article>
+
+      <article class="card support-option">
+        <small>COMMUNITY</small>
+        <h3>Telegram / community</h3>
+        <p>Official community links are loaded from the backend public config so they can be changed without editing frontend code.</p>
+        <div id="community-status" class="support-status">Community route is controlled by backend env. If no link appears, use the guide and dashboard while the public community link is being published.</div>
+        <div class="support-actions">
+          <a id="community-link" href="#" class="btn hidden" target="_blank" rel="noopener">Open community</a>
+          <a id="secondary-community-link" href="#" class="btn ghost hidden" target="_blank" rel="noopener">Open group</a>
+        </div>
+      </article>
+
+      <article class="card support-option">
+        <small>BOT</small>
+        <h3>Telegram bot</h3>
+        <p>Use the official Telegram bot for alerts, onboarding, and account-related support when configured.</p>
+        <div id="bot-status" class="support-status">Telegram bot access is backend-managed. The button appears here automatically when TELEGRAM_BOT_URL or TELEGRAM_BOT_USERNAME is configured.</div>
+        <div class="support-actions"><a id="bot-link" href="#" class="btn hidden" target="_blank" rel="noopener">Open Telegram bot</a></div>
+      </article>
+
+      <article class="card support-option">
+        <small>DIRECT HELP</small>
+        <h3>Platform support</h3>
+        <p>For account, payment, bot import, or dashboard issues, send the exact page, mode, and error text. Never send secrets.</p>
+        <div id="support-status" class="support-status">Direct support is backend-managed. When TELEGRAM_SUPPORT_URL is configured, the support button appears here.</div>
+        <div class="support-actions"><a id="support-link" href="#" class="btn hidden" target="_blank" rel="noopener">Contact support</a><a class="btn ghost" href="auth.html">Open account</a></div>
+      </article>
+
+      <article class="card support-option">
+        <small>SAFETY</small>
+        <h3>Before you trade</h3>
+        <p>Stop trading first if you feel pressured, confused, or emotional. Use demo mode until you understand the contract, stake, and loss limit.</p>
+        <div class="support-actions"><a class="btn ghost" href="https://deriv.com/responsible/" target="_blank" rel="noopener">Deriv responsible trading</a></div>
+      </article>
+
+      <article class="card support-option">
+        <small>REPORT</small>
+        <h3>What to send</h3>
+        <p>Send the page name, exact error, whether you were in DEMO or REAL mode, and what action caused it.</p>
+        <div class="support-status">Good report: “demo-scanner.html shows 425 Not enough candle data after selecting R_100.” Bad report: “it failed.”</div>
+      </article>
+    </div>
+
+    <div class="card risk-callout" style="margin-top:18px">
+      <h2>Before contacting support</h2>
+      <ol>
+        <li>Record the page and exact error message.</li>
+        <li>State whether you were in DEMO or REAL mode.</li>
+        <li>Never include passwords, tokens, API keys, payment secrets, or one-time codes.</li>
+        <li>For financial risk concerns, stop trading first and review responsible-trading information.</li>
+      </ol>
+    </div>
+  </main>
+
+  <script src="apex-config.js"></script>
+  <script src="js/config.js?v=20260702-1"></script>
+  <script>
+    (async()=>{
+      const isRealUrl = (url)=> Boolean(url && !/your_|example\.com|t\.me\/your/i.test(url));
+      const show = (linkId, statusId, url, okText)=>{
+        if(!isRealUrl(url)) return;
+        const a = document.getElementById(linkId);
+        const s = document.getElementById(statusId);
+        a.href = url;
+        a.classList.remove('hidden');
+        if(s){ s.textContent = okText; s.classList.add('ok'); }
+      };
+      try{
+        const c = await loadPublicConfig();
+        show('community-link','community-status',c.telegram?.community,'Official community link is active.');
+        show('secondary-community-link','community-status',c.telegram?.secondaryCommunity,'Official community/group links are active.');
+        show('bot-link','bot-status',c.telegram?.bot,'Official Telegram bot link is active.');
+        show('support-link','support-status',c.telegram?.support,'Official support route is active.');
+      }catch{}
+    })();
+  </script>
+</body>
+</html>
