@@ -3,13 +3,14 @@
 // performance graphs (equity / profit / drawdown / monthly returns / risk).
 // All stats come from the backend (real recorded trades). Honest empty states.
 window.CopyTrading = (function () {
-  let state = { q: '', category: '', sort: 'followers', canCopy: false };
+  let state = { q: '', category: '', sort: 'followers', canCopy: false, canPublish: false };
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+  const categories = ['forex', 'synthetic', 'crypto', 'mixed'];
 
   function emptyCopyState() {
     return `<div class="empty-upgrade" style="grid-column:1/-1">
       <strong>No copy strategies published yet — no fake leaders shown.</strong><br>
-      ApexBot should only show copy leaders after backend-recorded trades exist. Use the public bot lab to see the safe copy-trading standard: capital limit, max risk per trade, daily loss limit, and pause/stop controls.
+      Publish a strategy from this tab if you are on Standard plan or above. ApexBot will not fabricate followers, win rate, or profit. Stats appear only after backend-recorded trades exist.
       <div class="row"><a class="btn" href="demo-bots.html">Open copy preview</a><a class="btn ghost" href="guide.html#risk">Read risk guide</a></div>
     </div>`;
   }
@@ -42,6 +43,7 @@ window.CopyTrading = (function () {
         const capital = +overlay.querySelector('#copy-capital').value;
         const perTrade = +overlay.querySelector('#copy-per-trade').value;
         const daily = +overlay.querySelector('#copy-daily').value;
+        if (!capital || !perTrade || !daily) return alert('Capital allocation, max risk per trade, and max daily loss are required.');
         if (perTrade > capital * 0.1 && !confirm('Risk per trade is above 10% of allocated capital. Continue?')) return;
         if (daily > capital * 0.3 && !confirm('Daily loss limit is above 30% of allocated capital. Continue?')) return;
         close({ capital_allocation: capital, risk_max_per_trade: perTrade, risk_max_daily_loss: daily });
@@ -51,7 +53,7 @@ window.CopyTrading = (function () {
   }
 
   function strategyCard(s) {
-    const dd = s.maxDrawdown != null ? s.maxDrawdown.toFixed(1) + '%' : '—';
+    const dd = s.maxDrawdown != null ? Number(s.maxDrawdown).toFixed(1) + '%' : '—';
     const hasHistory = !!s.hasHistory;
     return `<div class="card">
       <div class="row between"><strong>${esc(s.name)}</strong>
@@ -81,13 +83,14 @@ window.CopyTrading = (function () {
       <div class="card" style="grid-column:1/-1">
         <div class="row between">
           <div><h3 style="margin:0">Copy Trading Marketplace</h3><p class="muted" style="font-size:12px;margin:4px 0 0">Copy only with risk limits. Rankings must come from backend trade records.</p></div>
-          <button id="cmp-btn" class="btn ghost sm" disabled>Compare selected</button>
+          <div class="row"><button id="cmp-btn" class="btn ghost sm" disabled>Compare selected</button>${state.canPublish ? '<button id="copy-publish-btn" class="btn sm">Publish strategy</button>' : '<span class="muted-sm">Standard plan+ to publish/copy</span>'}</div>
         </div>
+        <div id="copy-publish-panel"></div>
         <div class="row" style="margin-top:10px">
           <input id="cp-q" class="input" style="max-width:240px" placeholder="Search strategies…" value="${esc(state.q)}">
           <select id="cp-cat" class="input" style="max-width:160px">
             <option value="">All categories</option>
-            ${['trend','scalping','grid','reversal','ai','mixed'].map((c)=>`<option ${state.category===c?'selected':''}>${c}</option>`).join('')}
+            ${categories.map((c)=>`<option value="${c}" ${state.category===c?'selected':''}>${c}</option>`).join('')}
           </select>
           <select id="cp-sort" class="input" style="max-width:170px">
             <option value="followers">Most followers</option>
@@ -106,17 +109,54 @@ window.CopyTrading = (function () {
     const renderList = async () => {
       listEl.innerHTML = '<p class="muted">Loading strategies…</p>';
       try {
-        const { strategies } = await api(`/copy/strategies?q=${encodeURIComponent(state.q)}&category=${state.category}&sort=${state.sort}`);
+        const { strategies } = await api(`/copy/strategies?q=${encodeURIComponent(state.q)}&category=${encodeURIComponent(state.category)}&sort=${encodeURIComponent(state.sort)}`);
         listEl.innerHTML = strategies.length ? strategies.map(strategyCard).join('') : emptyCopyState();
         wireCards(listEl, container);
-      } catch (e) { listEl.innerHTML = `<div class="notice err">${esc(e.message)}</div>`; }
+      } catch (e) { listEl.innerHTML = `<div class="notice err">${esc(e.message)}${e.body?.detail ? '<br><span class="muted-sm">'+esc(e.body.detail)+'</span>' : ''}</div>`; }
     };
     container.querySelector('#cp-q').oninput = (e) => { state.q = e.target.value; clearTimeout(window._cpT); window._cpT = setTimeout(renderList, 300); };
     container.querySelector('#cp-cat').onchange = (e) => { state.category = e.target.value; renderList(); };
     container.querySelector('#cp-sort').onchange = (e) => { state.sort = e.target.value; renderList(); };
     container.querySelector('#cmp-btn').onclick = () => compareSelected(container);
+    if (state.canPublish) container.querySelector('#copy-publish-btn').onclick = () => publishPanel(container, renderList);
     await renderFollows(container);
     renderList();
+  }
+
+  function publishPanel(container, renderList) {
+    const panel = container.querySelector('#copy-publish-panel');
+    if (!panel) return;
+    if (panel.innerHTML) { panel.innerHTML = ''; return; }
+    panel.innerHTML = `<div class="card" style="margin-top:12px;border-color:#6366f1">
+      <h4 style="margin-top:0">Publish copy strategy</h4>
+      <p class="muted" style="font-size:12px">Publishing creates a provider strategy card. Followers/profit/win-rate remain empty until backend trade history exists.</p>
+      <div class="row">
+        <input id="cp-pub-name" class="input" style="max-width:220px" placeholder="Strategy name" />
+        <select id="cp-pub-cat" class="input" style="max-width:150px">${categories.map((c)=>`<option value="${c}">${c}</option>`).join('')}</select>
+        <input id="cp-pub-symbol" class="input" style="max-width:130px" placeholder="Symbol e.g. R_100" />
+        <input id="cp-pub-risk" class="input" style="max-width:120px" type="number" min="0" max="100" placeholder="Risk 0-100" />
+      </div>
+      <textarea id="cp-pub-desc" class="input" style="margin-top:8px" placeholder="Describe rules, risk limits, and suitable market conditions. No profit promises."></textarea>
+      <button id="cp-pub-submit" class="btn sm" style="margin-top:8px">Publish strategy</button>
+      <div id="cp-pub-msg"></div>
+    </div>`;
+    panel.querySelector('#cp-pub-submit').onclick = async () => {
+      const body = {
+        name: panel.querySelector('#cp-pub-name').value.trim(),
+        category: panel.querySelector('#cp-pub-cat').value,
+        symbol: panel.querySelector('#cp-pub-symbol').value.trim(),
+        risk_score: panel.querySelector('#cp-pub-risk').value,
+        description: panel.querySelector('#cp-pub-desc').value.trim(),
+      };
+      if (!body.name) return panel.querySelector('#cp-pub-msg').innerHTML = '<div class="notice err">Strategy name is required.</div>';
+      try {
+        await api('/copy/strategies', { method:'POST', body: JSON.stringify(body) });
+        panel.querySelector('#cp-pub-msg').innerHTML = '<div class="notice ok">Strategy published. Stats will appear after backend-recorded trades exist.</div>';
+        renderList();
+      } catch (e) {
+        panel.querySelector('#cp-pub-msg').innerHTML = `<div class="notice err">${esc(e.message)}${e.body?.detail ? '<br><span class="muted-sm">'+esc(e.body.detail)+'</span>' : ''}</div>`;
+      }
+    };
   }
 
   function selectedIds(container) { return [...container.querySelectorAll('input[data-cmp]:checked')].map((x) => x.dataset.cmp); }
@@ -155,7 +195,7 @@ window.CopyTrading = (function () {
       await api(`/copy/follow/${id}`, { method: 'POST', body: JSON.stringify(limits) });
       await renderFollows(container);
       alert('Now copying. Copying is backend-enforced with your risk limits.');
-    } catch (e) { alert(e.message); }
+    } catch (e) { alert(`${e.message}${e.body?.detail ? '\n' + e.body.detail : ''}`); }
   }
 
   async function renderFollows(container) {
@@ -196,5 +236,9 @@ window.CopyTrading = (function () {
     } catch (e) { panel.innerHTML = `<div class="notice err">${esc(e.message)}</div>`; }
   }
 
-  return { load, setCanCopy(v) { state.canCopy = v; } };
+  return {
+    load,
+    setCanCopy(v) { state.canCopy = v; },
+    setCanPublish(v) { state.canPublish = v; },
+  };
 })();
