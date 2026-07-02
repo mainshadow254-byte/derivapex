@@ -44,15 +44,12 @@ window.DerivOnboard = (function () {
       trigger.textContent = 'Opening Deriv…';
     }
 
-    // Open synchronously before awaiting config so popup blockers do not block it.
     let popup = null;
     try { popup = window.open('about:blank', 'apexDerivOAuth', popupFeatures()); } catch {}
 
     try {
       const url = await oauthUrl();
       if (!popup || popup.closed) {
-        // Reliable fallback for strict/mobile browsers. This remains same-tab rather
-        // than target=_blank, and the callback returns to ApexBot.
         window.location.assign(url);
         return { mode: 'same-tab' };
       }
@@ -175,6 +172,23 @@ window.DerivOnboard = (function () {
     wireAffiliate(container);
     wireOAuth(container);
   }
+
+  // Dashboard's account menu previously navigated the whole page with
+  // location.href. Intercept that action before its legacy handler runs.
+  document.addEventListener('click', (event) => {
+    const trigger = event.target?.closest?.('[data-action="deriv"]');
+    if (!trigger) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openOAuth({ trigger });
+  }, true);
+
+  // Refresh the dashboard after the backend has securely stored the Deriv token.
+  window.addEventListener('apex:deriv-connected', () => {
+    if (/\/dashboard\.html$/i.test(window.location.pathname)) {
+      setTimeout(() => window.location.reload(), 250);
+    }
+  });
 
   return { affiliateUrl, oauthUrl, openOAuth, wireAffiliate, wireOAuth, cardHTML, mount, OAUTH_MESSAGE };
 })();
