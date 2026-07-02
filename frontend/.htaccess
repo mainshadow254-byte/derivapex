@@ -12,9 +12,15 @@ RewriteRule ^api/(.*)$ https://apexbot-backend-production.up.railway.app/api/$1 
   ExpiresByType text/html "access plus 0 seconds"
 </IfModule>
 
-# Authentication and broker-connect scripts must not remain stale after a fix.
+# Authentication, broker-connect, and bot-builder files must not stay stale
+# after production fixes. The builder HTML changed structure, not just styling.
 <IfModule mod_headers.c>
-  <FilesMatch "^(deriv-onboard|dashboard|pb-client)\.js$">
+  <FilesMatch "^(deriv-onboard|dashboard|pb-client|bot-builder|deriv-builder-shell|deriv-builder-report)\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+  <FilesMatch "^(bot-builder\.html|deriv-builder\.css)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
