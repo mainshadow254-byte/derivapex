@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ApexBot — Visual Bot Builder</title>
   <link rel="stylesheet" href="css/styles.css?v=20260621-visual-builder" />
-  <link rel="stylesheet" href="css/deriv-builder.css?v=20260702-1" />
+  <link rel="stylesheet" href="css/deriv-builder.css?v=20260702-2" />
 </head>
 <body class="builder-page visual-builder-page">
   <nav class="nav builder-nav">
@@ -72,24 +72,12 @@
       </section>
 
       <aside class="builder-side" aria-label="Bot controls and reports">
-        <section class="builder-run-card">
+        <section class="builder-run-strip">
           <button id="run-demo-bottom" class="run-primary" type="button">▶ Run demo</button>
           <div class="run-status-box">
             <strong id="bot-run-state">Bot is not running</strong>
-            <span>Last action: <b id="last-signal">none</b></span>
-          </div>
-          <div class="builder-side-actions">
-            <button id="run-backtest" class="btn ghost" type="button">Backtest</button>
-            <button id="reset-builder-report" class="btn ghost" type="button">Reset report</button>
-          </div>
-          <div class="builder-stat-grid">
-            <div class="builder-stat"><small>Market</small><strong id="builder-summary-market">—</strong></div>
-            <div class="builder-stat"><small>Contract</small><strong id="builder-summary-contract">—</strong></div>
-            <div class="builder-stat"><small>Total stake</small><strong id="builder-summary-stake">0.00</strong></div>
-            <div class="builder-stat"><small>Total payout</small><strong id="builder-summary-payout">—</strong></div>
-            <div class="builder-stat"><small>Runs</small><strong id="builder-summary-runs">0</strong></div>
-            <div class="builder-stat"><small>Won / lost</small><strong><span id="builder-summary-won">—</span> / <span id="builder-summary-lost">—</span></strong></div>
-            <div class="builder-stat"><small>Profit / loss</small><strong id="builder-summary-profit">—</strong></div>
+            <span id="builder-progress-text">Ready</span>
+            <div class="builder-run-progress"><span id="builder-run-progress-bar"></span></div>
           </div>
         </section>
 
@@ -98,24 +86,56 @@
             <button class="workstation-tab active" data-panel-tab="summary" type="button">Summary</button>
             <button class="workstation-tab" data-panel-tab="transactions" type="button">Transactions</button>
             <button class="workstation-tab" data-panel-tab="journal" type="button">Journal</button>
-            <button class="workstation-tab" data-panel-tab="validation" type="button">Validation</button>
+            <button id="reset-builder-report" class="report-reset" type="button">Reset</button>
             <button id="toggle-workstation" class="workstation-toggle" type="button">Show</button>
           </div>
+
           <div class="workstation-body">
             <section class="workstation-view active" data-panel-view="summary">
-              <p class="muted" style="font-size:12px;margin:0">Configure the four core stages: trade parameters, purchase conditions, optional sell conditions, and restart conditions. Add analysis and risk blocks only when they serve the strategy.</p>
+              <div id="current-contract-card" class="current-contract empty">
+                <div class="current-contract-head">
+                  <div>
+                    <small>Current contract</small>
+                    <strong id="current-contract-title">No contract</strong>
+                  </div>
+                  <span id="current-contract-status" class="contract-status">Idle</span>
+                </div>
+                <div id="current-contract-body" class="current-contract-body">
+                  Run the bot in demo mode to display a verified order here.
+                </div>
+              </div>
+
+              <div class="deriv-stat-grid">
+                <div class="deriv-stat"><span>Total stake</span><strong id="builder-summary-stake">0.00</strong></div>
+                <div class="deriv-stat"><span>Total payout</span><strong id="builder-summary-payout">—</strong></div>
+                <div class="deriv-stat"><span>No. of runs</span><strong id="builder-summary-runs">0</strong></div>
+                <div class="deriv-stat"><span>Contracts lost</span><strong id="builder-summary-lost">—</strong></div>
+                <div class="deriv-stat"><span>Contracts won</span><strong id="builder-summary-won">—</strong></div>
+                <div class="deriv-stat"><span>Total profit/loss</span><strong id="builder-summary-profit">—</strong></div>
+              </div>
+              <p class="report-footnote">Unsettled demo requests do not create invented payout, win/loss, or profit figures.</p>
             </section>
+
             <section class="workstation-view" data-panel-view="transactions">
+              <div class="report-toolbar">
+                <span>Recorded orders</span>
+                <button id="download-transactions" class="report-tool" type="button">Download</button>
+              </div>
               <div id="transaction-list" class="table-empty">No transactions yet.</div>
             </section>
+
             <section class="workstation-view" data-panel-view="journal">
-              <div id="builder-log" class="builder-journal">
-                <div>Bot not running.</div>
-                <div>Configure the core blocks, then run in demo mode.</div>
+              <div class="report-toolbar">
+                <select id="journal-filter" class="report-filter" aria-label="Journal filter">
+                  <option value="all">All events</option>
+                  <option value="info">Information</option>
+                  <option value="success">Success</option>
+                  <option value="warning">Warnings</option>
+                  <option value="error">Errors</option>
+                </select>
+                <button id="download-journal" class="report-tool" type="button">Download</button>
               </div>
-            </section>
-            <section class="workstation-view" data-panel-view="validation">
-              <div id="validation-warnings" class="validation-list"></div>
+              <div id="builder-log" class="builder-journal"></div>
             </section>
           </div>
         </section>
@@ -126,13 +146,22 @@
             <b id="selected-block-name">No block selected</b>
           </div>
           <div id="properties-form" class="properties-form"></div>
+          <div class="builder-validation-box">
+            <strong>Strategy checks</strong>
+            <div id="validation-warnings" class="validation-list"></div>
+          </div>
         </section>
+
+        <div class="builder-side-actions">
+          <button id="run-backtest" class="btn ghost" type="button">Backtest strategy</button>
+        </div>
       </aside>
     </section>
 
-    <!-- Required runtime targets kept outside the visible workspace. They prevent
-         legacy builder code from failing while decorative panels remain removed. -->
     <div class="builder-hidden-runtime" aria-hidden="true">
+      <span id="builder-summary-market"></span>
+      <span id="builder-summary-contract"></span>
+      <span id="last-signal"></span>
       <div id="mini-map"></div>
       <div id="digit-stream"></div>
       <div id="signal-list"></div>
@@ -147,7 +176,8 @@
   <script src="js/pb-client.js"></script>
   <script src="js/security.js"></script>
   <script src="js/deriv-onboard.js?v=20260702-2"></script>
-  <script src="js/bot-builder.js?v=20260702-deriv-shell"></script>
-  <script src="js/deriv-builder-shell.js?v=20260702-1"></script>
+  <script src="js/bot-builder.js?v=20260702-deriv-report"></script>
+  <script src="js/deriv-builder-shell.js?v=20260702-2"></script>
+  <script src="js/deriv-builder-report.js?v=20260702-1"></script>
 </body>
 </html>
