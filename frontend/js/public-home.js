@@ -43,6 +43,16 @@
   }
 
   function renderComingSoon() {
+    const section = document.getElementById('plans');
+    if (section) {
+      const eyebrow = section.querySelector('.section-heading .eyebrow');
+      const heading = section.querySelector('.section-heading h2');
+      const paragraph = section.querySelector('.section-heading p');
+      if (eyebrow) eyebrow.textContent = 'OPEN EARLY ACCESS';
+      if (heading) heading.textContent = 'Subscriptions and payments are coming soon';
+      if (paragraph) paragraph.textContent = 'All currently available tools are open while the platform, AI capacity, payment provider, and production limits are being completed.';
+    }
+
     const grid = document.getElementById('plans-grid');
     if (!grid) return;
     grid.className = 'grid cols-2';
