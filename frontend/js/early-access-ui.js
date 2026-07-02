@@ -15,6 +15,12 @@
       mode.innerHTML = '<span class="badge real" data-open-access>EARLY ACCESS · PLANS COMING SOON</span>';
     }
 
+    const scanMode = document.getElementById('scan-mode');
+    if (scanMode) {
+      scanMode.className = 'badge real';
+      setText(scanMode, 'EARLY ACCESS');
+    }
+
     const meta = document.getElementById('acct-meta');
     if (meta && meta.innerHTML && !meta.innerHTML.includes('Open Early Access')) {
       meta.innerHTML = meta.innerHTML.replace(/Plan:\s*<strong>.*?<\/strong>/i, 'Plan: <strong>Open Early Access</strong>');
