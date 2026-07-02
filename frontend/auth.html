@@ -64,16 +64,18 @@
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
   <script src="apex-config.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/pb-client.js"></script>
+  <script src="js/pb-client.js?v=20260702-google-oauth"></script>
   <script src="js/deriv-onboard.js"></script>
   <script>
     const pageParams = new URLSearchParams(location.search);
     let mode = pageParams.get('mode') === 'login' ? 'login' : 'signup';
     const requestedNext = pageParams.get('next') || '';
+    const googleNext = sessionStorage.getItem('apex_google_next') || '';
     function safeNextUrl(){
-      if (!requestedNext) return 'dashboard.html';
+      const nextSource = requestedNext || new URLSearchParams(googleNext).get('next') || '';
+      if (!nextSource) return 'dashboard.html';
       try {
-        const decoded = decodeURIComponent(requestedNext);
+        const decoded = decodeURIComponent(nextSource);
         if (/^https?:\/\//i.test(decoded) || decoded.startsWith('//')) return 'dashboard.html';
         if (!/^[a-z0-9_./?#=&%-]+$/i.test(decoded)) return 'dashboard.html';
         return decoded;
@@ -115,15 +117,35 @@
     $('google').onclick = async () => {
       $('google').disabled = true;
       try {
-        const sync = await Auth.googleLogin();
-        if (sync.needsEmailVerification) location.href = 'verify.html';
-        else location.href = safeNextUrl();
+        await Auth.googleLogin();
       } catch (err) {
         msg(err?.message || 'Google sign-in failed. Please try again.');
-      } finally {
         $('google').disabled = false;
       }
     };
+
+    async function finishGoogleRedirect() {
+      if (!pageParams.get('code')) return;
+      $('submit').disabled = true;
+      $('google').disabled = true;
+      msg('Finishing Google sign-in...', 'ok');
+      try {
+        const sync = await Auth.completeGoogleLogin();
+        sessionStorage.removeItem('apex_google_next');
+        history.replaceState({}, document.title, location.pathname);
+        if (sync.needsEmailVerification) location.href = 'verify.html';
+        else location.href = safeNextUrl();
+      } catch (err) {
+        sessionStorage.removeItem('apex_google_oauth');
+        sessionStorage.removeItem('apex_google_next');
+        history.replaceState({}, document.title, location.pathname);
+        msg(err?.message || 'Google sign-in failed. Please try again.');
+        $('submit').disabled = false;
+        $('google').disabled = false;
+      } finally {
+        if (!pageParams.get('code')) $('google').disabled = false;
+      }
+    }
 
     // Surface the "Create Deriv Account" affiliate button (link from safe config).
     DerivOnboard.wireAffiliate();
@@ -148,6 +170,7 @@
       } finally { $('submit').disabled=false; }
     };
     render();
+    finishGoogleRedirect();
   </script>
 </body>
 </html>

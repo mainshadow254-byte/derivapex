@@ -62,10 +62,45 @@ window.Auth = {
       err.redirectUri = `${pbOrigin}/api/oauth2-redirect`;
       throw err;
     }
-    await pb.collection('users').authWithOAuth2({ provider: 'google' });
+    const redirectUrl = `${window.location.origin}${window.location.pathname}`;
+    const authUrl = new URL(google.authUrl || google.authURL);
+    authUrl.searchParams.set('redirect_uri', redirectUrl);
+
+    sessionStorage.setItem('apex_google_oauth', JSON.stringify({
+      provider: 'google',
+      state: google.state || '',
+      codeVerifier: google.codeVerifier,
+      redirectUrl,
+    }));
+    sessionStorage.setItem('apex_google_next', window.location.search || '');
+    window.location.href = authUrl.toString();
+    return new Promise(() => {});
+  },
+
+  async completeGoogleLogin() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const stored = JSON.parse(sessionStorage.getItem('apex_google_oauth') || '{}');
+    if (!code || !stored.codeVerifier || !stored.redirectUrl) {
+      throw new Error('Google sign-in session expired. Please try again.');
+    }
+    if (stored.state && state && stored.state !== state) {
+      throw new Error('Google sign-in state mismatch. Please try again.');
+    }
+
+    const authData = await pb.collection('users').authWithOAuth2Code(
+      stored.provider || 'google',
+      code,
+      stored.codeVerifier,
+      stored.redirectUrl,
+      { name: '' }
+    );
+    sessionStorage.removeItem('apex_google_oauth');
+    const displayName = authData?.meta?.name || authData?.record?.name || pb.authStore.model?.name || '';
     return api('/auth/oauth-sync', {
       method: 'POST',
-      body: JSON.stringify({ provider: 'google', displayName: pb.authStore.model?.name || '' }),
+      body: JSON.stringify({ provider: 'google', displayName }),
     });
   },
 
