@@ -3,8 +3,9 @@
   const report = { transactions:[], journal:[], current:null, running:false, controller:null };
   const $ = (id) => document.getElementById(id);
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[char]));
-  const money = (value, currency='') => Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}${currency ? ` ${currency}` : ''}` : '—';
-  const spot = (value) => Number.isFinite(Number(value)) ? Number(value).toFixed(5).replace(/0+$/,'').replace(/\.$/,'') : '—';
+  const hasNumber = (value) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+  const money = (value, currency='') => hasNumber(value) ? `${Number(value).toFixed(2)}${currency ? ` ${currency}` : ''}` : '—';
+  const spot = (value) => hasNumber(value) ? Number(value).toFixed(5).replace(/0+$/,'').replace(/\.$/,'') : '—';
 
   function state(){
     try {
@@ -19,7 +20,7 @@
   }
 
   function addJournal(message, level='info', details={}){
-    report.journal.unshift({ id:crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`, at:new Date(), level, message, details });
+    report.journal.unshift({ id:window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, at:new Date(), level, message, details });
     renderJournal();
   }
 
@@ -50,7 +51,7 @@
         <tr>
           <td><strong>${esc(tx.contract)}</strong><br><span class="muted">${esc(tx.symbol)}</span></td>
           <td>${spot(tx.entry)}<br><span class="muted">${spot(tx.exit)}</span></td>
-          <td>${money(tx.stake, tx.currency)}<br><span class="${Number(tx.pnl) > 0 ? 'positive' : Number(tx.pnl) < 0 ? 'negative' : 'muted'}">${money(tx.pnl, tx.currency)}</span></td>
+          <td>${money(tx.stake, tx.currency)}<br><span class="${hasNumber(tx.pnl) && Number(tx.pnl) > 0 ? 'positive' : hasNumber(tx.pnl) && Number(tx.pnl) < 0 ? 'negative' : 'muted'}">${money(tx.pnl, tx.currency)}</span></td>
           <td>${esc(tx.status)}</td>
         </tr>`).join('')}</tbody>
     </table>`;
@@ -84,9 +85,9 @@
 
   function renderStats(){
     const { strategy } = state();
-    const settled = report.transactions.filter((tx)=>Number.isFinite(Number(tx.pnl)));
-    const totalStake = report.transactions.reduce((sum, tx)=>sum + (Number(tx.stake) || 0), 0);
-    const totalPayout = settled.reduce((sum, tx)=>sum + (Number(tx.payout) || 0), 0);
+    const settled = report.transactions.filter((tx)=>hasNumber(tx.pnl));
+    const totalStake = report.transactions.reduce((sum, tx)=>sum + (hasNumber(tx.stake) ? Number(tx.stake) : 0), 0);
+    const totalPayout = settled.reduce((sum, tx)=>sum + (hasNumber(tx.payout) ? Number(tx.payout) : 0), 0);
     const totalPnl = settled.reduce((sum, tx)=>sum + Number(tx.pnl), 0);
     const won = settled.filter((tx)=>Number(tx.pnl) > 0).length;
     const lost = settled.filter((tx)=>Number(tx.pnl) < 0).length;
@@ -215,7 +216,6 @@
     $('download-transactions')?.addEventListener('click', downloadTransactions);
     $('reset-builder-report')?.addEventListener('click', resetReport);
 
-    // Capture before the legacy one-shot handlers so only this report engine runs.
     document.addEventListener('click', (event)=>{
       const target = event.target.closest?.('#run-demo-bottom,#run-backtest');
       if (!target) return;
