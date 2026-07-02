@@ -1,7 +1,6 @@
 RewriteEngine On
 
 # Hostinger serves the frontend, Railway serves the backend API.
-# Keep /api/... usable on the public domain without exposing backend secrets.
 RewriteRule ^api/(.*)$ https://apexbot-backend-production.up.railway.app/api/$1 [R=307,L]
 
 <IfModule mod_expires.c>
@@ -12,15 +11,13 @@ RewriteRule ^api/(.*)$ https://apexbot-backend-production.up.railway.app/api/$1 
   ExpiresByType text/html "access plus 0 seconds"
 </IfModule>
 
-# Authentication, broker-connect, and bot-builder files must not stay stale
-# after production fixes. The builder HTML changed structure, not just styling.
 <IfModule mod_headers.c>
-  <FilesMatch "^(deriv-onboard|dashboard|pb-client|bot-builder|builder-v2-shell|deriv-builder-shell|deriv-builder-report)\.js$">
+  <FilesMatch "^(deriv-onboard|dashboard|pb-client|bot-builder|builder-v2-shell|builder-deriv-account|deriv-builder-report|early-access-ui|ai-workspace|public-home)\.js$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
   </FilesMatch>
-  <FilesMatch "^(bot-builder\.html|builder-v2\.css|deriv-builder\.css)$">
+  <FilesMatch "^(bot-builder\.html|dashboard\.html|index\.html|builder-v2\.css|builder-verified\.css|ai-workspace\.css)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
