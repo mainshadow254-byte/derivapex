@@ -1,4 +1,11 @@
 (function(){
+  if(!document.querySelector('link[data-studio-fixes]')){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='css/trading-studio-fixes.css?v=20260702-1';
+    link.dataset.studioFixes='1';
+    document.head.appendChild(link);
+  }
   const $=(id)=>document.getElementById(id);
   const timeEl=$('studio-time');
   const modal=$('studio-risk-modal');
