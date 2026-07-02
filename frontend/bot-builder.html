@@ -3,172 +3,157 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ApexBot — Visual Bot Builder</title>
+  <title>ApexBot — Bot Builder</title>
   <link rel="stylesheet" href="css/styles.css?v=20260621-visual-builder" />
-  <link rel="stylesheet" href="css/deriv-builder.css?v=20260702-2" />
+  <link rel="stylesheet" href="css/deriv-builder.css?v=20260702-3" />
 </head>
-<body class="builder-page visual-builder-page">
+<body class="builder-page">
   <nav class="nav builder-nav">
     <a class="brand" href="index.html">ApexBot</a>
-    <div class="nav-actions">
-      <a class="btn ghost" href="dashboard.html">Dashboard</a>
-      <span class="btn" aria-current="page">Bot Builder</span>
-      <a class="btn ghost" href="terminal.html">Charts</a>
-      <a class="btn ghost" href="guide.html">Tutorials</a>
-      <a class="btn ghost" data-deriv-oauth>Connect Deriv</a>
+    <div class="builder-main-tabs">
+      <a href="dashboard.html">Dashboard</a>
+      <span class="active">Bot Builder</span>
+      <a href="terminal.html">Charts</a>
+      <a href="guide.html">Tutorials</a>
     </div>
+    <a class="builder-connect" data-deriv-oauth>Connect Deriv</a>
   </nav>
 
-  <main class="visual-builder-app">
-    <header class="visual-builder-topbar">
-      <label class="strategy-title-field">
-        <span>Bot name</span>
+  <main class="dbot-app">
+    <header class="dbot-toolbar">
+      <label class="dbot-name">
+        <span>Bot</span>
         <input id="s-name" class="input" maxlength="120" aria-label="Bot name" />
       </label>
-      <div class="visual-builder-actions">
-        <button id="new-strategy" class="btn ghost" type="button">New</button>
-        <label class="btn ghost file-btn">Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
-        <button id="save-bot" class="btn ok" type="button">Save</button>
-        <button id="export-bot" class="btn ghost" type="button">Export JSON</button>
-        <button id="auto-layout" class="btn ghost" type="button">Arrange blocks</button>
+      <div class="dbot-tools">
+        <button id="new-strategy" type="button">New</button>
+        <label>Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
+        <button id="save-bot" class="primary" type="button">Save</button>
+        <button id="export-bot" type="button">Export</button>
+        <button id="auto-layout" type="button">Arrange</button>
       </div>
     </header>
 
-    <section class="visual-builder-layout">
-      <aside class="visual-block-library" aria-label="Blocks menu">
-        <div class="library-primary">
-          <span class="quick-strategy-label">Quick strategy</span>
-          <select id="template-picker" class="input template-select" aria-label="Quick strategy">
+    <section class="dbot-layout">
+      <aside class="dbot-blocks" aria-label="Blocks menu">
+        <div class="dbot-quick">
+          <strong>Quick strategy</strong>
+          <select id="template-picker" class="input" aria-label="Quick strategy">
             <option value="">Select a strategy</option>
           </select>
         </div>
-        <div class="library-search">
+        <div class="dbot-search">
           <input id="block-search" class="input" placeholder="Search blocks" aria-label="Search blocks" />
         </div>
-        <div id="block-categories" class="library-categories"></div>
-        <p class="builder-risk-note">Test every strategy on a demo account. Automated trading can lose money and no setup is guaranteed.</p>
+        <div id="block-categories" class="dbot-block-categories"></div>
+        <p class="dbot-risk-note">Test every bot on a demo account first. Automated trading can lose money.</p>
       </aside>
 
-      <section class="visual-canvas-shell">
-        <div class="canvas-toolbar">
-          <div>
-            <strong>Workspace</strong>
-            <span id="canvas-status" class="badge info">Loading markets</span>
-          </div>
-          <div class="canvas-tools">
-            <button id="zoom-out" class="btn ghost sm" type="button" aria-label="Zoom out">−</button>
+      <section class="dbot-workspace-column">
+        <div class="dbot-workspace-tools">
+          <div><strong>Workspace</strong><span id="canvas-status">Loading markets</span></div>
+          <div class="dbot-zoom">
+            <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
             <span id="zoom-label">100%</span>
-            <button id="zoom-in" class="btn ghost sm" type="button" aria-label="Zoom in">+</button>
-            <label class="canvas-toggle"><input id="snap-grid" type="checkbox" checked /> Snap to grid</label>
+            <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+            <label><input id="snap-grid" type="checkbox" checked /> Snap</label>
           </div>
         </div>
 
-        <div id="visual-canvas" class="visual-canvas" aria-label="Bot strategy workspace">
-          <div class="canvas-grid"></div>
+        <div id="visual-canvas" class="dbot-canvas" aria-label="Bot strategy workspace">
           <svg id="connection-layer" class="visual-connections" aria-hidden="true"></svg>
           <div id="canvas-blocks" class="visual-canvas-blocks"></div>
-          <div id="canvas-empty" class="canvas-empty hidden">Load a quick strategy or drag the required blocks into the workspace.</div>
+          <div id="canvas-empty" class="canvas-empty hidden">Choose a quick strategy or add the required blocks.</div>
+        </div>
+
+        <div class="dbot-workspace-footer">
+          <span class="active">Workspace</span>
+          <a href="terminal.html">Chart</a>
         </div>
       </section>
 
-      <aside class="builder-side" aria-label="Bot controls and reports">
-        <section class="builder-run-strip">
-          <button id="run-demo-bottom" class="run-primary" type="button">▶ Run demo</button>
-          <div class="run-status-box">
+      <aside class="dbot-monitor" aria-label="Bot performance">
+        <div class="dbot-run-row">
+          <button id="run-demo-bottom" class="dbot-run" type="button">▶ Run</button>
+          <div class="dbot-run-status">
             <strong id="bot-run-state">Bot is not running</strong>
             <span id="builder-progress-text">Ready</span>
-            <div class="builder-run-progress"><span id="builder-run-progress-bar"></span></div>
+            <div class="dbot-progress"><i id="builder-run-progress-bar"></i></div>
           </div>
-        </section>
-
-        <section id="workstation-panel" class="workstation-panel builder-report-panel">
-          <div class="workstation-tabs">
-            <button class="workstation-tab active" data-panel-tab="summary" type="button">Summary</button>
-            <button class="workstation-tab" data-panel-tab="transactions" type="button">Transactions</button>
-            <button class="workstation-tab" data-panel-tab="journal" type="button">Journal</button>
-            <button id="reset-builder-report" class="report-reset" type="button">Reset</button>
-            <button id="toggle-workstation" class="workstation-toggle" type="button" hidden aria-hidden="true"></button>
-          </div>
-
-          <div class="workstation-body">
-            <section class="workstation-view active" data-panel-view="summary">
-              <div id="current-contract-card" class="current-contract empty">
-                <div class="current-contract-head">
-                  <div>
-                    <small>Current contract</small>
-                    <strong id="current-contract-title">No contract</strong>
-                  </div>
-                  <span id="current-contract-status" class="contract-status">Idle</span>
-                </div>
-                <div id="current-contract-body" class="current-contract-body">
-                  Run the bot in demo mode to display a verified order here.
-                </div>
-              </div>
-
-              <div class="deriv-stat-grid">
-                <div class="deriv-stat"><span>Total stake</span><strong id="builder-summary-stake">0.00</strong></div>
-                <div class="deriv-stat"><span>Total payout</span><strong id="builder-summary-payout">—</strong></div>
-                <div class="deriv-stat"><span>No. of runs</span><strong id="builder-summary-runs">0</strong></div>
-                <div class="deriv-stat"><span>Contracts lost</span><strong id="builder-summary-lost">—</strong></div>
-                <div class="deriv-stat"><span>Contracts won</span><strong id="builder-summary-won">—</strong></div>
-                <div class="deriv-stat"><span>Total profit/loss</span><strong id="builder-summary-profit">—</strong></div>
-              </div>
-              <p class="report-footnote">Unsettled demo requests do not create invented payout, win/loss, or profit figures.</p>
-            </section>
-
-            <section class="workstation-view" data-panel-view="transactions">
-              <div class="report-toolbar">
-                <span>Recorded orders</span>
-                <button id="download-transactions" class="report-tool" type="button">Download</button>
-              </div>
-              <div id="transaction-list" class="table-empty">No transactions yet.</div>
-            </section>
-
-            <section class="workstation-view" data-panel-view="journal">
-              <div class="report-toolbar">
-                <select id="journal-filter" class="report-filter" aria-label="Journal filter">
-                  <option value="all">All events</option>
-                  <option value="info">Information</option>
-                  <option value="success">Success</option>
-                  <option value="warning">Warnings</option>
-                  <option value="error">Errors</option>
-                </select>
-                <button id="download-journal" class="report-tool" type="button">Download</button>
-              </div>
-              <div id="builder-log" class="builder-journal"></div>
-            </section>
-          </div>
-        </section>
-
-        <section class="visual-properties" aria-label="Selected block properties">
-          <div class="properties-head">
-            <span>Block settings</span>
-            <b id="selected-block-name">No block selected</b>
-          </div>
-          <div id="properties-form" class="properties-form"></div>
-          <div class="builder-validation-box">
-            <strong>Strategy checks</strong>
-            <div id="validation-warnings" class="validation-list"></div>
-          </div>
-        </section>
-
-        <div class="builder-side-actions">
-          <button id="run-backtest" class="btn ghost" type="button">Backtest strategy</button>
         </div>
+
+        <div class="dbot-report-tabs" role="tablist">
+          <button class="active" data-dbot-tab="summary" type="button">Summary</button>
+          <button data-dbot-tab="transactions" type="button">Transactions</button>
+          <button data-dbot-tab="journal" type="button">Journal</button>
+        </div>
+
+        <div class="dbot-report-body">
+          <section class="dbot-report-view active" data-dbot-view="summary">
+            <div id="current-contract-card" class="dbot-contract empty">
+              <div class="dbot-contract-heading">
+                <div><small>Current contract</small><strong id="current-contract-title">No contract</strong></div>
+                <span id="current-contract-status">Idle</span>
+              </div>
+              <div id="current-contract-body" class="dbot-contract-body">Build a bot, then press Run.</div>
+            </div>
+            <div class="dbot-stats">
+              <div><span>Total stake</span><strong id="builder-summary-stake">0.00</strong></div>
+              <div><span>Total payout</span><strong id="builder-summary-payout">—</strong></div>
+              <div><span>No. of runs</span><strong id="builder-summary-runs">0</strong></div>
+              <div><span>Contracts lost</span><strong id="builder-summary-lost">—</strong></div>
+              <div><span>Contracts won</span><strong id="builder-summary-won">—</strong></div>
+              <div><span>Total profit/loss</span><strong id="builder-summary-profit">—</strong></div>
+            </div>
+          </section>
+
+          <section class="dbot-report-view" data-dbot-view="transactions">
+            <div class="dbot-report-toolbar"><span>Transactions</span><button id="download-transactions" type="button">Download</button></div>
+            <div id="dbot-transactions" class="dbot-empty">No transactions yet.</div>
+          </section>
+
+          <section class="dbot-report-view" data-dbot-view="journal">
+            <div class="dbot-report-toolbar">
+              <div class="dbot-journal-filters">
+                <label><input type="checkbox" value="error" checked /> Errors</label>
+                <label><input type="checkbox" value="info" checked /> Notifications</label>
+                <label><input type="checkbox" value="system" checked /> System</label>
+              </div>
+              <button id="download-journal" type="button">Download</button>
+            </div>
+            <div id="dbot-journal-list" class="dbot-journal"></div>
+          </section>
+        </div>
+
+        <button id="reset-builder-report" class="dbot-reset" type="button">Reset</button>
       </aside>
     </section>
-
-    <div class="builder-hidden-runtime" hidden aria-hidden="true">
-      <span id="builder-summary-market"></span>
-      <span id="builder-summary-contract"></span>
-      <span id="last-signal"></span>
-      <div id="mini-map"></div>
-      <div id="digit-stream"></div>
-      <div id="signal-list"></div>
-      <div id="ai-analysis-panel"></div>
-      <button id="show-workstation" type="button"></button>
-    </div>
   </main>
+
+  <aside id="block-inspector" class="dbot-inspector hidden" aria-label="Block settings">
+    <div class="dbot-inspector-head">
+      <div><small>Block settings</small><strong id="selected-block-name">No block selected</strong></div>
+      <button id="close-block-inspector" type="button" aria-label="Close block settings">×</button>
+    </div>
+    <div id="properties-form" class="properties-form"></div>
+    <div class="dbot-validation"><strong>Strategy checks</strong><div id="validation-warnings" class="validation-list"></div></div>
+  </aside>
+
+  <div class="builder-hidden-runtime" hidden aria-hidden="true">
+    <div id="workstation-panel"></div>
+    <button id="toggle-workstation" type="button"></button>
+    <button id="show-workstation" type="button"></button>
+    <div id="builder-log"></div>
+    <div id="transaction-list"></div>
+    <div id="signal-list"></div>
+    <div id="ai-analysis-panel"></div>
+    <div id="mini-map"></div>
+    <div id="digit-stream"></div>
+    <span id="builder-summary-market"></span>
+    <span id="builder-summary-contract"></span>
+    <span id="last-signal"></span>
+    <button id="run-backtest" type="button"></button>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
   <script src="apex-config.js"></script>
@@ -176,8 +161,9 @@
   <script src="js/pb-client.js"></script>
   <script src="js/security.js"></script>
   <script src="js/deriv-onboard.js?v=20260702-2"></script>
-  <script src="js/bot-builder.js?v=20260702-deriv-report"></script>
-  <script src="js/deriv-builder-shell.js?v=20260702-2"></script>
-  <script src="js/deriv-builder-report.js?v=20260702-1"></script>
+  <script src="js/deriv-builder-migrate.js?v=20260702-1"></script>
+  <script src="js/bot-builder.js?v=20260702-deriv-v4"></script>
+  <script src="js/deriv-builder-shell.js?v=20260702-4"></script>
+  <script src="js/deriv-builder-report.js?v=20260702-4"></script>
 </body>
 </html>
