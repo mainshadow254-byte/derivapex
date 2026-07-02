@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/builder-v2.css?v=20260702-final" />
   <link rel="stylesheet" href="css/builder-verified.css?v=20260702-1" />
   <link rel="stylesheet" href="css/trading-studio.css?v=20260702-2" />
+  <link rel="stylesheet" href="css/builder-video-audit.css?v=20260702-1" />
 </head>
 <body class="builder-page studio-light">
   <header class="studio-topbar">
@@ -46,6 +47,9 @@
             <button id="save-bot" type="button" title="Save">▤</button>
             <button id="export-bot" type="button" title="Export JSON">⇩</button>
             <button id="auto-layout" type="button" title="Arrange blocks">⌁</button>
+            <button id="run-backtest" type="button" title="Backtest strategy">⌗</button>
+            <button id="builder-undo" type="button" title="Undo">↶</button>
+            <button id="builder-redo" type="button" title="Redo">↷</button>
           </div>
           <div class="workspace-tools"><span id="canvas-status" class="builder-status">Loading</span><button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="zoom-in" type="button" aria-label="Zoom in">＋</button></div>
         </div>
@@ -59,13 +63,13 @@
         <div class="builder-monitor-body">
           <section class="workstation-view active" data-panel-view="summary">
             <div id="current-contract-card" class="current-contract empty"><div class="current-contract-head"><div><small>Current contract</small><strong id="current-contract-title">No contract</strong></div><span id="current-contract-status" class="contract-status">Idle</span></div><div id="current-contract-body" class="current-contract-body">When you’re ready to trade, hit Run. You’ll be able to track your bot’s performance here.</div></div>
-            <div class="deriv-stat-grid"><div class="deriv-stat"><span>Total stake</span><strong id="builder-summary-stake">0.00</strong></div><div class="deriv-stat"><span>Total payout</span><strong id="builder-summary-payout">—</strong></div><div class="deriv-stat"><span>No. of runs</span><strong id="builder-summary-runs">0</strong></div><div class="deriv-stat"><span>Contracts lost</span><strong id="builder-summary-lost">—</strong></div><div class="deriv-stat"><span>Contracts won</span><strong id="builder-summary-won">—</strong></div><div class="deriv-stat"><span>Total profit/loss</span><strong id="builder-summary-profit">—</strong></div></div>
-            <p class="report-footnote">Only verified settlement values are shown.</p>
+            <div class="deriv-stat-grid"><div class="deriv-stat"><span>Total stake</span><strong id="builder-summary-stake">0.00</strong></div><div class="deriv-stat"><span>Total payout</span><strong id="builder-summary-payout">0.00</strong></div><div class="deriv-stat"><span>No. of runs</span><strong id="builder-summary-runs">0</strong></div><div class="deriv-stat"><span>Contracts lost</span><strong id="builder-summary-lost">0</strong></div><div class="deriv-stat"><span>Contracts won</span><strong id="builder-summary-won">0</strong></div><div class="deriv-stat"><span>Total profit/loss</span><strong id="builder-summary-profit">0.00</strong></div></div>
+            <p class="report-footnote">Only verified settlement values are shown. Empty-session totals are zero; unsettled contract values remain blank.</p>
           </section>
           <section class="workstation-view" data-panel-view="transactions"><div class="report-toolbar"><span>Recorded orders</span><button id="download-transactions" type="button">Download</button></div><div id="transaction-list" class="table-empty">No transactions yet.</div></section>
           <section class="workstation-view" data-panel-view="journal"><div class="report-toolbar"><select id="journal-filter" aria-label="Journal filter"><option value="all">All events</option><option value="info">Information</option><option value="success">Success</option><option value="warning">Warnings</option><option value="error">Errors</option></select><button id="download-journal" type="button">Download</button></div><div id="builder-log" class="builder-journal"></div></section>
         </div>
-        <div class="monitor-actions"><button id="run-backtest" type="button">Backtest</button><button id="reset-builder-report" type="button">Reset</button></div>
+        <div class="monitor-actions"><button id="reset-builder-report" type="button">Reset</button></div>
       </aside>
     </section>
   </main>
@@ -75,7 +79,8 @@
   <div id="studio-risk-modal" class="studio-modal-backdrop"><div class="studio-modal studio-footer-modal"><div class="studio-modal-head"><h3>Risk Disclaimer</h3><button class="studio-modal-close" data-close-studio-modal type="button">×</button></div><div class="studio-modal-body studio-risk-copy">Trading can result in the loss of all invested funds. Automated strategies, indicators, AI explanations, and backtests cannot guarantee future outcomes. Test every strategy on a demo account first.</div></div></div>
 
   <script src="https://unpkg.com/blockly@12.1.0/blockly.min.js"></script>
+  <script src="js/blockly-capture.js?v=20260702-1"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
-  <script src="apex-config.js"></script><script src="js/config.js"></script><script src="js/pb-client.js"></script><script src="js/security.js"></script><script src="js/deriv-onboard.js?v=20260702-3"></script><script src="js/builder-deriv-account.js?v=20260702-1"></script><script src="js/studio-shell.js?v=20260702-2"></script><script src="js/blockly-builder-studio.js?v=20260702-1"></script><script src="js/deriv-builder-report.js?v=20260702-studio"></script>
+  <script src="apex-config.js"></script><script src="js/config.js"></script><script src="js/pb-client.js"></script><script src="js/security.js"></script><script src="js/deriv-onboard.js?v=20260702-3"></script><script src="js/builder-deriv-account.js?v=20260702-1"></script><script src="js/studio-shell.js?v=20260702-2"></script><script src="js/blockly-builder-studio.js?v=20260702-1"></script><script src="js/deriv-builder-report.js?v=20260702-studio"></script><script src="js/builder-video-audit.js?v=20260702-1"></script>
 </body>
 </html>
