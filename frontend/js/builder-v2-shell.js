@@ -24,6 +24,11 @@
   }
   function cleanLibrary(){
     $('#template-picker option[value="ai"]')?.remove();
+    $$('.library-group summary').forEach((summary)=>{
+      const text=summary.textContent.trim();
+      if(text==='Indicators')summary.textContent='Analysis/Indicators';
+      if(text==='Utilities')summary.textContent='Utility';
+    });
     $$('.library-group').forEach(group=>{const visible=$$('.library-block',group).some(block=>getComputedStyle(block).display!=='none');group.style.display=visible?'':'none';});
   }
   function decorate(){
@@ -42,6 +47,18 @@
   }
   function openInspector(){$('#block-inspector')?.classList.remove('hidden');$('#inspector-backdrop')?.classList.remove('hidden');}
   function closeInspector(){$('#block-inspector')?.classList.add('hidden');$('#inspector-backdrop')?.classList.add('hidden');}
+  function ensureInitialStrategy(attempt=0){
+    const state=read();
+    if(state.blocks.length||!$('#template-picker'))return;
+    const picker=$('#template-picker');
+    if(!picker.querySelector('option[value="rsi"]')){
+      if(attempt<20)setTimeout(()=>ensureInitialStrategy(attempt+1),100);
+      return;
+    }
+    picker.value='rsi';
+    forceLayout=true;
+    picker.dispatchEvent(new Event('change',{bubbles:true}));
+  }
   function init(){
     const library=$('#block-categories'),canvas=$('#canvas-blocks');
     if(library)new MutationObserver(cleanLibrary).observe(library,{childList:true,subtree:true});
@@ -51,7 +68,7 @@
     $('#visual-canvas')?.addEventListener('drop',event=>{if(event.dataTransfer?.getData('application/x-apex-block'))forceLayout=true;});
     $('#close-block-inspector')?.addEventListener('click',closeInspector);$('#inspector-backdrop')?.addEventListener('click',closeInspector);document.addEventListener('keydown',event=>{if(event.key==='Escape')closeInspector();});
     document.addEventListener('input',()=>setTimeout(decorate,70),true);document.addEventListener('change',()=>setTimeout(decorate,90),true);
-    cleanLibrary();decorate();requestAnimationFrame(verticalize);
+    cleanLibrary();ensureInitialStrategy();decorate();requestAnimationFrame(verticalize);
   }
   function wait(){if($('#block-categories')&&$('#canvas-blocks'))init();else setTimeout(wait,100);}wait();
 })();

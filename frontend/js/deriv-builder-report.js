@@ -32,6 +32,7 @@
     host.innerHTML = rows.length ? rows.map((item)=>`
       <article class="journal-entry ${esc(item.level)}">
         <div class="journal-meta"><span>${esc(item.level.toUpperCase())}</span><time>${esc(item.at.toLocaleString())}</time></div>
+        ${item.details?.market || item.details?.contractId ? `<div class="journal-meta"><span>${esc(item.details?.market || '')}</span><span>${esc(item.details?.contractId || '')}</span></div>` : ''}
         <p>${esc(item.message)}</p>
       </article>`).join('') : '<div class="table-empty">No journal entries match this filter.</div>';
   }
@@ -46,13 +47,19 @@
     }
     host.className = '';
     host.innerHTML = `<table class="report-transactions">
-      <thead><tr><th>Type</th><th>Entry / exit spot</th><th>Buy price / P&amp;L</th><th>Status</th></tr></thead>
+      <thead><tr><th>Time</th><th>Market</th><th>Contract</th><th>Entry spot</th><th>Exit spot</th><th>Buy price</th><th>Payout</th><th>Profit/loss</th><th>Status</th><th>Mode</th></tr></thead>
       <tbody>${report.transactions.map((tx)=>`
         <tr>
-          <td><strong>${esc(tx.contract)}</strong><br><span class="muted">${esc(tx.symbol)}</span></td>
-          <td>${spot(tx.entry)}<br><span class="muted">${spot(tx.exit)}</span></td>
-          <td>${money(tx.stake, tx.currency)}<br><span class="${hasNumber(tx.pnl) && Number(tx.pnl) > 0 ? 'positive' : hasNumber(tx.pnl) && Number(tx.pnl) < 0 ? 'negative' : 'muted'}">${money(tx.pnl, tx.currency)}</span></td>
+          <td>${esc(tx.time.toLocaleTimeString())}</td>
+          <td>${esc(tx.symbol)}</td>
+          <td>${esc(tx.contract)}</td>
+          <td>${spot(tx.entry)}</td>
+          <td>${spot(tx.exit)}</td>
+          <td>${money(tx.stake, tx.currency)}</td>
+          <td>${money(tx.payout, tx.currency)}</td>
+          <td><span class="${hasNumber(tx.pnl) && Number(tx.pnl) > 0 ? 'positive' : hasNumber(tx.pnl) && Number(tx.pnl) < 0 ? 'negative' : 'muted'}">${money(tx.pnl, tx.currency)}</span></td>
           <td>${esc(tx.status)}</td>
+          <td>${esc(tx.mode)}</td>
         </tr>`).join('')}</tbody>
     </table>`;
   }
@@ -149,7 +156,7 @@
 
     report.controller = new AbortController();
     setRunState(true, 'Attempting to buy', 'Sending verified demo request');
-    addJournal(`Attempting demo purchase: ${strategy.contract_type} on ${strategy.symbol}, stake ${money(strategy.stake, strategy.currency)}.`, 'info');
+    addJournal(`Attempting demo purchase: ${strategy.contract_type} on ${strategy.symbol}, stake ${money(strategy.stake, strategy.currency)}.`, 'info', { market:strategy.symbol, contractId:strategy.contract_type });
     try {
       const result = await api('/trading/demo-trade', {
         method:'POST', signal:report.controller.signal,
@@ -164,13 +171,13 @@
       };
       report.transactions.unshift(tx); report.current = tx;
       setRunState(false, 'Demo order recorded', 'Waiting for settlement data');
-      addJournal(`Demo order recorded${result.tradeId ? ` with ledger ID ${result.tradeId}` : ''}. Payout and P/L remain blank until a settled result exists.`, 'success');
+      addJournal(`Demo order recorded${result.tradeId ? ` with ledger ID ${result.tradeId}` : ''}. Payout and P/L remain blank until a settled result exists.`, 'success', { market:tx.symbol, contractId:tx.id });
       renderAll();
       activateTab('summary');
     } catch (error) {
       if (error?.name === 'AbortError') return;
       setRunState(false, 'Bot is not running', 'Order rejected');
-      addJournal(error?.body?.detail || error?.message || 'Demo order failed.', 'error');
+      addJournal(error?.body?.detail || error?.message || 'Demo order failed.', 'error', { market:strategy.symbol, contractId:strategy.contract_type });
       activateTab('journal');
     } finally { report.controller = null; }
   }
@@ -206,7 +213,7 @@
   }
 
   function downloadJournal(){
-    download('apexbot-journal.txt', report.journal.slice().reverse().map((item)=>`${item.at.toISOString()} [${item.level.toUpperCase()}] ${item.message}`).join('\n'));
+    download('apexbot-journal.txt', report.journal.slice().reverse().map((item)=>`${item.at.toISOString()} [${item.level.toUpperCase()}]${item.details?.market ? ` ${item.details.market}` : ''}${item.details?.contractId ? ` ${item.details.contractId}` : ''} ${item.message}`).join('\n'));
   }
 
   function init(){
