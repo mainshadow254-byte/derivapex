@@ -41,6 +41,18 @@ const pb = new PocketBase(pbUrl);
 pb.autoCancellation(false);
 
 await pb.collection('_superusers').authWithPassword(email, password);
+const settings = await pb.settings.getAll().catch(() => null);
+if (settings?.meta) {
+  await pb.settings.update({
+    meta: {
+      ...settings.meta,
+      appName: 'ApexBot',
+      appUrl,
+      senderName: process.env.RESEND_FROM_NAME || settings.meta.senderName || 'ApexBot Production',
+      senderAddress: process.env.RESEND_FROM_EMAIL || settings.meta.senderAddress || 'noreply@derivsignalhub.com',
+    },
+  });
+}
 const users = await pb.collections.getOne('users');
 const options = { ...(users.options || {}) };
 
