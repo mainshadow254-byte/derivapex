@@ -12,7 +12,7 @@
   <div class="container" style="max-width:520px;padding-top:40px">
     <div id="start" class="card hidden">
       <h2 style="margin-top:0">Connect your Deriv account</h2>
-      <p class="muted">Real trading features use your own Deriv account. OAuth works only when your Deriv app ID and redirect URL are configured. The fallback token flow is available for testing and production recovery.</p>
+      <p class="muted">Deriv authentication is completed on Deriv's secure domain. After approval, this window returns the connection to ApexBot automatically.</p>
       <div id="oauth-note" class="notice demo hidden" style="margin:12px 0"></div>
       <button id="go-oauth" class="btn" style="width:100%">Connect with Deriv OAuth</button>
       <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account</a>
@@ -34,7 +34,9 @@
     <div id="done" class="card hidden">
       <h2 style="margin-top:0">✅ Deriv account connected</h2>
       <div id="done-detail" class="muted"></div>
+      <p id="return-note" class="muted" style="font-size:12px;margin-top:10px"></p>
       <a class="btn ok" href="dashboard.html" style="width:100%;justify-content:center;margin-top:12px">Back to dashboard</a>
+      <button id="close-window" class="btn ghost hidden" type="button" style="width:100%;justify-content:center;margin-top:8px">Close this window</button>
     </div>
 
     <div id="fail" class="card hidden">
@@ -43,6 +45,7 @@
       <button id="retry" class="btn" style="width:100%">Try OAuth again</button>
       <a class="btn ghost" data-deriv-affiliate style="width:100%;justify-content:center;margin-top:8px">New to Deriv? Create Account</a>
       <button id="fallback" class="btn ghost" type="button" style="width:100%;justify-content:center;margin-top:8px">Use API-token fallback</button>
+      <button id="close-fail-window" class="btn ghost hidden" type="button" style="width:100%;justify-content:center;margin-top:8px">Close this window</button>
     </div>
   </div>
 
@@ -50,10 +53,26 @@
   <script src="apex-config.js"></script>
   <script src="js/config.js"></script>
   <script src="js/pb-client.js"></script>
-  <script src="js/deriv-onboard.js"></script>
+  <script src="js/deriv-onboard.js?v=20260702-2"></script>
   <script>
     const $ = (id) => document.getElementById(id);
+    const isPopup = Boolean(window.opener && !window.opener.closed);
     function show(id){ ['start','working','done','fail'].forEach(s=>$(s).classList.toggle('hidden', s!==id)); }
+
+    function postResult(payload){
+      if (!isPopup) return false;
+      try {
+        window.opener.postMessage({ type: 'apex:deriv-oauth-result', ...payload }, window.location.origin);
+        return true;
+      } catch { return false; }
+    }
+
+    function closePopupSoon(delay = 900){
+      if (!isPopup) return;
+      $('close-window')?.classList.remove('hidden');
+      $('close-fail-window')?.classList.remove('hidden');
+      setTimeout(() => { try { window.close(); } catch {} }, delay);
+    }
 
     function mergedParams(){
       const out = new URLSearchParams(location.search || '');
@@ -104,6 +123,18 @@
         (r.balance != null ? `Current balance: <strong>${r.balance} ${r.currency || ''}</strong>.` : '');
       history.replaceState({}, '', 'deriv-callback.html');
       show('done');
+      const returned = postResult({ ok: true, loginid: r.loginid || '', currency: r.currency || '', connected: true });
+      $('return-note').textContent = returned ? 'Connection sent back to ApexBot. This window will close.' : 'Your account is connected. Return to the dashboard.';
+      if (returned) closePopupSoon();
+      return r;
+    }
+
+    function showFailure(message){
+      history.replaceState({}, '', 'deriv-callback.html');
+      $('fail-detail').textContent = message;
+      show('fail');
+      postResult({ ok: false, error: message });
+      if (isPopup) $('close-fail-window').classList.remove('hidden');
     }
 
     function wireManualFallback(){
@@ -111,19 +142,15 @@
       if (button) button.onclick = async () => {
         button.disabled = true;
         try { await connectToken($('manual-token').value); }
-        catch (e) {
-          history.replaceState({}, '', 'deriv-callback.html');
-          $('fail-detail').textContent = e?.body?.detail || e?.message || 'Could not connect that Deriv token.';
-          show('fail');
-        } finally { button.disabled = false; }
+        catch (e) { showFailure(e?.body?.detail || e?.message || 'Could not connect that Deriv token.'); }
+        finally { button.disabled = false; }
       };
       const fallback = $('fallback');
-      if (fallback) fallback.onclick = async () => {
-        await prepareStartCard();
-        show('start');
-      };
+      if (fallback) fallback.onclick = async () => { await prepareStartCard(); show('start'); };
       const retry = $('retry');
       if (retry) retry.onclick = startOAuth;
+      $('close-window').onclick = () => window.close();
+      $('close-fail-window').onclick = () => window.close();
     }
 
     async function prepareStartCard(){
@@ -150,8 +177,8 @@
       }
 
       if (oauthError) {
-        $('fail-detail').textContent = `Deriv authorization failed: ${oauthError}. Check your Deriv app ID and redirect URL, or use the API-token fallback.`;
-        show('fail');
+        const message = `Deriv authorization failed: ${oauthError}. Check your Deriv app ID and redirect URL, or use the API-token fallback.`;
+        showFailure(message);
         DerivOnboard.wireAffiliate();
         return;
       }
@@ -164,9 +191,7 @@
 
       try { await connectToken(token); }
       catch (e) {
-        history.replaceState({}, '', 'deriv-callback.html');
-        $('fail-detail').textContent = e?.body?.detail || e?.message || 'Authorization failed. Confirm your Deriv app redirect URL points to this deriv-callback.html page, or use the API-token fallback.';
-        show('fail');
+        showFailure(e?.body?.detail || e?.message || 'Authorization failed. Confirm your Deriv app redirect URL points to this deriv-callback.html page, or use the API-token fallback.');
         DerivOnboard.wireAffiliate();
       }
     })();
