@@ -3,9 +3,9 @@
     en: {
       login: 'Log in',
       getStarted: 'Try Free Bot',
-      eyebrow: 'FREE BOTS. LIVE SCANNER. DEMO FIRST.',
-      headline: 'Pick a free Deriv bot and test it in demo in minutes.',
-      lead: 'Start with 8 ready bot templates, open one in the visual builder, scan the live Deriv market, then demo-test before connecting a real account. No fake profits, no hidden token handling, no blind automation.',
+      eyebrow: 'OPEN EARLY ACCESS. LIVE SCANNER. DEMO FIRST.',
+      headline: 'Build, scan, and test Deriv strategies without subscription limits.',
+      lead: 'ApexBot is in open early access while billing and higher-capacity APIs are being prepared. Use the current builder, scanner, charts, bots, copy tools, and marketplace without a paid plan. No guaranteed profits and no hidden token handling.',
       tryBot: 'Try Free Bot',
       tryScanner: 'Open AI Scanner',
       joinSupport: 'Join / Support',
@@ -13,9 +13,9 @@
     sw: {
       login: 'Ingia',
       getStarted: 'Jaribu Bot Bure',
-      eyebrow: 'BOTI BURE. SCANNER LIVE. DEMO KWANZA.',
-      headline: 'Chagua bot ya Deriv ya bure na ijaribu kwenye demo kwa dakika chache.',
-      lead: 'Anza na templates 8 tayari, fungua moja kwenye builder, scan soko la Deriv live, kisha jaribu demo kabla ya kuunganisha akaunti real. Hakuna faida za uongo, hakuna tokeni frontend, hakuna automation ya kubahatisha.',
+      eyebrow: 'EARLY ACCESS WAZI. SCANNER LIVE. DEMO KWANZA.',
+      headline: 'Jenga, scan, na jaribu mikakati ya Deriv bila mipaka ya subscription.',
+      lead: 'ApexBot iko open early access wakati billing na API zenye uwezo mkubwa zinaandaliwa. Tumia builder, scanner, charts, bots, copy tools na marketplace bila plan ya kulipia. Hakuna faida iliyohakikishwa na tokeni hazifichwi frontend.',
       tryBot: 'Jaribu Bot Bure',
       tryScanner: 'Fungua AI Scanner',
       joinSupport: 'Jiunge / Support',
@@ -38,55 +38,39 @@
     lang.onchange = () => setLanguage(lang.value);
   }
 
-  const FALLBACK = [
-    { plan: 'free', label: 'Free / Demo', price: 0, currency: 'USD', features: ['8 free bot templates', 'No-login demo dashboard', 'Live charts and demo scanner'] },
-    { plan: 'starter', label: 'Starter', price: 10, currency: 'USD', features: ['Full AI scanner', 'Real-time alerts', 'Watchlists and notifications'] },
-    { plan: 'standard', label: 'Standard', price: 20, currency: 'USD', features: ['Visual builder', 'Bot imports', 'Copy trading access'] },
-    { plan: 'premium', label: 'Premium', price: 30, currency: 'USD', features: ['Real trading permissions', 'Connected Deriv account tools', 'Marketplace installs'] },
-    { plan: 'elite', label: 'Elite', price: 50, currency: 'USD', features: ['Priority alerts', 'Higher operational limits', 'Advanced copy publishing'] },
-  ];
-
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
   }
 
-  function normalizeFeatures(features) {
-    if (Array.isArray(features)) return features.filter(Boolean);
-    if (!features) return [];
-    return String(features).split(/[|;,]/).map((x) => x.trim()).filter(Boolean).slice(0, 6);
-  }
-
-  function displayPrice(plan) {
-    const price = Number(plan.price || 0);
-    if (!price) return 'Free';
-    const currency = String(plan.currency || 'USD').toUpperCase();
-    if (currency === 'USD') return `$${price}`;
-    return `${currency} ${price.toLocaleString()}`;
-  }
-
-  async function loadPlans() {
+  function renderComingSoon() {
     const grid = document.getElementById('plans-grid');
     if (!grid) return;
-    let plans = FALLBACK;
-    try {
-      if (!window.PocketBase) throw new Error('PocketBase SDK unavailable');
-      const pb = new PocketBase(window.APEX.POCKETBASE_URL);
-      const records = await pb.collection('plans').getFullList({ sort: 'price' });
-      if (records.length) plans = records;
-    } catch {}
-    grid.innerHTML = plans.map((p) => {
-      const price = Number(p.price || 0);
-      const features = normalizeFeatures(p.features);
-      const isFeatured = ['standard', 'premium', 'pro'].includes(String(p.plan || p.code || p.label || '').toLowerCase());
-      const featureHtml = features.length ? `<ul class="plan-list">${features.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}</ul>` : '<p class="muted">Tool access is controlled by your verified backend subscription.</p>';
-      return `<article class="card plan ${isFeatured ? 'featured' : ''}">
-        <div class="eyebrow">${escapeHtml(p.label || p.name || p.plan || 'Plan')}</div>
-        <div class="plan-code">${escapeHtml(p.plan || p.code || '')}</div>
-        <div class="price">${escapeHtml(displayPrice(p))}${price ? '<span class="muted-sm">/mo</span>' : ''}</div>
-        ${featureHtml}
-        <a class="btn ${price === 0 ? 'ghost' : ''}" href="${price === 0 ? 'free-bots.html' : 'auth.html'}">${price === 0 ? 'Try free bot' : 'Choose plan'}</a>
+    grid.className = 'grid cols-2';
+    grid.innerHTML = `
+      <article class="card plan featured">
+        <div class="eyebrow">OPEN EARLY ACCESS</div>
+        <div class="price">Free for now</div>
+        <p class="muted">Subscription enforcement is disabled while the platform, AI capacity, payments, and production trading integrations are being completed.</p>
+        <ul class="plan-list">
+          <li>Full authenticated AI scanner and chart reasoning</li>
+          <li>Bot builder, imports, backtesting, and saved bots</li>
+          <li>Copy-trading and marketplace tools</li>
+          <li>Charts, analytics, alerts, and device controls</li>
+        </ul>
+        <a class="btn" href="auth.html">Enter early access</a>
+      </article>
+      <article class="card plan">
+        <div class="eyebrow">PLANS & PAYMENTS</div>
+        <div class="price">Coming Soon</div>
+        <p class="muted">No payment is required now. Future plans will be published only after the required APIs, capacity limits, billing provider, and support flow are ready.</p>
+        <ul class="plan-list">
+          <li>No automatic charge</li>
+          <li>No feature is currently locked by subscription</li>
+          <li>Existing account and strategy data stay intact</li>
+          <li>Trading risk never changes with a plan</li>
+        </ul>
+        <a class="btn ghost" href="support.html">Follow updates</a>
       </article>`;
-    }).join('');
   }
 
   async function loadTicker() {
@@ -98,14 +82,14 @@
       const data = await response.json();
       const rows = (data.markets || []).slice(0, 8);
       strip.innerHTML = rows.length
-        ? rows.map((m) => `<span><strong>${escapeHtml(m.symbol)}</strong> ${escapeHtml(m.direction || 'WAIT')} <small>${m.confidence == null ? '' : escapeHtml(m.confidence) + '% confidence'}</small></span>`).join('')
-        : '<span>Live markets are warming up. Try the 8 free bot templates while the scanner collects data.</span>';
+        ? rows.map((market) => `<span><strong>${escapeHtml(market.symbol)}</strong> ${escapeHtml(market.direction || 'WAIT')} <small>${market.confidence == null ? '' : escapeHtml(market.confidence) + '% confidence'}</small></span>`).join('')
+        : '<span>Live markets are warming up. Explore the builder while the scanner collects data.</span>';
     } catch {
-      strip.innerHTML = '<span>Public demo available — 8 free bot templates, demo scanner, and charts can still be explored when the backend is waking up.</span>';
+      strip.innerHTML = '<span>Open early access remains available while the live market backend wakes up.</span>';
     }
   }
 
-  loadPlans();
+  renderComingSoon();
   loadTicker();
   setInterval(loadTicker, 20000);
 })();
