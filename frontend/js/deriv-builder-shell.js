@@ -2,7 +2,7 @@
   const AUTOSAVE_KEY = 'apexbot_visual_strategy_v1';
   const $ = (selector, root=document) => root.querySelector(selector);
   const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
-  const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (c)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;' }[c]));
+  const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (c)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
   function readState(){
     try {
@@ -55,7 +55,10 @@
       const html = configRows(block.type, strategy);
       if (!html) { config?.remove(); return; }
       if (!config) { config = document.createElement('div'); config.className='node-config'; node.appendChild(config); }
-      config.innerHTML = html;
+      if (config.dataset.rendered !== html) {
+        config.innerHTML = html;
+        config.dataset.rendered = html;
+      }
     });
   }
 
@@ -95,8 +98,8 @@
     const library = $('#block-categories');
     const canvas = $('#canvas-blocks');
     const tx = $('#transaction-list');
-    if (library) new MutationObserver(()=>{ removeEmptyLibraryGroups(); }).observe(library,{childList:true,subtree:true});
-    if (canvas) new MutationObserver(()=>{ decorateNodes(); updateSummary(); }).observe(canvas,{childList:true,subtree:true,attributes:true});
+    if (library) new MutationObserver(removeEmptyLibraryGroups).observe(library,{childList:true,subtree:true});
+    if (canvas) new MutationObserver(()=>{ decorateNodes(); updateSummary(); }).observe(canvas,{childList:true,subtree:true});
     if (tx) new MutationObserver(updateSummary).observe(tx,{childList:true,subtree:true});
     document.addEventListener('input',()=>setTimeout(()=>{ decorateNodes(); updateSummary(); },80),true);
     document.addEventListener('change',()=>setTimeout(()=>{ decorateNodes(); updateSummary(); },100),true);
