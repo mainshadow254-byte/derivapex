@@ -48,69 +48,29 @@
     const { strategy, blocks } = readState();
     const byId = new Map(blocks.map((block)=>[block.id, block]));
     $$('.visual-node').forEach((node)=>{
-      const id = node.dataset.blockId;
-      const block = byId.get(id);
+      const block = byId.get(node.dataset.blockId);
       if (!block) return;
       let config = $('.node-config', node);
       const html = configRows(block.type, strategy);
       if (!html) { config?.remove(); return; }
-      if (!config) { config = document.createElement('div'); config.className='node-config'; node.appendChild(config); }
-      if (config.dataset.rendered !== html) {
-        config.innerHTML = html;
-        config.dataset.rendered = html;
-      }
+      if (!config) { config=document.createElement('div'); config.className='node-config'; node.appendChild(config); }
+      if (config.dataset.rendered !== html) { config.innerHTML=html; config.dataset.rendered=html; }
     });
-  }
-
-  function updateSummary(){
-    const { strategy } = readState();
-    const transactions = $$('#transaction-list tbody tr');
-    const runs = transactions.length;
-    let totalStake = 0;
-    transactions.forEach((row)=>{
-      const value = parseFloat(row.children?.[3]?.textContent || '0');
-      if (Number.isFinite(value)) totalStake += value;
-    });
-    const set = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
-    set('builder-summary-market', strategy.symbol || '—');
-    set('builder-summary-contract', strategy.contract_type || '—');
-    set('builder-summary-runs', String(runs));
-    set('builder-summary-stake', runs ? `${totalStake.toFixed(2)} ${strategy.currency || ''}` : `0.00 ${strategy.currency || ''}`);
-    set('builder-summary-payout', '—');
-    set('builder-summary-profit', '—');
-    set('builder-summary-won', '—');
-    set('builder-summary-lost', '—');
-  }
-
-  function resetVisibleReports(){
-    const tx = $('#transaction-list');
-    if (tx) tx.textContent = 'No transactions yet.';
-    const log = $('#builder-log');
-    if (log) log.innerHTML = '<div>Bot not running.</div><div>Configure the core blocks, then run in demo mode.</div>';
-    const last = $('#last-signal');
-    if (last) last.textContent = 'none';
-    const state = $('#bot-run-state');
-    if (state) state.textContent = 'Bot is not running';
-    updateSummary();
   }
 
   function init(){
     const library = $('#block-categories');
     const canvas = $('#canvas-blocks');
-    const tx = $('#transaction-list');
     if (library) new MutationObserver(removeEmptyLibraryGroups).observe(library,{childList:true,subtree:true});
-    if (canvas) new MutationObserver(()=>{ decorateNodes(); updateSummary(); }).observe(canvas,{childList:true,subtree:true});
-    if (tx) new MutationObserver(updateSummary).observe(tx,{childList:true,subtree:true});
-    document.addEventListener('input',()=>setTimeout(()=>{ decorateNodes(); updateSummary(); },80),true);
-    document.addEventListener('change',()=>setTimeout(()=>{ decorateNodes(); updateSummary(); },100),true);
-    $('#reset-builder-report')?.addEventListener('click', resetVisibleReports);
+    if (canvas) new MutationObserver(decorateNodes).observe(canvas,{childList:true,subtree:true});
+    document.addEventListener('input',()=>setTimeout(decorateNodes,80),true);
+    document.addEventListener('change',()=>setTimeout(decorateNodes,100),true);
     removeEmptyLibraryGroups();
     decorateNodes();
-    updateSummary();
   }
 
   function wait(){
-    if ($('#block-categories') && $('#canvas-blocks') && $('#transaction-list')) init();
+    if ($('#block-categories') && $('#canvas-blocks')) init();
     else setTimeout(wait,120);
   }
   wait();
