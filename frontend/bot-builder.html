@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="css/styles.css?v=20260621-visual-builder" />
   <link rel="stylesheet" href="css/builder-v2.css?v=20260702-final" />
   <link rel="stylesheet" href="css/builder-verified.css?v=20260702-1" />
-  <link rel="stylesheet" href="css/trading-studio.css?v=20260702-1" />
+  <link rel="stylesheet" href="css/trading-studio.css?v=20260702-2" />
 </head>
 <body class="builder-page studio-light">
   <header class="studio-topbar">
@@ -47,10 +47,10 @@
             <button id="export-bot" type="button" title="Export JSON">⇩</button>
             <button id="auto-layout" type="button" title="Arrange blocks">⌁</button>
           </div>
-          <div class="workspace-tools"><button id="zoom-out" type="button" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button id="zoom-in" type="button" aria-label="Zoom in">＋</button><label><input id="snap-grid" type="checkbox" checked /> Snap</label></div>
+          <div class="workspace-tools"><span id="canvas-status" class="builder-status">Loading</span><button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="zoom-in" type="button" aria-label="Zoom in">＋</button></div>
         </div>
-        <div id="visual-canvas" class="visual-canvas" aria-label="Bot strategy workspace"><svg id="connection-layer" class="visual-connections" aria-hidden="true"></svg><div id="canvas-blocks" class="visual-canvas-blocks"></div><div id="canvas-empty" class="canvas-empty hidden">Choose a quick strategy or drag blocks from the menu.</div></div>
-        <div class="workspace-footer"><span class="active">Workspace</span><a href="terminal.html">Chart</a><span class="workspace-hint">Click a block to edit its settings.</span></div>
+        <div id="blocklyDiv" class="blockly-host" aria-label="Blockly bot strategy workspace"></div>
+        <div class="workspace-footer"><span class="active">Workspace</span><a href="terminal.html">Chart</a><span class="workspace-hint">Drag blocks from the menu, connect the puzzle shapes, and edit values directly inside each block.</span></div>
       </section>
 
       <aside id="workstation-panel" class="builder-monitor" aria-label="Bot performance">
@@ -65,19 +65,17 @@
           <section class="workstation-view" data-panel-view="transactions"><div class="report-toolbar"><span>Recorded orders</span><button id="download-transactions" type="button">Download</button></div><div id="transaction-list" class="table-empty">No transactions yet.</div></section>
           <section class="workstation-view" data-panel-view="journal"><div class="report-toolbar"><select id="journal-filter" aria-label="Journal filter"><option value="all">All events</option><option value="info">Information</option><option value="success">Success</option><option value="warning">Warnings</option><option value="error">Errors</option></select><button id="download-journal" type="button">Download</button></div><div id="builder-log" class="builder-journal"></div></section>
         </div>
-        <div class="monitor-actions"><button id="run-backtest" type="button">Backtest</button><button id="reset-builder-report" type="button">Reset</button></div><button id="toggle-workstation" type="button" hidden aria-hidden="true"></button>
+        <div class="monitor-actions"><button id="run-backtest" type="button">Backtest</button><button id="reset-builder-report" type="button">Reset</button></div>
       </aside>
     </section>
   </main>
 
   <footer class="studio-statusbar"><button id="studio-risk-open" class="studio-risk-button" type="button">Risk Disclaimer</button><div class="studio-status-right"><span class="studio-online"></span><span id="studio-time"></span><span>◉</span><span>☀</span><span>?</span><span>EN</span><span>⛶</span></div></footer>
 
-  <aside id="block-inspector" class="builder-inspector hidden" hidden aria-hidden="true"><strong id="selected-block-name">No block selected</strong><div id="properties-form" class="properties-form"></div><div id="validation-warnings" class="validation-list"></div><button id="close-block-inspector" type="button"></button></aside>
-  <div id="inspector-backdrop" class="inspector-backdrop hidden" hidden></div>
-  <div class="builder-hidden-runtime" hidden aria-hidden="true"><span id="builder-summary-market"></span><span id="builder-summary-contract"></span><span id="last-signal"></span><div id="mini-map"></div><div id="digit-stream"></div><div id="signal-list"></div><div id="ai-analysis-panel"></div><button id="show-workstation" type="button"></button></div>
   <div id="studio-risk-modal" class="studio-modal-backdrop"><div class="studio-modal studio-footer-modal"><div class="studio-modal-head"><h3>Risk Disclaimer</h3><button class="studio-modal-close" data-close-studio-modal type="button">×</button></div><div class="studio-modal-body studio-risk-copy">Trading can result in the loss of all invested funds. Automated strategies, indicators, AI explanations, and backtests cannot guarantee future outcomes. Test every strategy on a demo account first.</div></div></div>
 
+  <script src="https://unpkg.com/blockly@12.1.0/blockly.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
-  <script src="apex-config.js"></script><script src="js/config.js"></script><script src="js/pb-client.js"></script><script src="js/security.js"></script><script src="js/deriv-onboard.js?v=20260702-3"></script><script src="js/bot-builder.js?v=20260702-studio"></script><script src="js/builder-v2-shell.js?v=20260702-studio"></script><script src="js/deriv-builder-report.js?v=20260702-studio"></script><script src="js/builder-deriv-account.js?v=20260702-1"></script><script src="js/studio-shell.js?v=20260702-1"></script>
+  <script src="apex-config.js"></script><script src="js/config.js"></script><script src="js/pb-client.js"></script><script src="js/security.js"></script><script src="js/deriv-onboard.js?v=20260702-3"></script><script src="js/builder-deriv-account.js?v=20260702-1"></script><script src="js/studio-shell.js?v=20260702-2"></script><script src="js/blockly-builder-studio.js?v=20260702-1"></script><script src="js/deriv-builder-report.js?v=20260702-studio"></script>
 </body>
 </html>
