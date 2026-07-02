@@ -12,12 +12,12 @@ RewriteRule ^api/(.*)$ https://apexbot-backend-production.up.railway.app/api/$1 
 </IfModule>
 
 <IfModule mod_headers.c>
-  <FilesMatch "^(deriv-onboard|dashboard|pb-client|bot-builder|builder-v2-shell|builder-deriv-account|deriv-builder-report|early-access-ui|ai-workspace|public-home)\.js$">
+  <FilesMatch "^(deriv-onboard|dashboard|pb-client|bot-builder|builder-v2-shell|builder-deriv-account|deriv-builder-report|early-access-ui|ai-workspace|public-home|chart-terminal|studio-shell|terminal-studio-core|terminal-studio-draw|terminal-studio-reports)\.js$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
   </FilesMatch>
-  <FilesMatch "^(bot-builder\.html|dashboard\.html|index\.html|builder-v2\.css|builder-verified\.css|ai-workspace\.css)$">
+  <FilesMatch "^(bot-builder\.html|terminal\.html|dashboard\.html|index\.html|builder-v2\.css|builder-verified\.css|trading-studio\.css|trading-studio-fixes\.css|ai-workspace\.css)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
