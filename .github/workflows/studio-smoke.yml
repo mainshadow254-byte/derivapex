@@ -1,0 +1,101 @@
+name: Studio smoke checks
+
+on:
+  pull_request:
+    paths:
+      - 'frontend/bot-builder.html'
+      - 'frontend/terminal.html'
+      - 'frontend/js/**'
+      - 'frontend/css/**'
+      - '.github/workflows/studio-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/bot-builder.html'
+      - 'frontend/terminal.html'
+      - 'frontend/js/**'
+      - 'frontend/css/**'
+
+jobs:
+  studio-static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check frontend/js/blockly-builder-studio.js
+          node --check frontend/js/blockly-capture.js
+          node --check frontend/js/builder-video-audit.js
+          node --check frontend/js/deriv-builder-report.js
+          node --check frontend/js/chart-terminal.js
+          node --check frontend/js/chart-connection-guard.js
+          node --check frontend/js/terminal-studio-core.js
+          node --check frontend/js/terminal-studio-draw.js
+          node --check frontend/js/terminal-studio-reports.js
+          node --check frontend/js/studio-shell.js
+
+      - name: Verify required builder and chart structure
+        run: |
+          python - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+
+          class Inspector(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids = set()
+                  self.scripts = []
+                  self.links = []
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if attrs.get('id'):
+                      self.ids.add(attrs['id'])
+                  if tag == 'script' and attrs.get('src'):
+                      self.scripts.append(attrs['src'])
+                  if tag == 'link' and attrs.get('href'):
+                      self.links.append(attrs['href'])
+
+          def inspect(path):
+              parser = Inspector()
+              parser.feed(Path(path).read_text(encoding='utf-8'))
+              return parser
+
+          builder = inspect('frontend/bot-builder.html')
+          required_builder = {
+              'blocklyDiv', 'block-categories', 'template-picker', 'block-search',
+              'run-demo-bottom', 'bot-run-state', 'builder-progress-text',
+              'builder-run-progress-bar', 'current-contract-card',
+              'builder-summary-stake', 'builder-summary-payout', 'builder-summary-runs',
+              'builder-summary-lost', 'builder-summary-won', 'builder-summary-profit',
+              'transaction-list', 'builder-log', 'run-backtest', 'reset-builder-report',
+              'builder-undo', 'builder-redo'
+          }
+          missing = sorted(required_builder - builder.ids)
+          assert not missing, f'Missing builder IDs: {missing}'
+          assert any('blockly@12.1.0' in src for src in builder.scripts), 'Pinned Blockly CDN missing'
+          assert any('blockly-capture.js' in src for src in builder.scripts), 'Blockly capture script missing'
+          assert any('blockly-builder-studio.js' in src for src in builder.scripts), 'Builder engine missing'
+          assert any('deriv-builder-report.js' in src for src in builder.scripts), 'Report engine missing'
+          assert any('builder-video-audit.js' in src for src in builder.scripts), 'Video audit bridge missing'
+
+          terminal = inspect('frontend/terminal.html')
+          required_terminal = {
+              'terminal-market-card', 'studio-market-drawer', 'main-chart', 'osc-chart',
+              'terminal-draw-layer', 'terminal-run', 'terminal-transactions',
+              'terminal-journal', 'studio-modal', 'studio-risk-modal'
+          }
+          missing = sorted(required_terminal - terminal.ids)
+          assert not missing, f'Missing terminal IDs: {missing}'
+          assert any('lightweight-charts@4.1.3' in src for src in terminal.scripts), 'Pinned chart CDN missing'
+          assert any('chart-connection-guard.js' in src for src in terminal.scripts), 'Chart connection guard missing'
+          print('Studio HTML structure is complete.')
+          PY
+
+      - name: Verify external studio libraries exist
+        run: |
+          curl -L --fail --silent --show-error --range 0-32 https://unpkg.com/blockly@12.1.0/blockly.min.js >/dev/null
+          curl -L --fail --silent --show-error --range 0-32 https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js >/dev/null
