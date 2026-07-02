@@ -55,12 +55,59 @@ router.get('/copy-preview', (_req, res) => res.json({ ...demoMeta(), strategies:
 router.get('/markets', (_req, res) => { res.json({ ...demoMeta(), tracked: getTrackedSymbols(), ready: getReadySymbols() }); });
 router.get('/symbols', async (_req, res) => { try { res.json({ ...demoMeta({ simulated: false }), groups: await getSymbolsGrouped() }); } catch (e) { res.status(502).json({ error: 'Deriv symbols unavailable.', detail: e.message }); } });
 router.get('/scan', (_req, res) => { const result = scanAll(); const readiness = productReadiness(); res.json({ ...demoMeta({ preview: true, simulated: false }), ...result, readiness, markets: (result.markets || []).slice(0, 8) }); });
-router.get('/scan/:symbol', (req, res) => {
+function riskLevelFromScore(score = 100) {
+  if (score >= 70) return 'high';
+  if (score >= 40) return 'medium';
+  return 'low';
+}
+
+function chartAnalysisToScan(symbol, a) {
+  const riskScore = Math.max(1, Math.min(100, Math.round(a.risk ?? 100)));
+  const riskLevel = riskLevelFromScore(riskScore);
+  const safe = Boolean(a.safe) && riskLevel !== 'high';
+  return {
+    marketName: symbol,
+    symbol,
+    dataSourceLabel: 'Live Deriv Candles',
+    analysisLabel: 'Multi-indicator candle safety scan',
+    setup: safe ? 'safe_candidate' : 'no_trade',
+    noTrade: !safe,
+    tradeable: safe,
+    rejectionReason: safe ? null : 'No entry: candle analysis safety gate did not pass.',
+    last: a.last,
+    direction: safe ? (a.bias === 'bearish' ? 'PUT/down' : 'CALL/up') : 'NO_TRADE',
+    rawDirection: a.bias === 'bearish' ? 'PUT/down' : a.bias === 'bullish' ? 'CALL/up' : 'mixed',
+    confidence: a.confidence,
+    riskScore,
+    riskLevel,
+    volatilityWarning: riskLevel === 'high' ? 'High volatility. Avoid this market and review safer alternatives immediately.' : null,
+    volatility: a.volatility?.atrPct,
+    atrLikePct: a.volatility?.atrPct,
+    momentum: a.momentum,
+    trend: a.trend?.direction || 'mixed',
+    trendStrength: a.trend?.strength,
+    confluence: { bullish: 0, bearish: 0, neutral: 0, notes: [a.reasons?.bullish, a.reasons?.bearish].filter(Boolean) },
+    indicators: a.indicators,
+    safe,
+    support: a.support,
+    resistance: a.resistance,
+    reason: [a.reasons?.selection, a.reasons?.risk, a.reasons?.macd, a.reasons?.oscillators].filter(Boolean).join(' '),
+    explain: a.reasons,
+    entryReasoning: safe ? a.reasons?.selection : 'Entry: wait. Do not enter while the safety gate rejects this market.',
+    invalidation: a.invalidation,
+    riskWarning: a.riskWarning,
+    ts: a.ts,
+  };
+}
+
+router.get('/scan/:symbol', async (req, res) => {
   const a = analyzeSymbol(req.params.symbol);
-  if (!a) return res.status(425).json({ error: 'Not enough live data yet for this symbol. Try again shortly.' });
+  const analysis = a || await analyzeChart(req.params.symbol, 60);
+  if (!analysis) return res.status(425).json({ error: 'Not enough live data yet for this symbol. Try again shortly.' });
+  const result = a || chartAnalysisToScan(req.params.symbol, analysis);
   const full = scanAll();
-  const safer = (full.safeCandidates || []).find((m) => m.symbol !== a.symbol) || null;
-  res.json({ ...demoMeta({ simulated: false }), ...a, saferAlternative: !a.safe ? safer : null, warning: !a.safe ? `${a.symbol} does not pass the safety gate. ${safer ? `Safer alternative: ${safer.symbol}.` : 'No safer alternative currently passes the safety gate.'}` : null });
+  const safer = (full.safeCandidates || []).find((m) => m.symbol !== result.symbol) || null;
+  res.json({ ...demoMeta({ simulated: false }), ...result, saferAlternative: !result.safe ? safer : null, warning: !result.safe ? `${result.symbol} does not pass the safety gate. ${safer ? `Safer alternative: ${safer.symbol}.` : 'No safer alternative currently passes the safety gate.'}` : null });
 });
 router.get('/candles', async (req, res) => {
   const { symbol, granularity = 60, count = 200 } = req.query;
