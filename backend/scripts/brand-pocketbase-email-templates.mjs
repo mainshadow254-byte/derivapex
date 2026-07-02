@@ -16,11 +16,14 @@ const brandFooter = `
   ApexBot by DerivSignalHub. Automated trading tools involve risk and do not guarantee profit.
 </p>`;
 
+const verificationUrl = `${appUrl}/verify.html?token={TOKEN}`;
+const resetUrl = `${appUrl}/reset.html?token={TOKEN}`;
+
 const verificationBody = `
 <p>Hello,</p>
 <p>Thank you for joining ApexBot on DerivSignalHub.</p>
 <p>Click the button below to verify your email address and continue setting up your account.</p>
-<p><a href="{APP_URL}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700">Verify email</a></p>
+<p><a href="${verificationUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700">Verify email</a></p>
 <p>If you did not recently register, you can safely ignore this email.</p>
 <p>Thanks,<br/>The ApexBot team</p>
 ${brandFooter}`;
@@ -29,7 +32,7 @@ const resetBody = `
 <p>Hello,</p>
 <p>We received a request to reset your ApexBot password.</p>
 <p>Click the button below to choose a new password.</p>
-<p><a href="{APP_URL}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700">Reset password</a></p>
+<p><a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700">Reset password</a></p>
 <p>If you did not request this, you can safely ignore this email.</p>
 <p>Thanks,<br/>The ApexBot team</p>
 ${brandFooter}`;
@@ -50,23 +53,38 @@ function mergeTemplate(existing, subject, actionUrl, body) {
   };
 }
 
-const nextOptions = {
-  ...options,
+const nextTemplates = {
   verificationTemplate: mergeTemplate(
-    options.verificationTemplate,
+    users.verificationTemplate || options.verificationTemplate,
     'Verify your ApexBot email',
-    `${appUrl}/verify.html?token={TOKEN}`,
+    verificationUrl,
     verificationBody,
   ),
   resetPasswordTemplate: mergeTemplate(
-    options.resetPasswordTemplate,
+    users.resetPasswordTemplate || options.resetPasswordTemplate,
     'Reset your ApexBot password',
-    `${appUrl}/reset.html?token={TOKEN}`,
+    resetUrl,
     resetBody,
   ),
+  authAlert: {
+    ...(users.authAlert || {}),
+    enabled: true,
+    emailTemplate: mergeTemplate(
+      users.authAlert?.emailTemplate,
+      'ApexBot login from a new location',
+      '',
+      `<p>Hello,</p>
+<p>We noticed a login to your ApexBot account from a new location:</p>
+<p><em>{ALERT_INFO}</em></p>
+<p><strong>If this was not you, change your ApexBot password immediately.</strong></p>
+<p>If this was you, you can safely ignore this email.</p>
+<p>Thanks,<br/>The ApexBot team</p>
+${brandFooter}`,
+    ),
+  },
 };
 
-await pb.collections.update(users.id, { options: nextOptions });
+await pb.collections.update(users.id, nextTemplates);
 console.log(`PocketBase email templates branded for ApexBot at ${pbUrl}`);
 console.log(`Verification URL: ${appUrl}/verify.html?token={TOKEN}`);
 console.log(`Reset URL: ${appUrl}/reset.html?token={TOKEN}`);
