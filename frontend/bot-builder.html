@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ApexBot - Visual Deriv Bot Builder</title>
+  <title>ApexBot — Visual Bot Builder</title>
   <link rel="stylesheet" href="css/styles.css?v=20260621-visual-builder" />
-  <link rel="stylesheet" href="css/builder-upgrade.css?v=20260702-1" />
+  <link rel="stylesheet" href="css/deriv-builder.css?v=20260702-1" />
 </head>
 <body class="builder-page visual-builder-page">
   <nav class="nav builder-nav">
     <a class="brand" href="index.html">ApexBot</a>
     <div class="nav-actions">
-      <a class="btn ghost" href="demo-dashboard.html">Demo</a>
-      <a class="btn ghost" href="guide.html">Guide</a>
       <a class="btn ghost" href="dashboard.html">Dashboard</a>
-      <a class="btn ghost" href="terminal.html">DTrader</a>
+      <span class="btn" aria-current="page">Bot Builder</span>
+      <a class="btn ghost" href="terminal.html">Charts</a>
+      <a class="btn ghost" href="guide.html">Tutorials</a>
       <a class="btn ghost" data-deriv-oauth>Connect Deriv</a>
     </div>
   </nav>
@@ -22,112 +22,123 @@
   <main class="visual-builder-app">
     <header class="visual-builder-topbar">
       <label class="strategy-title-field">
-        <span>Strategy</span>
-        <input id="s-name" class="input" maxlength="120" />
+        <span>Bot name</span>
+        <input id="s-name" class="input" maxlength="120" aria-label="Bot name" />
       </label>
       <div class="visual-builder-actions">
         <button id="new-strategy" class="btn ghost" type="button">New</button>
-        <select id="template-picker" class="input template-select" aria-label="Strategy templates">
-          <option value="">Templates</option>
-        </select>
-        <button id="auto-layout" class="btn ghost" type="button">Auto layout</button>
-        <button id="save-bot" class="btn ok" type="button">Save</button>
         <label class="btn ghost file-btn">Import<input id="import-bot-file" type="file" accept=".json,.xml,application/json,application/xml,text/xml" hidden /></label>
+        <button id="save-bot" class="btn ok" type="button">Save</button>
         <button id="export-bot" class="btn ghost" type="button">Export JSON</button>
-        <button id="run-backtest" class="btn ghost" type="button">Backtest demo</button>
+        <button id="auto-layout" class="btn ghost" type="button">Arrange blocks</button>
       </div>
     </header>
 
     <section class="visual-builder-layout">
-      <aside class="visual-block-library" aria-label="Blocks library">
+      <aside class="visual-block-library" aria-label="Blocks menu">
+        <div class="library-primary">
+          <span class="quick-strategy-label">Quick strategy</span>
+          <select id="template-picker" class="input template-select" aria-label="Quick strategy">
+            <option value="">Select a strategy</option>
+          </select>
+        </div>
         <div class="library-search">
-          <input id="block-search" class="input" placeholder="Search blocks" />
+          <input id="block-search" class="input" placeholder="Search blocks" aria-label="Search blocks" />
         </div>
         <div id="block-categories" class="library-categories"></div>
-        <p class="builder-risk-note">No guaranteed profits. Trading involves risk. Demo-test every strategy before real mode.</p>
+        <p class="builder-risk-note">Test every strategy on a demo account. Automated trading can lose money and no setup is guaranteed.</p>
       </aside>
 
       <section class="visual-canvas-shell">
         <div class="canvas-toolbar">
           <div>
-            <strong>Visual strategy canvas</strong>
+            <strong>Workspace</strong>
             <span id="canvas-status" class="badge info">Loading markets</span>
           </div>
           <div class="canvas-tools">
-            <button id="zoom-out" class="btn ghost sm" type="button">-</button>
+            <button id="zoom-out" class="btn ghost sm" type="button" aria-label="Zoom out">−</button>
             <span id="zoom-label">100%</span>
-            <button id="zoom-in" class="btn ghost sm" type="button">+</button>
-            <label class="canvas-toggle"><input id="snap-grid" type="checkbox" checked /> Snap</label>
+            <button id="zoom-in" class="btn ghost sm" type="button" aria-label="Zoom in">+</button>
+            <label class="canvas-toggle"><input id="snap-grid" type="checkbox" checked /> Snap to grid</label>
           </div>
         </div>
 
-        <div id="visual-canvas" class="visual-canvas" aria-label="Strategy canvas">
+        <div id="visual-canvas" class="visual-canvas" aria-label="Bot strategy workspace">
           <div class="canvas-grid"></div>
           <svg id="connection-layer" class="visual-connections" aria-hidden="true"></svg>
           <div id="canvas-blocks" class="visual-canvas-blocks"></div>
-          <div id="canvas-empty" class="canvas-empty hidden">Choose a template or drag blocks here to build a strategy.</div>
-        </div>
-
-        <div class="canvas-footer">
-          <div class="mini-map-wrap">
-            <span>Mini-map</span>
-            <div id="mini-map" class="visual-mini-map"></div>
-          </div>
-          <div class="digit-panel">
-            <span>Recent digits</span>
-            <div id="digit-stream" class="digit-stream"><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b><b>-</b></div>
-          </div>
+          <div id="canvas-empty" class="canvas-empty hidden">Load a quick strategy or drag the required blocks into the workspace.</div>
         </div>
       </section>
 
-      <aside class="visual-properties" aria-label="Selected block properties">
-        <div class="properties-head">
-          <span>Properties</span>
-          <b id="selected-block-name">No block selected</b>
-        </div>
-        <div id="properties-form" class="properties-form"></div>
+      <aside class="builder-side" aria-label="Bot controls and reports">
+        <section class="builder-run-card">
+          <button id="run-demo-bottom" class="run-primary" type="button">▶ Run demo</button>
+          <div class="run-status-box">
+            <strong id="bot-run-state">Bot is not running</strong>
+            <span>Last action: <b id="last-signal">none</b></span>
+          </div>
+          <div class="builder-side-actions">
+            <button id="run-backtest" class="btn ghost" type="button">Backtest</button>
+            <button id="reset-builder-report" class="btn ghost" type="button">Reset report</button>
+          </div>
+          <div class="builder-stat-grid">
+            <div class="builder-stat"><small>Market</small><strong id="builder-summary-market">—</strong></div>
+            <div class="builder-stat"><small>Contract</small><strong id="builder-summary-contract">—</strong></div>
+            <div class="builder-stat"><small>Total stake</small><strong id="builder-summary-stake">0.00</strong></div>
+            <div class="builder-stat"><small>Total payout</small><strong id="builder-summary-payout">—</strong></div>
+            <div class="builder-stat"><small>Runs</small><strong id="builder-summary-runs">0</strong></div>
+            <div class="builder-stat"><small>Won / lost</small><strong><span id="builder-summary-won">—</span> / <span id="builder-summary-lost">—</span></strong></div>
+            <div class="builder-stat"><small>Profit / loss</small><strong id="builder-summary-profit">—</strong></div>
+          </div>
+        </section>
+
+        <section id="workstation-panel" class="workstation-panel builder-report-panel">
+          <div class="workstation-tabs">
+            <button class="workstation-tab active" data-panel-tab="summary" type="button">Summary</button>
+            <button class="workstation-tab" data-panel-tab="transactions" type="button">Transactions</button>
+            <button class="workstation-tab" data-panel-tab="journal" type="button">Journal</button>
+            <button class="workstation-tab" data-panel-tab="validation" type="button">Validation</button>
+            <button id="toggle-workstation" class="workstation-toggle" type="button">Show</button>
+          </div>
+          <div class="workstation-body">
+            <section class="workstation-view active" data-panel-view="summary">
+              <p class="muted" style="font-size:12px;margin:0">Configure the four core stages: trade parameters, purchase conditions, optional sell conditions, and restart conditions. Add analysis and risk blocks only when they serve the strategy.</p>
+            </section>
+            <section class="workstation-view" data-panel-view="transactions">
+              <div id="transaction-list" class="table-empty">No transactions yet.</div>
+            </section>
+            <section class="workstation-view" data-panel-view="journal">
+              <div id="builder-log" class="builder-journal">
+                <div>Bot not running.</div>
+                <div>Configure the core blocks, then run in demo mode.</div>
+              </div>
+            </section>
+            <section class="workstation-view" data-panel-view="validation">
+              <div id="validation-warnings" class="validation-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="visual-properties" aria-label="Selected block properties">
+          <div class="properties-head">
+            <span>Block settings</span>
+            <b id="selected-block-name">No block selected</b>
+          </div>
+          <div id="properties-form" class="properties-form"></div>
+        </section>
       </aside>
     </section>
 
-    <section id="workstation-panel" class="workstation-panel minimized">
-      <div class="workstation-tabs">
-        <button class="workstation-tab active" data-panel-tab="journal" type="button">Journal</button>
-        <button class="workstation-tab" data-panel-tab="transactions" type="button">Transactions</button>
-        <button class="workstation-tab" data-panel-tab="signals" type="button">Signals</button>
-        <button class="workstation-tab" data-panel-tab="ai" type="button">AI Analysis</button>
-        <button class="workstation-tab" data-panel-tab="validation" type="button">Validation</button>
-        <button id="toggle-workstation" class="workstation-toggle" type="button">Show</button>
-      </div>
-      <div class="workstation-body">
-        <section class="workstation-view active" data-panel-view="journal">
-          <div id="builder-log" class="builder-journal">
-            <div>Bot not running.</div>
-            <div>Choose a template, edit blocks, then run in demo mode.</div>
-          </div>
-        </section>
-        <section class="workstation-view" data-panel-view="transactions">
-          <div id="transaction-list" class="table-empty">No transactions yet.</div>
-        </section>
-        <section class="workstation-view" data-panel-view="signals">
-          <div id="signal-list" class="signal-list">No signals generated yet.</div>
-        </section>
-        <section class="workstation-view" data-panel-view="ai">
-          <div id="ai-analysis-panel" class="ai-analysis-panel">AI blocks show analysis only after backend analysis is available. No fake outputs are displayed.</div>
-        </section>
-        <section class="workstation-view" data-panel-view="validation">
-          <div id="validation-warnings" class="validation-list"></div>
-        </section>
-      </div>
-    </section>
-
-    <section class="builder-runbar">
-      <button id="run-demo-bottom" class="btn run-wide" type="button">Run demo</button>
-      <div class="run-status-box">
-        <strong id="bot-run-state">Bot is not running</strong>
-        <span>Last signal: <b id="last-signal">none</b></span>
-      </div>
-      <button id="show-workstation" class="btn ghost" type="button">Journal</button>
-    </section>
+    <!-- Required runtime targets kept outside the visible workspace. They prevent
+         legacy builder code from failing while decorative panels remain removed. -->
+    <div class="builder-hidden-runtime" aria-hidden="true">
+      <div id="mini-map"></div>
+      <div id="digit-stream"></div>
+      <div id="signal-list"></div>
+      <div id="ai-analysis-panel"></div>
+      <button id="show-workstation" type="button"></button>
+    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
@@ -135,8 +146,8 @@
   <script src="js/config.js"></script>
   <script src="js/pb-client.js"></script>
   <script src="js/security.js"></script>
-  <script src="js/deriv-onboard.js"></script>
-  <script src="js/bot-builder.js?v=20260621-visual-builder"></script>
-  <script src="js/builder-upgrade.js?v=20260702-1"></script>
+  <script src="js/deriv-onboard.js?v=20260702-2"></script>
+  <script src="js/bot-builder.js?v=20260702-deriv-shell"></script>
+  <script src="js/deriv-builder-shell.js?v=20260702-1"></script>
 </body>
 </html>
