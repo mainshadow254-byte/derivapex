@@ -34,7 +34,10 @@ window.Auth = {
     // and store Telegram as pending only when supplied.
     const verification = await fetch(`${window.APEX.API_BASE}/auth/start-verification`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(pb.authStore.token ? { Authorization: `Bearer ${pb.authStore.token}` } : {}),
+      },
       body: JSON.stringify({ userId: user.id, telegram: normalizeTelegramUsername(telegram) }),
     });
     if (!verification.ok) {

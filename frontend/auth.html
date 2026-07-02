@@ -27,26 +27,28 @@
 
       <div id="msg"></div>
 
-      <div id="name-wrap" style="margin-bottom:14px">
-        <label class="label">Full name</label>
-        <input id="name" type="text" class="input" placeholder="Your full name" autocomplete="name" />
-      </div>
-      <div style="margin-bottom:14px">
-        <label class="label">Email</label>
-        <input id="email" type="email" class="input" placeholder="you@example.com" />
-      </div>
-      <div style="margin-bottom:14px">
-        <label class="label">Password</label>
-        <input id="password" type="password" minlength="8" class="input" placeholder="At least 8 characters" />
-      </div>
-      <div id="tg-wrap" style="margin-bottom:14px">
-        <label class="label">Telegram username (optional)</label>
-        <input id="telegram" type="text" class="input" placeholder="@yourhandle" />
-        <p class="muted" style="font-size:12px;margin:6px 0 0">Telegram is optional. Recommended for alerts and community access.</p>
-      </div>
+      <form id="auth-form" novalidate>
+        <div id="name-wrap" style="margin-bottom:14px">
+          <label class="label" for="name">Full name</label>
+          <input id="name" type="text" class="input" placeholder="Your full name" autocomplete="name" />
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="label" for="email">Email</label>
+          <input id="email" type="email" class="input" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="label" for="password">Password</label>
+          <input id="password" type="password" minlength="8" class="input" placeholder="At least 8 characters" autocomplete="current-password" required />
+        </div>
+        <div id="tg-wrap" style="margin-bottom:14px">
+          <label class="label" for="telegram">Telegram username (optional)</label>
+          <input id="telegram" type="text" class="input" placeholder="@yourhandle" autocomplete="off" />
+          <p class="muted" style="font-size:12px;margin:6px 0 0">Telegram is optional. Recommended for alerts and community access.</p>
+        </div>
 
-      <button id="submit" class="btn" style="width:100%">Create account</button>
-      <button id="google" class="btn ghost" style="width:100%;justify-content:center;margin-top:10px" type="button">Continue with Google</button>
+        <button id="submit" class="btn" style="width:100%" type="submit">Create account</button>
+        <button id="google" class="btn ghost" style="width:100%;justify-content:center;margin-top:10px" type="button">Continue with Google</button>
+      </form>
 
       <p class="muted" style="text-align:center;margin-top:16px;font-size:13px">
         <a id="toggle" href="#">Already have an account? Log in</a><br/>
@@ -64,7 +66,7 @@
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.27.0/dist/pocketbase.umd.js"></script>
   <script src="apex-config.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/pb-client.js?v=20260702-google-oauth"></script>
+  <script src="js/pb-client.js?v=20260702-auth-form"></script>
   <script src="js/deriv-onboard.js"></script>
   <script>
     const pageParams = new URLSearchParams(location.search);
@@ -102,10 +104,12 @@
       if (mode==='login'){
         $('title').textContent='Welcome back'; $('subtitle').textContent='Log in to your account.';
         $('name-wrap').classList.add('hidden'); $('tg-wrap').classList.add('hidden'); $('submit').textContent='Log in';
+        $('password').setAttribute('autocomplete', 'current-password');
         $('toggle').textContent="Need an account? Sign up"; $('forgot').classList.remove('hidden');
       } else {
         $('title').textContent='Create your account'; $('subtitle').textContent='Sign up with your name, email, and password. Telegram is optional.';
         $('name-wrap').classList.remove('hidden'); $('tg-wrap').classList.remove('hidden'); $('submit').textContent='Create account';
+        $('password').setAttribute('autocomplete', 'new-password');
         $('toggle').textContent='Already have an account? Log in'; $('forgot').classList.add('hidden');
       }
     }
@@ -150,7 +154,8 @@
     // Surface the "Create Deriv Account" affiliate button (link from safe config).
     DerivOnboard.wireAffiliate();
 
-    $('submit').onclick = async () => {
+    $('auth-form').onsubmit = async (event) => {
+      event.preventDefault();
       const name=$('name').value.trim(), email=$('email').value.trim(), password=$('password').value, telegram=$('telegram').value.trim();
       if(!email||!password) return msg('Email and password are required.');
       $('submit').disabled=true;
@@ -161,9 +166,17 @@
           location.href = 'verify.html?email='+encodeURIComponent(email);
         } else {
           await Auth.login(email, password);
-          const me = await api('/me').catch(()=>null);
-          if (me && !me.verified) location.href = 'verify.html?email='+encodeURIComponent(email);
-          else location.href = safeNextUrl();
+          try {
+            const me = await api('/me');
+            if (me && !me.verified) location.href = 'verify.html?email='+encodeURIComponent(email);
+            else location.href = safeNextUrl();
+          } catch (err) {
+            if (err?.status === 403 && /verified/i.test(err?.message || '')) {
+              location.href = 'verify.html?email='+encodeURIComponent(email);
+            } else {
+              throw err;
+            }
+          }
         }
       } catch (err) {
         safeError(err);
