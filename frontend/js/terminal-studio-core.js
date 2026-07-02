@@ -66,14 +66,15 @@
   }
   $('studio-market-search').oninput=(event)=>{state.query=event.target.value;renderMarketDrawer();};
   $('terminal-market-card').onclick=()=>{renderMarketDrawer();$('studio-market-drawer').classList.toggle('open');};
+  $('terminal-market-card').onkeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();$('terminal-market-card').click();}};
   document.addEventListener('click',(event)=>{if(!event.target.closest('#studio-market-drawer,#terminal-market-card'))$('studio-market-drawer').classList.remove('open');});
 
   const chartTypes=[['area','▰','Area'],['candlestick','▥','Candle'],['hollow','▯','Hollow'],['ohlc','⌁','OHLC'],['line','╱','Line'],['tick','•','Tick']];
-  const timeframes=[[0,'1 tick'],[60,'1 minute'],[120,'2 minutes'],[180,'3 minutes'],[300,'5 minutes'],[600,'10 minutes'],[900,'15 minutes'],[1800,'30 minutes'],[3600,'1 hour'],[7200,'2 hours'],[14400,'4 hours'],[28800,'8 hours'],[86400,'1 day']];
+  const timeframes=[[0,'1 tick',true],[60,'1 minute',true],[120,'2 minutes',false],[180,'3 minutes',false],[300,'5 minutes',true],[600,'10 minutes',false],[900,'15 minutes',true],[1800,'30 minutes',true],[3600,'1 hour',true],[7200,'2 hours',false],[14400,'4 hours',true],[28800,'8 hours',false],[86400,'1 day',true]];
   function chartSettings(){
-    openModal('Chart types',`<div class="studio-choice-grid">${chartTypes.map(([id,icon,label])=>`<button class="studio-choice ${state.chartType===id?'active':''}" data-chart-type="${id}"><span class="studio-choice-icon">${icon}</span>${label}</button>`).join('')}</div><h4 class="studio-section-title">Time interval</h4><div class="studio-time-grid">${timeframes.map(([value,label])=>`<button class="studio-time ${state.granularity===value?'active':''}" data-chart-time="${value}">${label}</button>`).join('')}</div>`);
+    openModal('Chart types',`<div class="studio-choice-grid">${chartTypes.map(([id,icon,label])=>`<button class="studio-choice ${state.chartType===id?'active':''}" data-chart-type="${id}"><span class="studio-choice-icon">${icon}</span>${label}</button>`).join('')}</div><h4 class="studio-section-title">Time interval</h4><div class="studio-time-grid">${timeframes.map(([value,label,supported])=>`<button class="studio-time ${state.granularity===value?'active':''}" data-chart-time="${value}" ${supported?'':'disabled title="Not supported by the current Deriv candle API"'}>${label}</button>`).join('')}</div>`);
     document.querySelectorAll('[data-chart-type]').forEach((button)=>button.onclick=async()=>{state.chartType=button.dataset.chartType;await term.setType(state.chartType);chartSettings();});
-    document.querySelectorAll('[data-chart-time]').forEach((button)=>button.onclick=async()=>{const value=Number(button.dataset.chartTime);state.granularity=value;state.chartType=value===0?'tick':state.chartType==='tick'?'candlestick':state.chartType;if(term.type!==state.chartType)await term.setType(state.chartType);if(value>0)await term.setGranularity(value);chartSettings();});
+    document.querySelectorAll('[data-chart-time]:not([disabled])').forEach((button)=>button.onclick=async()=>{const value=Number(button.dataset.chartTime);state.granularity=value;state.chartType=value===0?'tick':state.chartType==='tick'?'candlestick':state.chartType;if(term.type!==state.chartType)await term.setType(state.chartType);if(value>0)await term.setGranularity(value);chartSettings();});
   }
 
   const indicators=[['ema20','EMA 20'],['ema50','EMA 50'],['ma20','Simple MA'],['bollinger','Bollinger Bands'],['sr','Support / Resistance'],['trendline','Trend line'],['rsi','RSI'],['macd','MACD'],['atr','ATR']];
