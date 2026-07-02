@@ -87,7 +87,7 @@
             <button class="workstation-tab" data-panel-tab="transactions" type="button">Transactions</button>
             <button class="workstation-tab" data-panel-tab="journal" type="button">Journal</button>
             <button id="reset-builder-report" class="report-reset" type="button">Reset</button>
-            <button id="toggle-workstation" class="workstation-toggle" type="button">Show</button>
+            <button id="toggle-workstation" class="workstation-toggle" type="button" hidden aria-hidden="true"></button>
           </div>
 
           <div class="workstation-body">
@@ -158,7 +158,7 @@
       </aside>
     </section>
 
-    <div class="builder-hidden-runtime" aria-hidden="true">
+    <div class="builder-hidden-runtime" hidden aria-hidden="true">
       <span id="builder-summary-market"></span>
       <span id="builder-summary-contract"></span>
       <span id="last-signal"></span>
