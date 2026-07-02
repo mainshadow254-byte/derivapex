@@ -1,68 +1,58 @@
-// Subscription resolution. Source of truth = PocketBase `subscriptions`.
-// A subscription is ACTIVE only if status='active' and not expired.
-// Activation happens ONLY via verified payment webhook (see routes/payments.js).
+// Early-access feature access.
+//
+// Subscription records are intentionally kept in PocketBase so billing can be
+// enabled later without a schema migration. During the current product-polish
+// phase, however, no feature is restricted by plan or payment status.
 import { getServicePB } from '../pocketbase.js';
-import { PLAN_TIERS, FEATURE_MIN_RANK } from '../config.js';
+import { FEATURE_MIN_RANK } from '../config.js';
+
+export const EARLY_ACCESS_PLAN = Object.freeze({
+  plan: 'early_access',
+  label: 'Open Early Access',
+  rank: 999,
+  status: 'open_access',
+  expiresAt: null,
+  billing: 'coming_soon',
+});
 
 export function freePlan(status = 'none', expiresAt = null) {
-  return { plan: 'free', rank: 0, status, expiresAt };
+  return { plan: 'free', label: 'Free', rank: 0, status, expiresAt };
 }
 
-function effectiveFromRows(rows) {
-  const active = (rows || []).find((row) => row.status === 'active');
-  if (!active) return freePlan();
-  const expiresAt = active.expires_at || active.current_period_end || null;
-  const expired = expiresAt && new Date(expiresAt) < new Date();
-  if (expired) return freePlan('expired', expiresAt);
-  const tier = PLAN_TIERS[active.plan] || PLAN_TIERS.free;
-  if (!tier.rank) return freePlan(active.plan === 'free' ? 'active' : 'invalid');
-  return { plan: active.plan, rank: tier.rank, status: 'active', expiresAt, subId: active.id };
-}
-
-// Subscription reads are intentionally fail-closed: an unavailable or empty
-// collection produces a free plan instead of crashing a route or granting paid
-// access. `pb.filter` safely binds relation values for PocketBase.
+// Keep subscription reads available for admin/history pages. They no longer
+// control feature access while billing is marked Coming Soon.
 export async function getSubscriptionSnapshot(userId, { pbFactory = getServicePB } = {}) {
   try {
     const pb = await pbFactory();
     const filter = pb.filter('user = {:user}', { user: userId });
     const subscriptions = await pb.collection('subscriptions').getFullList({ filter, sort: '-created' });
-    return { subscriptions, effective: effectiveFromRows(subscriptions), lookupOk: true };
+    return { subscriptions, effective: { ...EARLY_ACCESS_PLAN }, lookupOk: true, accessMode: 'early_access' };
   } catch (error) {
-    console.error('[subscriptions] lookup failed; using free plan:', error?.message || error);
-    return { subscriptions: [], effective: freePlan('unavailable'), lookupOk: false };
+    console.error('[subscriptions] lookup failed; continuing with open early access:', error?.message || error);
+    return { subscriptions: [], effective: { ...EARLY_ACCESS_PLAN }, lookupOk: false, accessMode: 'early_access' };
   }
 }
 
-export async function getEffectivePlan(userId) {
-  const snapshot = await getSubscriptionSnapshot(userId);
-  return snapshot.effective;
+export async function getEffectivePlan(_userId) {
+  return { ...EARLY_ACCESS_PLAN };
 }
 
-export function canUse(feature, planRank) {
-  const min = FEATURE_MIN_RANK[feature];
-  if (min === undefined) return false;
-  return planRank >= min;
+export function canUse(feature, _planRank) {
+  // Unknown feature names remain denied so typos do not silently grant access.
+  // Every registered feature is available during open early access.
+  return Object.prototype.hasOwnProperty.call(FEATURE_MIN_RANK, feature);
 }
 
-// Express guard factory: blocks a route unless the user's backend-resolved plan
-// allows the feature. Demo features (rank 0) are always allowed for verified users.
 export function requireFeature(feature) {
   return async (req, res, next) => {
     try {
-      const eff = await getEffectivePlan(req.auth.user.id);
-      req.plan = eff;
-      if (!canUse(feature, eff.rank)) {
-        return res.status(402).json({
-          error: 'Your current plan does not include this feature.',
-          feature,
-          currentPlan: eff.plan,
-          upgradeRequired: true,
-        });
+      if (!canUse(feature, EARLY_ACCESS_PLAN.rank)) {
+        return res.status(404).json({ error: 'Unknown feature.', feature });
       }
+      req.plan = { ...EARLY_ACCESS_PLAN };
       next();
-    } catch (e) {
-      res.status(500).json({ error: 'Could not verify subscription.' });
+    } catch (error) {
+      res.status(500).json({ error: 'Could not resolve early-access permissions.' });
     }
   };
 }
