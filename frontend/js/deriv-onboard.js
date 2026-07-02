@@ -1,19 +1,13 @@
-// Deriv onboarding helpers. The affiliate/referral link is PUBLIC-SAFE and is
-// loaded from GET /api/public-config (never hardcoded across pages, never a
-// secret). Provides:
-//   DerivOnboard.wireAffiliate(scope)  -> turn [data-deriv-affiliate] elements
-//                                         into new-tab links to the affiliate URL
-//   DerivOnboard.wireOAuth(scope)      -> turn [data-deriv-oauth] elements into
-//                                         official Deriv OAuth authorize links
-//   DerivOnboard.cardHTML(opts)        -> the "Connect Your Deriv Account" card
-//   DerivOnboard.mount(container,opts) -> insert the card + wire its buttons
+// Deriv onboarding helpers. OAuth is opened in a controlled popup so ApexBot
+// stays visible while Deriv handles authentication on its own secure domain.
 window.DerivOnboard = (function () {
+  const OAUTH_MESSAGE = 'apex:deriv-oauth-result';
+
   async function affiliateUrl() {
     try {
       const cfg = await loadPublicConfig();
       return cfg?.derivAffiliateLink || '';
-    }
-    catch { return ''; }
+    } catch { return ''; }
   }
 
   async function oauthUrl() {
@@ -33,8 +27,90 @@ window.DerivOnboard = (function () {
     return url.toString();
   }
 
-  // Wire every element marked [data-deriv-affiliate] within `scope` (default: document).
-  // If no affiliate link is configured, those elements are hidden (no broken links).
+  function popupFeatures() {
+    const width = Math.min(520, Math.max(380, window.screen?.availWidth || 520));
+    const height = Math.min(760, Math.max(620, window.screen?.availHeight || 760));
+    const left = Math.max(0, Math.round((window.screenX || 0) + ((window.outerWidth || width) - width) / 2));
+    const top = Math.max(0, Math.round((window.screenY || 0) + ((window.outerHeight || height) - height) / 2));
+    return `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+  }
+
+  async function openOAuth(options = {}) {
+    const trigger = options.trigger || null;
+    const originalText = trigger?.textContent || '';
+    if (trigger) {
+      trigger.disabled = true;
+      trigger.setAttribute('aria-busy', 'true');
+      trigger.textContent = 'Opening Deriv…';
+    }
+
+    // Open synchronously before awaiting config so popup blockers do not block it.
+    let popup = null;
+    try { popup = window.open('about:blank', 'apexDerivOAuth', popupFeatures()); } catch {}
+
+    try {
+      const url = await oauthUrl();
+      if (!popup || popup.closed) {
+        // Reliable fallback for strict/mobile browsers. This remains same-tab rather
+        // than target=_blank, and the callback returns to ApexBot.
+        window.location.assign(url);
+        return { mode: 'same-tab' };
+      }
+
+      try {
+        popup.document.title = 'Connect Deriv — ApexBot';
+        popup.document.body.innerHTML = '<p style="font-family:system-ui;padding:24px">Opening secure Deriv sign in…</p>';
+      } catch {}
+      popup.location.replace(url);
+      popup.focus();
+
+      return await new Promise((resolve) => {
+        let settled = false;
+        const finish = (result) => {
+          if (settled) return;
+          settled = true;
+          window.removeEventListener('message', onMessage);
+          clearInterval(closedPoll);
+          clearTimeout(timeout);
+          if (trigger) {
+            trigger.disabled = false;
+            trigger.removeAttribute('aria-busy');
+            trigger.textContent = result?.ok ? 'Deriv connected' : originalText;
+          }
+          if (result?.ok) {
+            window.dispatchEvent(new CustomEvent('apex:deriv-connected', { detail: result }));
+          } else if (result?.error) {
+            window.dispatchEvent(new CustomEvent('apex:deriv-oauth-error', { detail: result }));
+          }
+          resolve(result || { ok: false });
+        };
+        const onMessage = (event) => {
+          if (event.origin !== window.location.origin) return;
+          if (event.data?.type !== OAUTH_MESSAGE) return;
+          finish(event.data);
+        };
+        window.addEventListener('message', onMessage);
+        const closedPoll = setInterval(() => {
+          if (popup.closed) finish({ ok: false, cancelled: true });
+        }, 500);
+        const timeout = setTimeout(() => {
+          try { if (!popup.closed) popup.close(); } catch {}
+          finish({ ok: false, error: 'Deriv sign in timed out. Please try again.' });
+        }, 5 * 60 * 1000);
+      });
+    } catch (error) {
+      try { if (popup && !popup.closed) popup.close(); } catch {}
+      if (trigger) {
+        trigger.disabled = false;
+        trigger.removeAttribute('aria-busy');
+        trigger.textContent = originalText;
+      }
+      const result = { ok: false, error: error?.message || 'Could not open Deriv sign in.' };
+      window.dispatchEvent(new CustomEvent('apex:deriv-oauth-error', { detail: result }));
+      return result;
+    }
+  }
+
   async function wireAffiliate(scope) {
     const root = scope || document;
     const els = root.querySelectorAll('[data-deriv-affiliate]');
@@ -61,18 +137,19 @@ window.DerivOnboard = (function () {
         el.textContent = el.dataset.manualText || 'Connect with API token';
         el.title = cfg?.derivOAuthIssue || 'Deriv OAuth is not configured yet.';
       }
-      if (el.tagName === 'A') {
-        el.href = url; el.rel = 'noopener noreferrer';
-      } else {
-        el.onclick = () => { location.href = url; };
-      }
+      if (el.tagName === 'A') el.href = url;
+      el.removeAttribute('target');
+      el.rel = 'noopener noreferrer';
+      el.onclick = (event) => {
+        event.preventDefault();
+        openOAuth({ trigger: el });
+      };
     });
   }
 
-  // The standard Deriv onboarding card. `opts.title`, `opts.body` optional.
   function cardHTML(opts = {}) {
     const title = opts.title || 'Connect Your Deriv Account';
-    const body = opts.body || 'To use real trading features, connect your Deriv account. If you don’t have one, create one first using the button below, then return here and connect.';
+    const body = opts.body || 'To use real trading features, connect your Deriv account. ApexBot stays open while Deriv handles secure sign in, then the account returns here automatically.';
     const createText = opts.createText || 'Create Deriv Account';
     return `<div class="card" data-deriv-onboard style="border-color:#6366f1">
       <h3 style="margin-top:0">${title}</h3>
@@ -82,7 +159,7 @@ window.DerivOnboard = (function () {
         <a class="btn ghost" data-deriv-affiliate>${createText}</a>
         <a class="btn" data-deriv-oauth data-manual-text="Connect with API token">Connect Deriv Account</a>
       </div>
-      <p class="muted" style="font-size:12px;margin:10px 0 0">OAuth requires your own Deriv app ID and redirect URL. If it is not configured, use the API-token fallback; the backend verifies and encrypts the token.</p>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Deriv authentication is completed on Deriv's secure domain. API-token fallback remains available if a browser blocks the popup.</p>
     </div>`;
   }
 
@@ -99,5 +176,5 @@ window.DerivOnboard = (function () {
     wireOAuth(container);
   }
 
-  return { affiliateUrl, oauthUrl, wireAffiliate, wireOAuth, cardHTML, mount };
+  return { affiliateUrl, oauthUrl, openOAuth, wireAffiliate, wireOAuth, cardHTML, mount, OAUTH_MESSAGE };
 })();
